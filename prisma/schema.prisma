@@ -1,0 +1,121 @@
+// Prisma schema for the freshman.academy paper publication site.
+// Prisma 7 uses the new `prisma-client` generator with a required output path.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// SQLite, deliberately — this site is small and ships as a single Render web
+// service with a mounted disk. Note the tradeoff recorded in the README: the
+// disk disables zero-downtime deploys, and DATABASE_URL must point inside the
+// mount or every deploy silently discards the database.
+datasource db {
+  provider = "sqlite"
+}
+
+// ----- Auth.js (NextAuth) models -----
+// Field names here are dictated by @auth/prisma-adapter. Renaming any of them
+// (including the snake_case OAuth token fields) breaks sign-in at runtime, not
+// at build time. DO NOT "FIX" THE CASING.
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  // READER (default) may download published PDFs; ADMIN may review submissions.
+  // Promotion to ADMIN is driven by the ADMIN_EMAILS env var on each sign-in —
+  // see src/auth.ts. There is deliberately no in-app UI to change this.
+  role String @default("READER")
+
+  accounts Account[]
+  sessions Session[]
+  papers   Paper[]   @relation("PapersSubmitted")
+  reviewed Paper[]   @relation("PapersReviewed")
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ----- App models -----
+
+model Paper {
+  id       String @id @default(cuid())
+  // Derived from the title at submission time and never changed afterwards, so
+  // a published URL keeps working even if the title is edited.
+  slug     String @unique
+  title    String
+  // Public and indexed. This is the ONLY body text search engines ever see —
+  // the PDF is gated, so the abstract carries all of the site's SEO weight.
+  abstract String
+  // Free-text byline ("A. Kim, R. Patel"), not linked accounts. Co-authors do
+  // not need logins to be credited.
+  authorLine String
+
+  // DRAFT     — author is still editing, not visible to reviewers
+  // SUBMITTED — awaiting review, locked for editing
+  // PUBLISHED — public abstract + READER-gated PDF download
+  // REJECTED  — returned to the author with reviewNote
+  // Stored as String because SQLite has no native enum; the PaperStatus union
+  // in src/lib/papers.ts is the source of truth for allowed values.
+  status String @default("DRAFT")
+  // Shown to the author on /submissions when a paper is rejected.
+  reviewNote String?
+
+  // Generated cuid filename on the disk mount. Never the name the user typed —
+  // user-controlled filenames allow path traversal out of the upload directory.
+  storedName   String
+  // The uploaded filename, used only for the Content-Disposition download name.
+  originalName String
+  fileSize     Int // bytes; capped at MAX_UPLOAD_BYTES in src/lib/storage.ts
+
+  submitterId String
+  submitter   User   @relation("PapersSubmitted", fields: [submitterId], references: [id], onDelete: Cascade)
+  reviewerId  String?
+  reviewer    User?  @relation("PapersReviewed", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  submittedAt DateTime?
+  publishedAt DateTime?
+
+  // The public index queries published papers newest-first; the author's
+  // dashboard queries by submitter.
+  @@index([status, publishedAt])
+  @@index([submitterId])
+}
