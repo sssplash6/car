@@ -14,7 +14,11 @@ import path from "node:path";
 // Critically this directory is OUTSIDE public/. Anything under public/ is served
 // statically by Next with no auth check, which would bypass the READER gate
 // entirely and hand out every PDF to anyone who guessed a filename.
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "var", "uploads");
+// The default is a bare relative path rather than path.join(process.cwd(), …):
+// Node resolves it against the working directory identically, and calling
+// process.cwd() at module scope makes Turbopack trace the entire project tree
+// into the build output.
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "var/uploads";
 
 // 10 MB covers a text-heavy paper with figures. Must stay <= the
 // serverActions.bodySizeLimit in next.config.ts, or the request is rejected by
@@ -32,6 +36,21 @@ const PDF_MAGIC = "%PDF-";
 const STORED_NAME_PATTERN = /^[0-9a-f-]{36}\.pdf$/;
 
 export class UploadError extends Error {}
+
+/**
+ * Resolve a stored filename to its full path on disk.
+ *
+ * UPLOAD_DIR is runtime configuration pointing at a mounted disk, so the build
+ * tracer cannot resolve it and emits an "unexpected file in NFT list" warning.
+ * The turbopackIgnore hint below is the documented remedy but does NOT silence it
+ * here; the warning is cosmetic — build output stays project-scoped (~15 MB) and
+ * there is genuinely nothing to include at build time, since the directory does
+ * not exist until the service is running. Left in place as documentation of
+ * intent rather than as a working suppression.
+ */
+function uploadPath(storedName: string): string {
+  return path.join(/*turbopackIgnore: true*/ UPLOAD_DIR, storedName);
+}
 
 /**
  * Persist an uploaded PDF and return its generated filename plus byte size.
@@ -61,8 +80,8 @@ export async function savePdf(
   const storedName = `${randomUUID()}.pdf`;
 
   // Unlike the SQLite file, upload dirs may nest — create the whole path.
-  await mkdir(UPLOAD_DIR, { recursive: true });
-  await writeFile(path.join(UPLOAD_DIR, storedName), bytes);
+  await mkdir(/*turbopackIgnore: true*/ UPLOAD_DIR, { recursive: true });
+  await writeFile(uploadPath(storedName), bytes);
 
   return { storedName, size: bytes.byteLength };
 }
@@ -72,7 +91,7 @@ export async function readPdf(storedName: string): Promise<Buffer> {
   if (!STORED_NAME_PATTERN.test(storedName)) {
     throw new UploadError(`Refusing to read suspicious filename: ${storedName}`);
   }
-  return readFile(path.join(UPLOAD_DIR, storedName));
+  return readFile(uploadPath(storedName));
 }
 
 /**
@@ -85,7 +104,7 @@ export async function readPdf(storedName: string): Promise<Buffer> {
 export async function deletePdf(storedName: string): Promise<void> {
   if (!STORED_NAME_PATTERN.test(storedName)) return;
   try {
-    await unlink(path.join(UPLOAD_DIR, storedName));
+    await unlink(uploadPath(storedName));
   } catch {
     // Already gone — nothing to do.
   }

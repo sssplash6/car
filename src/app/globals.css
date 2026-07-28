@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Brand palette — shared with web/ and Weak/ (ONBOARDING.md §4). Components read
+   the semantic tokens (bg-surface, text-ink, border-line), never raw hex. */
+@theme {
+  --color-canvas: #f4f5f6; /* page background */
+  --color-surface: #ffffff; /* raised areas */
+  --color-line: #e5e6e8; /* borders / rules */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-brand: #124b84; /* deep blue — chrome, actions, links */
+  --color-brand-dark: #0e3c6a; /* hover */
+  --color-brand-soft: #e7eef5; /* tint background */
+
+  --color-accent: #f18d05; /* orange — emphasis */
+  --color-accent-dark: #ed7a2d; /* hover */
+  --color-accent-soft: #fdebcf; /* tint background */
+  /* The bright accent sits at ~2.5:1 on white — fine for rules and fills, too
+     light for text. accent-ink is the same hue darkened to pass AA (~5:1). */
+  --color-accent-ink: #b45309;
+
+  --color-ink: #1a2733; /* primary text */
+  --color-muted-fg: #6b7480; /* secondary text */
+
+  /* Review-status marks. Deliberately NOT the brand or accent hues: those mean
+     "action" and "emphasis", these mean state (§4). Mapped in StatusPill:
+     published → good, under review → warn, needs revision → bad, draft → mute.
+     Validated for colour-vision separation on the surface — re-check before
+     changing a value, and keep the dark steps below in step. */
+  --color-chart-good: #047857; /* emerald 700 */
+  --color-chart-warn: #d97706; /* amber 600 */
+  --color-chart-bad: #b91c1c; /* red 700 */
+  --color-chart-mute: #94a3b8; /* slate 400 — the intentionally grey slot */
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Serif headings, system sans for everything else (§4 visual taste). A system
+     serif stack rather than a webfont — one less blocking request, and this is a
+     reading site where first paint matters. */
+  --font-serif: Georgia, "Times New Roman", serif;
+
+  /* Motion: strong ease-out on everything interactive; default curves feel flat. */
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: var(--ease-out-strong);
+}
+
+/* Dark theme — override the semantic tokens only, so no component needs `dark:`
+   variants. `:root[data-theme]` outranks the @theme :root defaults.
+   prefers-color-scheme is honoured too, for visitors who never touch a toggle. */
+:root {
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --color-canvas: #0d1219;
+    --color-surface: #161d26;
+    --color-line: #29323d;
+
+    /* Brightened so white labels stay legible on bg-brand and text-brand links
+       stay legible on the dark surface — one token serving both, as in light. */
+    --color-brand: #3d84c9;
+    --color-brand-dark: #5197d6; /* hover — lighter than brand in dark */
+    --color-brand-soft: #17293d;
+
+    --color-accent: #f79a2e;
+    --color-accent-dark: #ffb057;
+    --color-accent-soft: #33240f;
+    --color-accent-ink: #e0912f; /* orange text, readable on dark */
+
+    --color-ink: #e7ebf0;
+    --color-muted-fg: #98a2b0;
+
+    /* Re-stepped for the dark surface rather than flipped — same validation. */
+    --color-chart-good: #0d9488; /* teal 600 */
+    --color-chart-warn: #d97706; /* amber 600 */
+    --color-chart-bad: #e11d48; /* rose 600 */
+    --color-chart-mute: #8595a8;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* The abstract is author-entered plain text, not markup. Preserving newlines is
+   what makes paragraph breaks survive without giving authors an HTML surface. */
+.abstract-body {
+  white-space: pre-line;
 }

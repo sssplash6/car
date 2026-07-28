@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Pin the workspace root. Without this Next walks up looking for a lockfile
+    // and finds a stray one in the home directory, then traces that entire tree
+    // into the build — which is what produced the "whole project was traced
+    // unintentionally" warning. DO NOT remove unless that lockfile is gone.
+    root: __dirname,
+  },
   experimental: {
     serverActions: {
       // Server action bodies are capped at 1 MB by default, which rejects almost
