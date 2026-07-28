@@ -32,6 +32,21 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...but .env.example IS the documentation for every var — always commit it.
+!.env.example
+
+# Prisma: generated client is a build artifact, regenerated on postinstall.
+/src/generated/
+
+# Local SQLite database and its WAL sidecars. In production this lives on the
+# Render disk mount instead, well outside the checked-out repo.
+/prisma/*.db
+/prisma/*.db-journal
+/prisma/*.db-wal
+/prisma/*.db-shm
+
+# Local upload directory. Production writes to the disk mount (UPLOAD_DIR).
+/var/uploads/
 
 # vercel
 .vercel
