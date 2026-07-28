@@ -1,0 +1,144 @@
+# ==============================================================================
+# Render Blueprint for the paper publication site
+# ==============================================================================
+# Spec reference: https://render.com/docs/blueprint-spec
+# JSON Schema:    https://render.com/schema/render.yaml.json
+#
+# WHY THESE CHOICES
+#
+#   type: web       Next.js binds $PORT. (Contrast the Telegram bots in this
+#                   workspace, which are workers and never bind a port.)
+#
+#   plan: starter   NOT free — a service with a persistent disk cannot use the
+#                   free instance type, and this one needs a disk (below). Free
+#                   would also spin down on idle, which for a public content site
+#                   means a cold start on the first visitor after a quiet spell.
+#
+#   disk:           Render's filesystem is ephemeral: "any changes you make to a
+#                   service's local files are lost every time the service
+#                   redeploys or restarts". Both the SQLite database AND every
+#                   uploaded PDF live here, and neither is recoverable from
+#                   anywhere else. Without a disk each deploy silently empties
+#                   the site. https://render.com/docs/disks
+#
+# THE SQLITE TRADEOFF — recorded so it does not look accidental
+#
+#   Weak/ (the other Next app here) uses Postgres. This site deliberately uses
+#   SQLite on a disk instead, accepting two consequences:
+#
+#     * Attaching a disk DISABLES zero-downtime deploys — Render stops the old
+#       instance before starting the new one, so every deploy is a few seconds of
+#       downtime. Acceptable for a reading site.
+#     * A disk-backed service CANNOT be scaled to multiple instances. numInstances
+#       stays 1 forever. Two instances would also mean two writers against one
+#       SQLite file, which is a corruption risk, not just a scaling limit.
+#
+#   If either becomes a problem, the migration is to Postgres + object storage for
+#   the PDFs, not to more instances.
+# ==============================================================================
+
+# Preview environments are disabled. Google OAuth only accepts pre-registered
+# redirect URIs, and a preview env gets a fresh unpredictable hostname — so
+# sign-in is broken there by construction. Each preview would also provision its
+# own billable disk.
+# ('off' is quoted because bare `off` is a YAML boolean.)
+previews:
+  generation: 'off'
+
+services:
+  - type: web
+    name: car-papers
+    runtime: node
+
+    # A disk requires a paid instance type; starter is the floor.
+    plan: starter
+
+    # Region is PERMANENT — changing it means deleting and recreating the service
+    # and its disk. Keep it matching the rest of the workspace.
+    region: oregon
+
+    # Set explicitly so a stray branch never deploys.
+    branch: main
+
+    # postinstall runs `prisma generate`, so the client is built here. Note that
+    # migrations deliberately do NOT run at build time: the disk is not mounted
+    # during the build, so there is no database to migrate yet.
+    buildCommand: npm ci && npm run build
+
+    # `migrate deploy` (not `migrate dev`) applies pending migrations without ever
+    # prompting or resetting. It runs at START, not build, because that is the
+    # first moment the disk exists. On the very first boot this also creates the
+    # database file.
+    startCommand: npx prisma migrate deploy && npm start
+
+    # Push-to-deploy is fine here — unlike the Telegram bots, there is no
+    # in-memory conversation state to drop and no queued updates to lose. The only
+    # cost is the few seconds of disk-deploy downtime noted above.
+    autoDeployTrigger: commit
+
+    # The public index. Cheap, needs no auth, and touches the database, so it
+    # fails if the disk or migrations are broken — which is exactly what a health
+    # check should catch.
+    healthCheckPath: /
+
+    # --------------------------------------------------------------------------
+    # Persistent disk — SQLite database AND uploaded PDFs
+    # --------------------------------------------------------------------------
+    # ONLY paths under mountPath survive a deploy. The checked-out repo at
+    # /opt/render/project/src does NOT, which is why DATABASE_URL and UPLOAD_DIR
+    # below must both point in here. Getting them wrong is silent data loss.
+    #
+    # Size for PDF growth, not for rows: the database is tiny, but every submitted
+    # paper is up to 10 MB and nothing is ever deleted automatically. 1 GB holds
+    # roughly 100 papers at the cap. You can grow a disk later but you can NEVER
+    # shrink it. $0.25/GB/month. Render snapshots it every 24h.
+    disk:
+      name: car-papers-data
+      mountPath: /var/data
+      sizeGB: 1
+
+    envVars:
+      # Pin the major version so a Render default bump cannot change the runtime
+      # under us. Matches the local development version.
+      - key: NODE_VERSION
+        value: 22.23.1
+
+      # ---- Paths that MUST live on the persistent disk -------------------
+      # DATABASE_URL sits at the mount ROOT on purpose: sqlite will not create
+      # missing parent directories, so /var/data/db/car.db would fail on first
+      # boot. UPLOAD_DIR may nest — that code calls mkdir recursively.
+      - key: DATABASE_URL
+        value: file:/var/data/car.db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+
+      # ---- Secrets, prompted in the Dashboard ----------------------------
+      # `sync: false` means "prompt me, never store it in git". Render prompts for
+      # these ONLY during initial Blueprint creation; later changes are made by
+      # hand in the Dashboard.
+      #
+      # AUTH_SECRET: generate with `npx auth secret`. Without a stable value every
+      # restart signs all users out.
+      - key: AUTH_SECRET
+        sync: false
+      # The Google OAuth client. Its authorized redirect URI must be
+      # https://YOUR-DOMAIN/api/auth/callback/google or sign-in fails with
+      # redirect_uri_mismatch.
+      - key: AUTH_GOOGLE_ID
+        sync: false
+      - key: AUTH_GOOGLE_SECRET
+        sync: false
+      # Comma-separated editor emails. Blank means nobody can publish anything.
+      - key: ADMIN_EMAILS
+        sync: false
+      # Absolute public origin, no trailing slash. Wrong or missing values emit
+      # canonical tags pointing somewhere else, which suppresses the real pages
+      # in search.
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false
+      # Resend. When blank, decision emails are logged instead of sent — the
+      # review flow still works, authors just are not notified.
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
