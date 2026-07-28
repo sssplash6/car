@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { googleEnabled } from "@/auth.config";
-import { signInWithGoogle } from "@/app/_actions/auth";
+import { devLoginEnabled } from "@/auth";
+import { signInAsDev, signInWithGoogle } from "@/app/_actions/auth";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -52,6 +53,48 @@ export default async function LoginPage({ searchParams }: PageProps) {
             Google sign-in is not configured on this deployment. Set
             AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.
           </p>
+        )}
+
+        {/* Local testing only. This block cannot render off localhost — see the
+            double guard on devLoginEnabled in src/auth.ts. */}
+        {devLoginEnabled && (
+          <div className="mt-8 rounded-md border border-dashed border-chart-warn/50 p-4">
+            <p className="text-xs font-medium text-chart-warn">
+              Dev login — localhost only
+            </p>
+            <p className="mt-1 text-xs text-muted-fg">
+              Bypasses Google entirely. The editor account is promoted through the
+              real ADMIN_EMAILS path, so it only works if that address is listed.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <form
+                action={async () => {
+                  "use server";
+                  await signInAsDev("reader");
+                }}
+              >
+                <button
+                  type="submit"
+                  className="cursor-pointer rounded-md border border-line px-3 py-2 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
+                >
+                  Continue as reader
+                </button>
+              </form>
+              <form
+                action={async () => {
+                  "use server";
+                  await signInAsDev("admin");
+                }}
+              >
+                <button
+                  type="submit"
+                  className="cursor-pointer rounded-md border border-line px-3 py-2 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
+                >
+                  Continue as editor
+                </button>
+              </form>
+            </div>
+          </div>
         )}
       </div>
     </div>
