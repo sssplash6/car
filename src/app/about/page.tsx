@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getBlock } from "@/lib/content";
+import { COPY } from "@/lib/content";
 import { PUBLISHER_NAME, REGION_COUNTRIES } from "@/lib/site";
 import { slotImage } from "@/lib/placeholderImage";
 import { Reveal } from "@/app/_components/Reveal";
@@ -13,19 +13,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-// Every section here is a content block with a placeholder fallback, so the real
-// copy can be pasted in from the editor dashboard without a deploy.
+// Every section here is placeholder text from src/lib/content.ts.
 //
 // No eyebrows on this page: the homepage already spends the page-level budget, and
 // each section here has a real heading doing the same job. The label-left,
 // body-right split is its own layout family, distinct from anything on the
 // homepage.
-export default async function AboutPage() {
-  const [main, masthead, submissions] = await Promise.all([
-    getBlock("about.main"),
-    getBlock("about.masthead"),
-    getBlock("about.submissions"),
-  ]);
+export default function AboutPage() {
+  const { main, masthead, submissions } = COPY.about;
 
   return (
     <>

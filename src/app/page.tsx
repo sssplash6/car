@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
-import { getBlock } from "@/lib/content";
+import { COPY } from "@/lib/content";
 import { REGION_COUNTRIES, formatDate } from "@/lib/site";
 import { paperImage, slotImage } from "@/lib/placeholderImage";
 import { Reveal } from "@/app/_components/Reveal";
@@ -11,32 +11,28 @@ import { Reveal } from "@/app/_components/Reveal";
 // are the site's entire search presence, so gating them would delete its search
 // traffic.
 //
-// All copy comes from content blocks with placeholder fallbacks, so the editors can
-// replace it from the dashboard without a deploy.
+// All copy is placeholder text from src/lib/content.ts.
 //
 // Layout families are deliberately varied so no two sections share a shape:
 // asymmetric split hero, full-bleed lead article, divided list plus aside, and a
 // coverage strip. Eyebrows are rationed to two on the whole page.
 
 export default async function HomePage() {
-  const [hero, editorial, callForPapers, published] = await Promise.all([
-    getBlock("home.hero"),
-    getBlock("home.editorial"),
-    getBlock("home.callForPapers"),
-    prisma.paper.findMany({
-      where: { status: PAPER_STATUS.PUBLISHED },
-      orderBy: { publishedAt: "desc" },
-      take: 7, // one lead plus six in the list
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        abstract: true,
-        authorLine: true,
-        publishedAt: true,
-      },
-    }),
-  ]);
+  const { hero, editorial, callForPapers } = COPY.home;
+
+  const published = await prisma.paper.findMany({
+    where: { status: PAPER_STATUS.PUBLISHED },
+    orderBy: { publishedAt: "desc" },
+    take: 7, // one lead plus six in the list
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      abstract: true,
+      authorLine: true,
+      publishedAt: true,
+    },
+  });
 
   const [lead, ...rest] = published;
 

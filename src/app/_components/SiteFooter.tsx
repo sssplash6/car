@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getBlock } from "@/lib/content";
+import { COPY } from "@/lib/content";
 import { PUBLISHER_NAME, SITE_NAME } from "@/lib/site";
 
 // Footer. Carries the publisher credit: the review fronts its own brand, and
@@ -7,9 +7,7 @@ import { PUBLISHER_NAME, SITE_NAME } from "@/lib/site";
 //
 // No eyebrows here, deliberately. The page above already spends its budget of two,
 // and column headings in a footer read as labels rather than as section markers.
-export async function SiteFooter() {
-  const credit = await getBlock("footer.credit");
-
+export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-rule bg-surface">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-14 sm:grid-cols-[1.6fr_1fr_1fr]">
@@ -18,7 +16,7 @@ export async function SiteFooter() {
             {SITE_NAME}
           </p>
           <p className="prose-plain mt-3 max-w-xs text-sm leading-relaxed text-muted-fg">
-            {credit.body}
+            {COPY.footer.credit}
           </p>
         </div>
 

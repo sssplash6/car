@@ -37,7 +37,6 @@ model User {
   papers        Paper[]        @relation("PapersSubmitted")
   reviewed      Paper[]        @relation("PapersReviewed")
   notifications Notification[]
-  editedBlocks  ContentBlock[] @relation("BlocksEdited")
 }
 
 model Account {
@@ -168,19 +167,4 @@ model EmailLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
-}
-
-// Admin-editable copy, so placeholder text can be replaced without a deploy.
-//
-// Every key has a hardcoded fallback in src/lib/content.ts, so a fresh database
-// renders complete pages with nothing seeded. A missing row is normal, not an
-// error state.
-model ContentBlock {
-  key   String  @id
-  title String?
-  body  String?
-
-  updatedAt   DateTime @updatedAt
-  updatedById String?
-  updatedBy   User?    @relation("BlocksEdited", fields: [updatedById], references: [id], onDelete: SetNull)
 }

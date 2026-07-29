@@ -29,7 +29,6 @@ export default async function AdminLayout({
     { href: "/admin/queue", label: "Review queue", count: pending },
     { href: "/admin/users", label: "Readers" },
     { href: "/admin/emails", label: "Email log" },
-    { href: "/admin/content", label: "Site copy" },
   ];
 
   return (

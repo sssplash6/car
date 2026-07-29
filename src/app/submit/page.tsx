@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/dal";
-import { getBlock } from "@/lib/content";
+import { COPY } from "@/lib/content";
 import { SubmitForm } from "@/app/submit/_components/SubmitForm";
 import { PageShell } from "@/app/_components/PageShell";
 
@@ -14,7 +14,7 @@ export default async function SubmitPage() {
   // cookie check. This is the check that actually holds.
   await requireUser();
 
-  const intro = await getBlock("submit.intro");
+  const intro = COPY.submit.intro;
 
   return (
     <PageShell>
