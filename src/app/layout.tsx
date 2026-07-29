@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { EB_Garamond, Geist } from "next/font/google";
 import { SiteHeader } from "@/app/_components/SiteHeader";
+import { SiteFooter } from "@/app/_components/SiteFooter";
 import { SITE_NAME, siteUrl } from "@/lib/site";
 import "./globals.css";
 
@@ -9,9 +10,14 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Display serif for the masthead and headings. Serif is justified here because
+// the brief is an actual publication, which is the one case the house rules allow
+// it as a default; Garamond specifically because it reads as academic press
+// rather than as fashion editorial. The only webfont the site loads besides Geist.
+const displaySerif = EB_Garamond({
+  variable: "--font-display",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -19,11 +25,11 @@ export const metadata: Metadata = {
   // it Next emits relative og:url values, which most crawlers ignore.
   metadataBase: new URL(siteUrl()),
   title: {
-    default: SITE_NAME,
-    template: `%s — ${SITE_NAME}`,
+    default: `${SITE_NAME}: research and analysis on Central Asia`,
+    template: `%s · ${SITE_NAME}`,
   },
   description:
-    "Research papers and essays from students and faculty at Freshman Academy.",
+    "Research, analysis and essays on the politics, economies and societies of Central Asia.",
 };
 
 export default function RootLayout({
@@ -34,18 +40,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${displaySerif.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <SiteHeader />
-        {/* Narrow measure, centered, no card-on-tinted-background: the page IS
-            the card (§4 visual taste). */}
-        <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
-          {children}
-        </main>
-        <footer className="border-t border-line px-6 py-8 text-center text-sm text-muted-fg">
-          {SITE_NAME}
-        </footer>
+        {/* No width constraint here: the homepage runs full-bleed sections while
+            article pages set their own narrow measure. Constraining globally would
+            box the hero in. */}
+        <main className="flex-1">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );

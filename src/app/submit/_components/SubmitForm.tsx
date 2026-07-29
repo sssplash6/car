@@ -15,7 +15,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="cursor-pointer rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60"
+      className="cursor-pointer rounded bg-accent px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "Uploading…" : "Submit for review"}
     </button>
@@ -26,9 +26,9 @@ export function SubmitForm() {
   const [state, formAction] = useActionState<SubmitState, FormData>(submitPaper, {});
 
   return (
-    <form action={formAction} className="mt-10 border-t border-line pt-10">
+    <form action={formAction} className="mt-10 border-t border-rule pt-10">
       {state.error && (
-        <p className="mb-8 rounded-md border border-chart-bad/40 px-4 py-3 text-sm text-chart-bad">
+        <p className="mb-8 rounded border border-state-bad/40 px-4 py-3 text-sm text-state-bad">
           {state.error}
         </p>
       )}
@@ -40,7 +40,7 @@ export function SubmitForm() {
             name="title"
             required
             maxLength={300}
-            className="mt-2 w-full rounded-md border border-line bg-surface px-3 py-2 text-ink outline-none transition-colors focus:border-brand"
+            className="mt-2 w-full rounded border border-rule bg-surface px-3 py-2 text-ink outline-none transition-colors focus:border-accent"
           />
         </label>
 
@@ -54,14 +54,14 @@ export function SubmitForm() {
             required
             maxLength={300}
             placeholder="A. Karimova, R. Patel"
-            className="mt-2 w-full rounded-md border border-line bg-surface px-3 py-2 text-ink outline-none transition-colors focus:border-brand"
+            className="mt-2 w-full rounded border border-rule bg-surface px-3 py-2 text-ink outline-none transition-colors focus:border-accent"
           />
         </label>
 
         <label className="block">
           <span className="text-sm font-medium text-ink">Abstract</span>
           <span className="mt-1 block text-xs text-muted-fg">
-            Public and indexed by search engines. The PDF itself is not — this is
+            Public and indexed by search engines. The PDF itself is not, so this is
             the only part of your paper that can be found by search, so make it
             complete.
           </span>
@@ -71,7 +71,7 @@ export function SubmitForm() {
             rows={10}
             minLength={100}
             maxLength={5000}
-            className="mt-2 w-full rounded-md border border-line bg-surface px-3 py-2 leading-relaxed text-ink outline-none transition-colors focus:border-brand"
+            className="mt-2 w-full rounded border border-rule bg-surface px-3 py-2 leading-relaxed text-ink outline-none transition-colors focus:border-accent"
           />
         </label>
 
@@ -87,7 +87,7 @@ export function SubmitForm() {
             name="file"
             required
             accept="application/pdf,.pdf"
-            className="mt-2 block w-full text-sm text-muted-fg file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-brand-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-brand"
+            className="mt-2 block w-full text-sm text-muted-fg file:mr-4 file:cursor-pointer file:rounded file:border-0 file:bg-accent-soft file:px-4 file:py-2 file:text-sm file:font-medium file:text-accent"
           />
         </label>
       </div>

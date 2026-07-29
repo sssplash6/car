@@ -1,4 +1,6 @@
+import Link from "next/link";
 import type { Metadata } from "next";
+import { GoogleLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { googleEnabled } from "@/auth.config";
 import { devLoginEnabled } from "@/auth";
 import { signInAsDev, signInWithGoogle } from "@/app/_actions/auth";
@@ -18,20 +20,25 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const { next, error } = await searchParams;
 
   return (
-    <div className="mx-auto max-w-md">
-      <h1 className="font-serif text-3xl text-ink">Sign in</h1>
-      <p className="mt-3 text-muted-fg">
-        Reading abstracts needs no account. Sign in to download full papers or to
-        submit your own.
+    <div className="mx-auto w-full max-w-md px-6 py-16">
+      <h1 className="display-flush font-serif text-[2.5rem] leading-tight tracking-tight text-ink">
+        Sign in
+      </h1>
+      <p className="mt-4 leading-relaxed text-ink-soft">
+        Abstracts are free to read without an account. Sign in to download full
+        papers or to submit your own work.
       </p>
 
       {error && (
-        <p className="mt-6 rounded-md border border-chart-bad/40 px-4 py-3 text-sm text-chart-bad">
+        <p
+          role="alert"
+          className="mt-7 rounded border border-state-bad/40 bg-surface px-4 py-3 text-sm text-state-bad"
+        >
           That sign-in attempt did not complete. Please try again.
         </p>
       )}
 
-      <div className="mt-10 border-t border-line pt-10">
+      <div className="mt-9 border-t border-rule pt-9">
         {googleEnabled ? (
           <form
             action={async () => {
@@ -41,32 +48,33 @@ export default async function LoginPage({ searchParams }: PageProps) {
           >
             <button
               type="submit"
-              className="w-full cursor-pointer rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+              className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded bg-accent px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-accent-dark active:translate-y-px"
             >
+              <GoogleLogoIcon size={17} weight="bold" aria-hidden="true" />
               Continue with Google
             </button>
           </form>
         ) : (
-          // Configuration problem, not a user error — say so plainly instead of
-          // rendering a button that dead-ends on Google's error page.
-          <p className="rounded-md border border-chart-warn/40 px-4 py-3 text-sm text-chart-warn">
+          // A configuration problem, not a user error, so say so plainly rather
+          // than rendering a button that dead-ends on Google's error page.
+          <p className="rounded border border-state-warn/40 bg-surface px-4 py-3 text-sm text-state-warn">
             Google sign-in is not configured on this deployment. Set
             AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.
           </p>
         )}
 
-        {/* Local testing only. This block cannot render off localhost — see the
+        {/* Local testing only. This block cannot render off localhost: see the
             double guard on devLoginEnabled in src/auth.ts. */}
         {devLoginEnabled && (
-          <div className="mt-8 rounded-md border border-dashed border-chart-warn/50 p-4">
-            <p className="text-xs font-medium text-chart-warn">
-              Dev login — localhost only
+          <div className="mt-8 rounded border border-dashed border-state-warn/50 p-4">
+            <p className="text-xs font-medium text-state-warn">
+              Dev login, localhost only
             </p>
-            <p className="mt-1 text-xs text-muted-fg">
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-fg">
               Bypasses Google entirely. The editor account is promoted through the
               real ADMIN_EMAILS path, so it only works if that address is listed.
             </p>
-            <div className="mt-4 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-wrap gap-2.5">
               <form
                 action={async () => {
                   "use server";
@@ -75,7 +83,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
               >
                 <button
                   type="submit"
-                  className="cursor-pointer rounded-md border border-line px-3 py-2 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
+                  className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
                 >
                   Continue as reader
                 </button>
@@ -88,7 +96,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
               >
                 <button
                   type="submit"
-                  className="cursor-pointer rounded-md border border-line px-3 py-2 text-sm text-ink transition-colors hover:border-brand hover:text-brand"
+                  className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
                 >
                   Continue as editor
                 </button>
@@ -97,6 +105,14 @@ export default async function LoginPage({ searchParams }: PageProps) {
           </div>
         )}
       </div>
+
+      <p className="mt-9 text-sm text-muted-fg">
+        Just here to read?{" "}
+        <Link href="/papers" className="text-accent hover:text-accent-dark">
+          Browse the papers
+        </Link>
+        .
+      </p>
     </div>
   );
 }

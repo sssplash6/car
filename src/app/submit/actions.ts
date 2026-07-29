@@ -6,6 +6,8 @@ import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS, buildUniqueSlug } from "@/lib/papers";
 import { UploadError, savePdf } from "@/lib/storage";
+import { NOTIFICATION_KIND, notify } from "@/lib/notifications";
+import { notifyEditorsOfSubmission } from "@/lib/email";
 
 // Field limits. Enforced server-side because the matching maxLength attributes in
 // the form are a hint to the browser, not a constraint — a crafted POST ignores
@@ -76,7 +78,7 @@ export async function submitPaper(
     return hit !== null;
   });
 
-  await prisma.paper.create({
+  const paper = await prisma.paper.create({
     data: {
       slug,
       title,
@@ -91,8 +93,32 @@ export async function submitPaper(
     },
   });
 
+  // Tell the editors. Both calls swallow their own failures — the paper is already
+  // saved, and neither a missing notification nor a mail outage should make a
+  // successful submission look like it failed to the author.
+  const editors = await prisma.user.findMany({
+    where: { role: "ADMIN" },
+    select: { id: true, email: true },
+  });
+
+  await notify({
+    userIds: editors.map((e) => e.id),
+    kind: NOTIFICATION_KIND.SUBMISSION_RECEIVED,
+    title: "New submission awaiting review",
+    body: `${title} · ${authorLine}`,
+    href: "/admin/queue",
+  });
+
+  await notifyEditorsOfSubmission({
+    to: editors.map((e) => e.email).filter((e): e is string => !!e),
+    paperId: paper.id,
+    title,
+    authorLine,
+  });
+
   revalidatePath("/submissions");
   revalidatePath("/admin");
+  revalidatePath("/admin/queue");
 
   // redirect() throws, so it must sit outside the try above or it would be
   // swallowed and reported to the user as an upload failure.

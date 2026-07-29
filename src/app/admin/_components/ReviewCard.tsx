@@ -21,18 +21,18 @@ export function ReviewCard({
   submittedAt: string;
 }) {
   return (
-    <article className="border-b border-line pb-10 last:border-b-0">
+    <article className="border-b border-rule pb-10 last:border-b-0">
       <h3 className="font-serif text-xl text-ink">{title}</h3>
       <p className="mt-1.5 text-sm text-muted-fg">{authorLine}</p>
       <p className="mt-0.5 text-xs text-muted-fg">
         Submitted {submittedAt} by {submitterLabel}
       </p>
 
-      <p className="abstract-body mt-5 leading-relaxed text-ink/90">{abstract}</p>
+      <p className="prose-plain mt-5 leading-relaxed text-ink/90">{abstract}</p>
 
       <a
         href={`/api/papers/${id}/file`}
-        className="mt-5 inline-block text-sm text-brand transition-colors hover:text-brand-dark"
+        className="mt-5 inline-block text-sm text-accent transition-colors hover:text-accent-dark"
       >
         Read the PDF
       </a>
@@ -42,7 +42,7 @@ export function ReviewCard({
           <input type="hidden" name="id" value={id} />
           <button
             type="submit"
-            className="cursor-pointer rounded-md bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-dark"
+            className="cursor-pointer rounded bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
           >
             Publish
           </button>
@@ -55,11 +55,11 @@ export function ReviewCard({
               name="reviewNote"
               maxLength={2000}
               placeholder="What needs revising? (shown to the author)"
-              className="flex-1 rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-brand"
+              className="flex-1 rounded border border-rule bg-surface px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-accent"
             />
             <button
               type="submit"
-              className="cursor-pointer rounded-md border border-chart-bad/40 px-4 py-2 text-sm font-medium text-chart-bad transition-colors hover:bg-chart-bad/5"
+              className="cursor-pointer rounded border border-state-bad/40 px-4 py-2 text-sm font-medium text-state-bad transition-colors hover:bg-state-bad/5"
             >
               Return for revision
             </button>

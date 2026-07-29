@@ -1,83 +1,82 @@
 @import "tailwindcss";
 
-/* Brand palette — shared with web/ and Weak/ (ONBOARDING.md §4). Components read
-   the semantic tokens (bg-surface, text-ink, border-line), never raw hex. */
+/* Central Asian Review.
+   Its own editorial identity, distinct from the freshman.academy navy/orange used
+   by web/ and Weak/ (ONBOARDING.md §4). The review fronts its own brand and
+   credits the academy in the footer.
+
+   Palette is deliberately COOL neutral rather than the warm cream/beige that
+   "editorial" usually attracts: this is a research publication, and the cool
+   grey reads institutional rather than artisanal. One accent, used only for
+   links and actions.
+
+   Components read the semantic tokens (bg-surface, text-ink, border-rule), never
+   raw hex, so dark mode overrides tokens rather than components. */
 @theme {
-  --color-canvas: #f4f5f6; /* page background */
-  --color-surface: #ffffff; /* raised areas */
-  --color-line: #e5e6e8; /* borders / rules */
+  --color-canvas: #f6f6f4; /* paper, faintly cool */
+  --color-surface: #fdfdfc; /* raised areas, inputs */
+  --color-rule: #e2e2dd; /* hairlines; this design uses rules, not cards */
+  --color-rule-strong: #c6c6bf; /* dividers that must read as deliberate */
 
-  --color-brand: #124b84; /* deep blue — chrome, actions, links */
-  --color-brand-dark: #0e3c6a; /* hover */
-  --color-brand-soft: #e7eef5; /* tint background */
+  --color-ink: #16181b; /* primary text, cool near-black (never #000) */
+  --color-ink-soft: #3f444a; /* body copy at length */
+  --color-muted-fg: #6c7176; /* metadata, captions */
 
-  --color-accent: #f18d05; /* orange — emphasis */
-  --color-accent-dark: #ed7a2d; /* hover */
-  --color-accent-soft: #fdebcf; /* tint background */
-  /* The bright accent sits at ~2.5:1 on white — fine for rules and fills, too
-     light for text. accent-ink is the same hue darkened to pass AA (~5:1). */
-  --color-accent-ink: #b45309;
+  /* Single accent: the deep teal of regional tilework. The one saturated colour
+     in the system, so it is spent only on interactivity. ~6.2:1 on canvas. */
+  --color-accent: #0d6a75;
+  --color-accent-dark: #094f58; /* hover */
+  --color-accent-soft: #e4eff0; /* tint background */
 
-  --color-ink: #1a2733; /* primary text */
-  --color-muted-fg: #6b7480; /* secondary text */
-
-  /* Review-status marks. Deliberately NOT the brand or accent hues: those mean
-     "action" and "emphasis", these mean state (§4). Mapped in StatusPill:
-     published → good, under review → warn, needs revision → bad, draft → mute.
-     Validated for colour-vision separation on the surface — re-check before
-     changing a value, and keep the dark steps below in step. */
-  --color-chart-good: #047857; /* emerald 700 */
-  --color-chart-warn: #d97706; /* amber 600 */
-  --color-chart-bad: #b91c1c; /* red 700 */
-  --color-chart-mute: #94a3b8; /* slate 400 — the intentionally grey slot */
+  /* Review-status marks, kept separate from the accent: the accent means
+     "action", these mean state. All four clear 4.5:1 on canvas; re-check
+     contrast before changing a value and keep the dark steps in step. */
+  --color-state-good: #1c6a4c;
+  --color-state-warn: #8a5a10;
+  --color-state-bad: #9c2f24;
+  --color-state-mute: #7d8288;
 
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  /* Serif headings, system sans for everything else (§4 visual taste). A system
-     serif stack rather than a webfont — one less blocking request, and this is a
-     reading site where first paint matters. */
-  --font-serif: Georgia, "Times New Roman", serif;
+  /* EB Garamond: an actual academic-press serif. Serif is justified here because
+     the brief IS a publication (the one case the house design rules allow it),
+     and Garamond carries scholarly authority without the Playfair cliche. */
+  --font-serif: var(--font-display);
 
-  /* Motion: strong ease-out on everything interactive; default curves feel flat. */
-  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
-  --default-transition-duration: 150ms;
+  /* Motion. One shared ease so every transition on the site feels related.
+     Duration stays short: this is a reading site, not a showcase. */
+  --ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1);
+  --default-transition-duration: 180ms;
   --default-transition-timing-function: var(--ease-out-strong);
 }
 
-/* Dark theme — override the semantic tokens only, so no component needs `dark:`
-   variants. `:root[data-theme]` outranks the @theme :root defaults.
-   prefers-color-scheme is honoured too, for visitors who never touch a toggle. */
 :root {
   color-scheme: light;
 }
 
+/* Dark mode overrides the same tokens, so no component needs `dark:` variants.
+   Re-stepped for a dark surface rather than mechanically inverted. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --color-canvas: #0d1219;
-    --color-surface: #161d26;
-    --color-line: #29323d;
+    --color-canvas: #121415;
+    --color-surface: #1a1d1f;
+    --color-rule: #2c3033;
+    --color-rule-strong: #434749;
 
-    /* Brightened so white labels stay legible on bg-brand and text-brand links
-       stay legible on the dark surface — one token serving both, as in light. */
-    --color-brand: #3d84c9;
-    --color-brand-dark: #5197d6; /* hover — lighter than brand in dark */
-    --color-brand-soft: #17293d;
+    --color-ink: #edeeec;
+    --color-ink-soft: #c7cac6;
+    --color-muted-fg: #969a9c;
 
-    --color-accent: #f79a2e;
-    --color-accent-dark: #ffb057;
-    --color-accent-soft: #33240f;
-    --color-accent-ink: #e0912f; /* orange text, readable on dark */
+    /* Lifted so it stays legible on the dark surface and as button text. */
+    --color-accent: #4aa8b3;
+    --color-accent-dark: #63c0ca; /* hover is lighter in dark */
+    --color-accent-soft: #10292c;
 
-    --color-ink: #e7ebf0;
-    --color-muted-fg: #98a2b0;
-
-    /* Re-stepped for the dark surface rather than flipped — same validation. */
-    --color-chart-good: #0d9488; /* teal 600 */
-    --color-chart-warn: #d97706; /* amber 600 */
-    --color-chart-bad: #e11d48; /* rose 600 */
-    --color-chart-mute: #8595a8;
+    --color-state-good: #4fae86;
+    --color-state-warn: #cf9a3f;
+    --color-state-bad: #e0776a;
+    --color-state-mute: #969a9c;
   }
 }
 
@@ -87,8 +86,36 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
-/* The abstract is author-entered plain text, not markup. Preserving newlines is
-   what makes paragraph breaks survive without giving authors an HTML surface. */
-.abstract-body {
+/* Author-entered plain text (abstracts, content blocks) is not markup.
+   Preserving newlines keeps paragraph breaks without granting an HTML surface. */
+.prose-plain {
   white-space: pre-line;
+}
+
+/* Small-caps section label. Rationed to at most one per three sections, so the
+   page does not acquire the templated eyebrow-above-every-heading rhythm. */
+.eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted-fg);
+}
+
+/* Optical correction for large Garamond display type, which carries noticeable
+   left side-bearing at scale and otherwise looks indented against a rule. */
+.display-flush {
+  margin-left: -0.06em;
+}
+
+/* Reduced motion is honoured by each Motion component via useReducedMotion.
+   This is the belt-and-braces CSS fallback for anything purely declarative. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

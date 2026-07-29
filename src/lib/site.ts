@@ -13,7 +13,19 @@ export function siteUrl(): string {
   return raw.replace(/\/+$/, "");
 }
 
-export const SITE_NAME = "Freshman Academy Papers";
+export const SITE_NAME = "Central Asian Review";
+
+/** Shown in the footer. The review fronts its own brand; the academy publishes it. */
+export const PUBLISHER_NAME = "Freshman Academy";
+
+/** Region the review covers. Placeholder ordering — confirm with the editors. */
+export const REGION_COUNTRIES = [
+  "Kazakhstan",
+  "Kyrgyzstan",
+  "Tajikistan",
+  "Turkmenistan",
+  "Uzbekistan",
+];
 
 /**
  * Format a date for display.

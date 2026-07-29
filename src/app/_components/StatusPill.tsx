@@ -1,14 +1,14 @@
 import { STATUS_LABEL, isPaperStatus, type PaperStatus } from "@/lib/papers";
 
-// Status uses the chart triad, not brand colours — brand means "action", these
-// mean state (ONBOARDING.md §4). Text sits on a tinted background of the same
-// hue rather than being coloured text alone, so the meaning survives for
-// colour-blind readers via the label itself.
+// Status uses the state triad, not the accent colour — the accent means "action",
+// these mean state (ONBOARDING.md §4). The label carries the meaning too, so it
+// survives for colour-blind readers rather than relying on hue alone.
+
 const STYLES: Record<PaperStatus, string> = {
-  DRAFT: "text-chart-mute border-chart-mute/40",
-  SUBMITTED: "text-chart-warn border-chart-warn/40",
-  PUBLISHED: "text-chart-good border-chart-good/40",
-  REJECTED: "text-chart-bad border-chart-bad/40",
+  DRAFT: "text-state-mute border-state-mute/40",
+  SUBMITTED: "text-state-warn border-state-warn/40",
+  PUBLISHED: "text-state-good border-state-good/40",
+  REJECTED: "text-state-bad border-state-bad/40",
 };
 
 export function StatusPill({ status }: { status: string }) {

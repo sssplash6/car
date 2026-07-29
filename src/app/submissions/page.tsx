@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
 import { formatDate } from "@/lib/site";
 import { StatusPill } from "@/app/_components/StatusPill";
+import { PageShell } from "@/app/_components/PageShell";
 
 export const metadata: Metadata = {
   title: "My submissions",
@@ -34,34 +35,34 @@ export default async function SubmissionsPage({ searchParams }: PageProps) {
   });
 
   return (
-    <div>
-      <h1 className="font-serif text-3xl text-ink">My submissions</h1>
+    <PageShell>
+      <h1 className="font-serif text-4xl text-ink">My submissions</h1>
 
       {submitted && (
-        <p className="mt-6 rounded-md border border-chart-good/40 px-4 py-3 text-sm text-chart-good">
+        <p className="mt-6 rounded border border-state-good/40 px-4 py-3 text-sm text-state-good">
           Received. Your paper is now in the review queue.
         </p>
       )}
 
       {papers.length === 0 ? (
-        <p className="mt-10 border-t border-line pt-10 text-muted-fg">
+        <p className="mt-10 border-t border-rule pt-10 text-muted-fg">
           You have not submitted anything yet.{" "}
-          <Link href="/submit" className="text-brand hover:text-brand-dark">
+          <Link href="/submit" className="text-accent hover:text-accent-dark">
             Submit a paper
           </Link>
           .
         </p>
       ) : (
-        <ul className="mt-10 border-t border-line">
+        <ul className="mt-10 border-t border-rule">
           {papers.map((paper) => (
-            <li key={paper.id} className="border-b border-line py-6">
+            <li key={paper.id} className="border-b border-rule py-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="font-serif text-lg text-ink">
                     {paper.status === PAPER_STATUS.PUBLISHED ? (
                       <Link
                         href={`/p/${paper.slug}`}
-                        className="transition-colors hover:text-brand"
+                        className="transition-colors hover:text-accent"
                       >
                         {paper.title}
                       </Link>
@@ -81,7 +82,7 @@ export default async function SubmissionsPage({ searchParams }: PageProps) {
               {/* The reviewer note is the whole point of the REJECTED state —
                   without it the author has no idea what to change. */}
               {paper.status === PAPER_STATUS.REJECTED && paper.reviewNote && (
-                <p className="mt-4 border-l-2 border-chart-bad/40 pl-4 text-sm text-ink/80">
+                <p className="mt-4 border-l-2 border-state-bad/40 pl-4 text-sm text-ink/80">
                   {paper.reviewNote}
                 </p>
               )}
@@ -90,7 +91,7 @@ export default async function SubmissionsPage({ searchParams }: PageProps) {
                   they can confirm what the reviewer is looking at. */}
               <a
                 href={`/api/papers/${paper.id}/file`}
-                className="mt-3 inline-block text-xs text-brand transition-colors hover:text-brand-dark"
+                className="mt-3 inline-block text-xs text-accent transition-colors hover:text-accent-dark"
               >
                 Download what you uploaded
               </a>
@@ -98,6 +99,6 @@ export default async function SubmissionsPage({ searchParams }: PageProps) {
           ))}
         </ul>
       )}
-    </div>
+    </PageShell>
   );
 }

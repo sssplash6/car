@@ -32,10 +32,12 @@ model User {
   // see src/auth.ts. There is deliberately no in-app UI to change this.
   role String @default("READER")
 
-  accounts Account[]
-  sessions Session[]
-  papers   Paper[]   @relation("PapersSubmitted")
-  reviewed Paper[]   @relation("PapersReviewed")
+  accounts      Account[]
+  sessions      Session[]
+  papers        Paper[]        @relation("PapersSubmitted")
+  reviewed      Paper[]        @relation("PapersReviewed")
+  notifications Notification[]
+  editedBlocks  ContentBlock[] @relation("BlocksEdited")
 }
 
 model Account {
@@ -118,4 +120,67 @@ model Paper {
   // dashboard queries by submitter.
   @@index([status, publishedAt])
   @@index([submitterId])
+}
+
+// In-app notifications. Kept as durable rows rather than relying on email alone:
+// email delivery is best-effort (and skipped entirely in dev), so this is the
+// record a user can always come back to.
+model Notification {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // "SUBMISSION_RECEIVED" (to editors) | "PAPER_PUBLISHED" | "PAPER_RETURNED".
+  // A String for the same reason Paper.status is — SQLite has no enum. The
+  // NotificationKind union in src/lib/notifications.ts is the source of truth.
+  kind  String
+  title String
+  body  String?
+  // Where clicking the notification goes. Nullable so a notification can exist
+  // without a destination.
+  href  String?
+
+  // Null until read. A timestamp rather than a boolean so "when did they see
+  // this" stays answerable later.
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  // The bell queries unread-for-this-user constantly, and the list orders by
+  // recency — one composite index serves both.
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+// Every attempted send. Exists because the Resend calls are deliberately
+// fire-and-forget — without this, a delivery failure only ever appears in server
+// logs that nobody reads. Status is "SENT" | "FAILED" | "SKIPPED" (SKIPPED means
+// RESEND_API_KEY was unset, i.e. local dev).
+model EmailLog {
+  id        String   @id @default(cuid())
+  recipient String
+  subject   String
+  status    String
+  // Provider error text when status is FAILED. Truncated by the caller.
+  error     String?
+  // Loose reference, not a relation with a foreign key: the log should survive
+  // the paper being deleted, since the point is an audit trail.
+  paperId   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Admin-editable copy, so placeholder text can be replaced without a deploy.
+//
+// Every key has a hardcoded fallback in src/lib/content.ts, so a fresh database
+// renders complete pages with nothing seeded. A missing row is normal, not an
+// error state.
+model ContentBlock {
+  key   String  @id
+  title String?
+  body  String?
+
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+  updatedBy   User?    @relation("BlocksEdited", fields: [updatedById], references: [id], onDelete: SetNull)
 }
