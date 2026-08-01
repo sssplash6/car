@@ -47,7 +47,7 @@ previews:
 
 services:
   - type: web
-    name: car-papers
+    name: centralasianreview
     runtime: node
 
     # A disk requires a paid instance type; starter is the floor.
@@ -93,7 +93,7 @@ services:
     # roughly 100 papers at the cap. You can grow a disk later but you can NEVER
     # shrink it. $0.25/GB/month. Render snapshots it every 24h.
     disk:
-      name: car-papers-data
+      name: centralasianreview-data
       mountPath: /var/data
       sizeGB: 1
 
