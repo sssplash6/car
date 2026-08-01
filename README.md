@@ -57,6 +57,7 @@ it carries the site's entire search presence. Two consequences:
 cp .env.example .env      # then fill in AUTH_SECRET and the Google client
 npm install               # postinstall runs prisma generate
 npm run db:migrate        # creates prisma/dev.db
+npm run db:seed           # optional: demo papers in every review state
 npm run dev
 ```
 
@@ -67,11 +68,25 @@ so instead of showing a broken button.
 Without `RESEND_API_KEY`, decision emails are logged to the console rather than
 sent, so the review flow is testable end to end with no mail account.
 
+### Demo data
+
+`npm run db:seed` fills the database with ten papers spanning all four states
+(published, under review, needs revision, draft) and writes a real one-page PDF
+for each, so every download link resolves to a file a viewer can actually open.
+It is **destructive** — it drops all papers, notifications and email logs, then
+reinserts — but it preserves user accounts, so an open dev session survives.
+
+Both dev-login accounts are wired to have something to look at: the editor lands
+on a review queue with two pending papers and unread notifications, and the
+reader owns one paper in each of the four states, including a returned one that
+shows the editor's revision note.
+
 | Script | Does |
 |---|---|
 | `npm run dev` | Dev server |
 | `npm run build` | Production build |
 | `npm run db:migrate` | Create and apply a migration |
+| `npm run db:seed` | Load demo papers and generate their PDFs |
 | `npm run db:studio` | Browse the database |
 | `npm run lint` | ESLint |
 
