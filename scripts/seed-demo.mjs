@@ -327,6 +327,28 @@ const PAPERS = [
 const db = new Database(DB_PATH);
 db.pragma("foreign_keys = ON");
 
+// Refuse to destroy work that did not come from this script.
+//
+// Everything seeded here carries a "demo-" id prefix, so anything without one is
+// a real submission that arrived through /submit — on the deployed site that is
+// somebody's actual paper, and the PDF is not recoverable from anywhere else.
+// Overridable because wiping a staging box on purpose is legitimate.
+const realPapers = db
+  .prepare("SELECT COUNT(*) AS n FROM Paper WHERE id NOT LIKE 'demo-%'")
+  .get().n;
+
+if (realPapers > 0 && process.env.SEED_FORCE !== "1") {
+  console.error(
+    `Refusing to seed: ${realPapers} paper(s) in ${DB_PATH} were not created by ` +
+      `this script, and seeding deletes every paper row.\n` +
+      `Their uploaded PDFs would be orphaned on disk with no way to match them ` +
+      `back up.\n\n` +
+      `If you really mean to wipe them, re-run with SEED_FORCE=1.`,
+  );
+  db.close();
+  process.exit(1);
+}
+
 mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const userIds = {};

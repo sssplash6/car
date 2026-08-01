@@ -81,6 +81,15 @@ on a review queue with two pending papers and unread notifications, and the
 reader owns one paper in each of the four states, including a returned one that
 shows the editor's revision note.
 
+Everything it inserts carries a `demo-` id prefix, and it **refuses to run** if
+it finds any paper without one — those arrived through `/submit` and are real,
+and their PDFs could not be matched back up once the rows were gone. Override
+with `SEED_FORCE=1` only when wiping a throwaway environment on purpose.
+
+It can also seed the deployed site: open the Render Shell and run
+`npm run db:seed`. It reads `DATABASE_URL` and `UPLOAD_DIR`, so the rows and the
+PDFs both land on the mounted disk.
+
 | Script | Does |
 |---|---|
 | `npm run dev` | Dev server |

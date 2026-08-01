@@ -23,6 +23,24 @@ const nextConfig: NextConfig = {
       // the headroom covers the multipart encoding overhead around the file, so
       // a file exactly at the 10 MB limit still fits inside the request.
       bodySizeLimit: "12mb",
+
+      // Next rejects a server action whose Origin does not match Host /
+      // X-Forwarded-Host, which is a CSRF guard. Demoing the dev server through
+      // a tunnel (cloudflared, ngrok) trips it: the browser sends the tunnel
+      // origin while the proxy may rewrite Host to localhost, so sign-in and
+      // submit silently fail.
+      //
+      // Read from the environment and ONLY outside production, so a tunnel host
+      // can never widen the CSRF guard on the real deployment. Set it to the
+      // tunnel hostname without the scheme, e.g.
+      //   DEMO_TUNNEL_ORIGINS="hello-world.trycloudflare.com"
+      ...(process.env.NODE_ENV !== "production" && process.env.DEMO_TUNNEL_ORIGINS
+        ? {
+            allowedOrigins: process.env.DEMO_TUNNEL_ORIGINS.split(",")
+              .map((origin) => origin.trim())
+              .filter(Boolean),
+          }
+        : {}),
     },
   },
 };
