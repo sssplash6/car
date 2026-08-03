@@ -4,7 +4,17 @@ import Google from "next-auth/providers/google";
 // Show the Google button only when credentials are configured, so a fresh clone
 // with an empty .env renders an explanatory message instead of a button that
 // dead-ends on Google's error page.
-export const googleEnabled = !!process.env.AUTH_GOOGLE_ID;
+//
+// BOTH halves are required, not just the id. Auth.js reads the secret itself
+// (from AUTH_GOOGLE_SECRET, by convention from the provider id) so it never
+// appears in this file — which makes it easy to check only the id and ship a
+// half-configured client. That combination is the worst failure mode: the button
+// renders, the user completes Google's consent screen, and the token exchange
+// then fails on the callback with an opaque Configuration error. Render prompts
+// for these two separately, so a typo in one is a realistic way to get there.
+export const googleEnabled = !!(
+  process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
+);
 
 // Routes that require a signed-in user. Everything else is public — this is a
 // content-marketing site, so the paper index and abstract pages MUST stay

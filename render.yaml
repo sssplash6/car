@@ -112,6 +112,14 @@ services:
       - key: UPLOAD_DIR
         value: /var/data/uploads
 
+      # Pinned to false rather than left absent. The dev login is a complete
+      # authentication bypass that grants ADMIN (see src/auth.ts), and "absent so
+      # it defaults off" is one Dashboard mistake away from being set. Stating it
+      # here means the Blueprint is the record, and an accidental override shows
+      # up as a diff against this file.
+      - key: ALLOW_DEV_LOGIN
+        value: 'false'
+
       # ---- Secrets, prompted in the Dashboard ----------------------------
       # `sync: false` means "prompt me, never store it in git". Render prompts for
       # these ONLY during initial Blueprint creation; later changes are made by
@@ -134,6 +142,19 @@ services:
       # Absolute public origin, no trailing slash. Wrong or missing values emit
       # canonical tags pointing somewhere else, which suppresses the real pages
       # in search.
+      #
+      # READ AT BUILD TIME, NOT AT RUNTIME. Next inlines every NEXT_PUBLIC_* var
+      # into the bundle during `next build`, so this one is frozen into the
+      # artifact. Two consequences that do not apply to any other var here:
+      #
+      #   * It must be filled in at Blueprint creation, before the first build.
+      #     Adding it afterwards leaves localhost baked into canonical tags, OG
+      #     urls, robots.txt's Sitemap: line and every outbound email link.
+      #   * Changing it later needs a full REDEPLOY, not just a restart. Editing
+      #     the value in the Dashboard and restarting changes nothing.
+      #
+      # It also decides the localhost check that helps gate the dev-login bypass
+      # (src/auth.ts), which is the other reason it must be right at build time.
       - key: NEXT_PUBLIC_SITE_URL
         sync: false
       # Resend. When blank, decision emails are logged instead of sent — the

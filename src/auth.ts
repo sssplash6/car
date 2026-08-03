@@ -29,20 +29,36 @@ function intendedRole(email: string | null | undefined): "ADMIN" | "READER" {
 // queue can be exercised without registering a Google OAuth client.
 //
 // This is a COMPLETE AUTHENTICATION BYPASS: authorize() below accepts any input
-// and hands back a session. It is therefore guarded twice — the flag must be set
-// AND the site must be running on localhost. The second check is what makes this
-// safe to leave in the repo: on Render, NEXT_PUBLIC_SITE_URL is the real origin,
-// so the provider is not registered at all even if the flag leaks into the
-// environment. DO NOT relax either condition.
+// and hands back a session. It is therefore guarded three times, and each guard
+// covers a different way the other two can fail. DO NOT relax any of them.
+//
+//   1. the flag must be explicitly set                    (runtime)
+//   2. the build must not be a production build           (runtime)
+//   3. the public origin must be localhost                (BUILD-TIME CONSTANT)
+//
+// Guard 3 cannot stand on its own, which is why guard 2 exists. siteUrl() reads
+// NEXT_PUBLIC_SITE_URL, and Next INLINES every NEXT_PUBLIC_* var into the bundle
+// at build time — `siteUrl()` compiles down to a frozen string literal with no
+// env read left in it. So `isLocalhost` is decided by whatever the origin was
+// when `next build` ran, NOT by the deployed environment. If a production build
+// ever runs without NEXT_PUBLIC_SITE_URL set, isLocalhost freezes as `true` and
+// the only thing standing between the public internet and this bypass is the
+// flag — and `dev-admin@freshman.academy` is promoted through the real
+// ADMIN_EMAILS path, so the bypass hands out ADMIN, not just a reader session.
+//
+// NODE_ENV is a genuine per-process runtime read (`next start` sets it), so
+// guard 2 holds even against a mis-built bundle.
 const devLoginRequested = process.env.ALLOW_DEV_LOGIN === "true";
+const isProduction = process.env.NODE_ENV === "production";
 const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(siteUrl());
 
-export const devLoginEnabled = devLoginRequested && isLocalhost;
+export const devLoginEnabled = devLoginRequested && !isProduction && isLocalhost;
 
-if (devLoginRequested && !isLocalhost) {
+if (devLoginRequested && !devLoginEnabled) {
   console.warn(
-    `[auth] ALLOW_DEV_LOGIN=true was IGNORED because NEXT_PUBLIC_SITE_URL (${siteUrl()}) ` +
-      "is not localhost. The dev login is never available off localhost.",
+    "[auth] ALLOW_DEV_LOGIN=true was IGNORED because this is not a localhost " +
+      `development server (NODE_ENV=${process.env.NODE_ENV}, ` +
+      `NEXT_PUBLIC_SITE_URL=${siteUrl()}). The dev login is never available here.`,
   );
 }
 
