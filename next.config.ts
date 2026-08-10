@@ -1,14 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    // PLACEHOLDER IMAGE SOURCE. Every image on the site is currently a seeded
-    // picsum photo standing in for real editorial photography. When the real
-    // assets arrive, drop this remotePattern and serve them from /public or a
-    // proper CDN — leaving it in production means the homepage depends on a
-    // third-party placeholder service staying up.
-    remotePatterns: [{ protocol: "https", hostname: "picsum.photos" }],
-  },
+  // No images.remotePatterns on purpose: every image ships from
+  // public/regional/ (CC0, provenance in CREDITS.md there), so production has
+  // no third-party image dependency. Adding a remote pattern back means
+  // re-accepting that a stranger's uptime can blank the homepage.
   turbopack: {
     // Pin the workspace root. Without this Next walks up looking for a lockfile
     // and finds a stray one in the home directory, then traces that entire tree

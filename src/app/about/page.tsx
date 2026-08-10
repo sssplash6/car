@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { COPY } from "@/lib/content";
 import { PUBLISHER_NAME, REGION_COUNTRIES } from "@/lib/site";
-import { slotImage } from "@/lib/placeholderImage";
+import { aboutSuzani } from "@/lib/regionalImages";
 import { Reveal } from "@/app/_components/Reveal";
 import { Diamond, IkatDivider } from "@/app/_components/Ornament";
 
@@ -44,9 +44,10 @@ export default function AboutPage() {
           <div className="self-start border border-rule-strong bg-surface p-1.5">
             <div className="relative aspect-4/5 w-full overflow-hidden">
               <Image
-                src={slotImage("about-editorial", 600, 750)}
-                alt=""
+                src={aboutSuzani}
+                alt="Silk suzani embroidery from Bukhara"
                 fill
+                placeholder="blur"
                 sizes="(max-width: 1024px) 100vw, 34vw"
                 className="object-cover"
               />

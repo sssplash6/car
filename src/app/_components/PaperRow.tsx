@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatDate } from "@/lib/site";
-import { paperImage } from "@/lib/placeholderImage";
+import { paperImage } from "@/lib/regionalImages";
 
 export type PaperRowData = {
   id: string;
@@ -26,9 +26,10 @@ export function PaperRow({ paper }: { paper: PaperRowData }) {
         {/* Mounted like a plate in a catalogue: hairline, mount, then image. */}
         <span className="relative block aspect-3/2 overflow-hidden sm:aspect-4/3">
           <Image
-            src={paperImage(paper.slug, 360, 270)}
+            src={paperImage(paper.slug)}
             alt=""
             fill
+            placeholder="blur"
             sizes="(max-width: 640px) 100vw, 9rem"
             className="object-cover transition-transform duration-500 ease-[var(--ease-out-strong)] group-hover:scale-[1.04]"
           />

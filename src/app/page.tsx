@@ -5,7 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
 import { COPY } from "@/lib/content";
 import { REGION_COUNTRIES, formatDate } from "@/lib/site";
-import { paperImage, slotImage } from "@/lib/placeholderImage";
+import {
+  asideBaburnama,
+  heroRegistan,
+  interludeSongKul,
+  paperImage,
+} from "@/lib/regionalImages";
 import { Reveal } from "@/app/_components/Reveal";
 import { ClipReveal } from "@/app/_components/ClipReveal";
 import {
@@ -91,12 +96,16 @@ export default async function HomePage() {
             <ArchFrame className="aspect-4/5 w-full sm:aspect-3/4 lg:aspect-4/5">
               <div className="relative h-full w-full">
                 <Image
-                  src={slotImage("hero-region", 900, 1200)}
-                  alt=""
+                  src={heroRegistan}
+                  alt="Portal and minarets of the Registan in Samarkand"
                   fill
                   priority
+                  placeholder="blur"
                   sizes="(max-width: 1024px) 100vw, 44vw"
-                  className="object-cover"
+                  // Top-anchored crop: keeps the portal and minarets (and the
+                  // sky above them, which meets the arch's point) and drops
+                  // the plaza railing at the photo's foot entirely.
+                  className="object-cover object-top"
                 />
               </div>
             </ArchFrame>
@@ -124,9 +133,10 @@ export default async function HomePage() {
                 {/* Framed like a museum plate: hairline, then mount, then image. */}
                 <span className="relative block aspect-3/2 overflow-hidden">
                   <Image
-                    src={paperImage(lead.slug, 900, 600)}
+                    src={paperImage(lead.slug)}
                     alt=""
                     fill
+                    placeholder="blur"
                     sizes="(max-width: 1024px) 100vw, 42vw"
                     className="object-cover transition-transform duration-500 ease-[var(--ease-out-strong)] group-hover:scale-[1.03]"
                   />
@@ -246,6 +256,25 @@ export default async function HomePage() {
 
           <Reveal delay={0.1}>
             <aside className="space-y-9 lg:border-l lg:border-rule lg:pl-8">
+              {/* A leaf from the Baburnama beside the editors' voice — the one
+                  place the site shows manuscript art itself. The visible museum
+                  credit is deliberate: provenance is part of the register. */}
+              <figure className="border border-rule-strong bg-surface p-1">
+                <div className="relative aspect-3/4 w-full overflow-hidden">
+                  <Image
+                    src={asideBaburnama}
+                    alt="The Fall of Samarkand, a Timurid miniature from a Baburnama manuscript"
+                    fill
+                    placeholder="blur"
+                    sizes="(max-width: 1024px) 100vw, 17rem"
+                    className="object-cover object-top"
+                  />
+                </div>
+                <figcaption className="px-1 pb-0.5 pt-2 text-xs leading-relaxed text-muted-fg">
+                  The Fall of Samarkand, from the Baburnama · Walters Art Museum
+                </figcaption>
+              </figure>
+
               <section>
                 <h2 className="font-serif text-lg text-ink">{editorial.title}</h2>
                 <p className="prose-plain mt-2.5 text-sm leading-relaxed text-ink-soft">
@@ -272,6 +301,28 @@ export default async function HomePage() {
             </aside>
           </Reveal>
         </div>
+
+        {/* ---- Interlude: the region itself, one wide mounted plate as a
+             breath between the archive and its map. Honest caption — this is
+             verified CC0 photography (public/regional/CREDITS.md), so naming
+             the place is a claim the image can keep. ---- */}
+        <Reveal className="pb-16">
+          <figure className="border border-rule-strong bg-surface p-1.5">
+            <div className="relative aspect-21/9 w-full overflow-hidden sm:aspect-8/3">
+              <Image
+                src={interludeSongKul}
+                alt="Yurts on the summer pasture at Song-Kul, Kyrgyzstan"
+                fill
+                placeholder="blur"
+                sizes="(max-width: 1152px) 100vw, 1104px"
+                className="object-cover"
+              />
+            </div>
+            <figcaption className="px-1 pb-0.5 pt-2 text-right text-xs text-muted-fg">
+              Song-Kul, Kyrgyzstan
+            </figcaption>
+          </figure>
+        </Reveal>
       </div>
 
       {/* ---- Coverage strip ----

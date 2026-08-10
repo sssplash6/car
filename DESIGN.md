@@ -73,6 +73,23 @@ section's first line, the site's close. Rows, cards, paragraphs and forms keep
 plain hairlines. If two ornaments are visible in one viewport at reading
 width, one of them is wrong.
 
+## Photography
+
+The photographic layer lives in `public/regional/` (all CC0/PDM, provenance in
+its CREDITS.md — unknown-provenance imagery does not ship) and is wired through
+`src/lib/regionalImages.ts` as static imports, so every image has dimensions
+and a blur placeholder.
+
+- **Named slots** (hero arch, homepage interlude, About suzani, Baburnama
+  leaf) appear in exactly one place each and carry honest alt text and, where
+  shown, a caption naming a real, verified place or source.
+- **The paper pool** decorates papers by stable slug hash. Pool images are
+  decoration BESIDE an article, never a claim about its subject — so they get
+  empty alt text, and no pool image may ever be captioned with a place or
+  attached to specific countries.
+- Photographs sit in the same mounted-plate frame as everything else
+  (hairline, mount, image); no bare full-bleed imagery outside the hero arch.
+
 ## Motion
 
 Doctrine: entrances materialize (opacity + 14px rise + 6px blur), hovers are

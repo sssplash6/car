@@ -12,7 +12,7 @@ import { getOptionalUser } from "@/lib/dal";
 import { PAPER_STATUS } from "@/lib/papers";
 import { issueFor } from "@/lib/issues";
 import { SITE_NAME, formatDate, siteUrl } from "@/lib/site";
-import { paperImage } from "@/lib/placeholderImage";
+import { paperImage } from "@/lib/regionalImages";
 import {
   Corners,
   PatternField,
@@ -61,6 +61,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   // badly.
   const description = truncateAtWord(paper.abstract, 155);
 
+  // The paper's pool image doubles as the share card. metadataBase makes the
+  // static-asset path absolute; width/height come from the import.
+  const image = paperImage(paper.slug);
+
   return {
     title: paper.title,
     description,
@@ -72,7 +76,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       url: `${siteUrl()}/p/${paper.slug}`,
       siteName: SITE_NAME,
       publishedTime: paper.publishedAt?.toISOString(),
-      images: [paperImage(paper.slug, 1200, 630)],
+      images: [{ url: image.src, width: image.width, height: image.height }],
     },
   };
 }
@@ -186,10 +190,11 @@ export default async function PaperPage({ params }: PageProps) {
       <div className="mx-auto w-full max-w-4xl px-6">
         <div className="relative -mt-px aspect-16/9 w-full overflow-hidden sm:aspect-21/9">
           <Image
-            src={paperImage(paper.slug, 1400, 600)}
+            src={paperImage(paper.slug)}
             alt=""
             fill
             priority
+            placeholder="blur"
             sizes="(max-width: 896px) 100vw, 56rem"
             className="object-cover"
           />
