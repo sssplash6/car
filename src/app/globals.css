@@ -1,50 +1,60 @@
 @import "tailwindcss";
 
-/* Central Asian Review.
+/* Central Asian Review — "Timurid manuscript".
    Its own editorial identity, distinct from the freshman.academy navy/orange used
    by web/ and Weak/ (ONBOARDING.md §4). The review fronts its own brand and
    credits the academy in the footer.
 
-   Palette is deliberately COOL neutral rather than the warm cream/beige that
-   "editorial" usually attracts: this is a research publication, and the cool
-   grey reads institutional rather than artisanal. One accent, used only for
-   links and actions.
+   The palette is a warm manuscript paper with lapis as the ONE action colour and
+   three rationed decorative threads (turquoise tile, pomegranate ember, gilded
+   ochre) that appear only in ornament — see DESIGN.md for the rationing rules.
+   Every pair below is contrast-checked (4.5:1 text, 3:1 ornament) in both modes;
+   re-validate before changing a value and keep the dark steps in step.
 
-   Components read the semantic tokens (bg-surface, text-ink, border-rule), never
+   Components read the semantic tokens (bg-canvas, text-ink, border-rule), never
    raw hex, so dark mode overrides tokens rather than components. */
 @theme {
-  --color-canvas: #f6f6f4; /* paper, faintly cool */
-  --color-surface: #fdfdfc; /* raised areas, inputs */
-  --color-rule: #e2e2dd; /* hairlines; this design uses rules, not cards */
-  --color-rule-strong: #c6c6bf; /* dividers that must read as deliberate */
+  --color-canvas: #f9f4e8; /* warm paper, like a miniature's margin */
+  --color-surface: #fefcf4; /* raised areas, inputs */
+  --color-rule: #e8dcc2; /* hairlines; rules still do the everyday work */
+  --color-rule-strong: #cbbb96; /* dividers that must read as deliberate */
 
-  --color-ink: #16181b; /* primary text, cool near-black (never #000) */
-  --color-ink-soft: #3f444a; /* body copy at length */
-  --color-muted-fg: #6c7176; /* metadata, captions */
+  --color-ink: #262019; /* sepia-black manuscript ink (never #000) */
+  --color-ink-soft: #4d4536; /* body copy at length */
+  --color-muted-fg: #6e6450; /* metadata, captions */
 
-  /* Single accent: the deep teal of regional tilework. The one saturated colour
-     in the system, so it is spent only on interactivity. ~6.2:1 on canvas. */
-  --color-accent: #0d6a75;
-  --color-accent-dark: #094f58; /* hover */
-  --color-accent-soft: #e4eff0; /* tint background */
+  /* THE action colour: Samarkand lapis. Links, buttons, focus — and nothing
+     decorative, so interactivity stays unambiguous. 7.2:1 on canvas. */
+  --color-accent: #1d4f9c;
+  --color-accent-dark: #163d7a; /* hover */
+  --color-accent-soft: #e3ebf6; /* tint field */
+
+  /* Decorative threads. Ornament and small marks ONLY — if one of these starts
+     colouring buttons or links, the accent has lost its meaning. tile-ink and
+     ember also pass 4.5:1 as text for rare label moments. */
+  --color-tile: #0f7f76; /* tilework turquoise */
+  --color-tile-ink: #0c665f;
+  --color-tile-soft: #daefe9;
+  --color-ember: #a33a28; /* pomegranate / terracotta */
+  --color-ember-soft: #f4e0d6;
+  --color-gild: #a87a1e; /* gilded ochre, ≥3:1 as ornament on canvas */
 
   /* Review-status marks, kept separate from the accent: the accent means
-     "action", these mean state. All four clear 4.5:1 on canvas; re-check
-     contrast before changing a value and keep the dark steps in step. */
-  --color-state-good: #1c6a4c;
-  --color-state-warn: #8a5a10;
-  --color-state-bad: #9c2f24;
-  --color-state-mute: #7d8288;
+     "action", these mean state. All clear 4.5:1 on canvas. */
+  --color-state-good: #256b48;
+  --color-state-warn: #855a0e;
+  --color-state-bad: #9c3222;
+  --color-state-mute: #6e6450;
 
   --font-sans: var(--font-geist-sans);
   /* EB Garamond: an actual academic-press serif. Serif is justified here because
-     the brief IS a publication (the one case the house design rules allow it),
-     and Garamond carries scholarly authority without the Playfair cliche. */
+     the brief IS a publication (the one case the house design rules allow it). */
   --font-serif: var(--font-display);
 
-  /* Motion. One shared ease so every transition on the site feels related.
-     Duration stays short: this is a reading site, not a showcase. */
+  /* Motion. One shared ease so every transition on the site feels related; the
+     in-out curve is reserved for things that MOVE while staying on screen. */
   --ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
   --default-transition-duration: 180ms;
   --default-transition-timing-function: var(--ease-out-strong);
 }
@@ -53,37 +63,84 @@
   color-scheme: light;
 }
 
-/* Dark mode overrides the same tokens, so no component needs `dark:` variants.
-   Re-stepped for a dark surface rather than mechanically inverted. */
+/* Dark mode: a lacquered yurt interior at night, not an inverted grey. The same
+   tokens are overridden, so no component needs `dark:` variants. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --color-canvas: #121415;
-    --color-surface: #1a1d1f;
-    --color-rule: #2c3033;
-    --color-rule-strong: #434749;
+    --color-canvas: #171310;
+    --color-surface: #211a14;
+    --color-rule: #3a3024;
+    --color-rule-strong: #564936;
 
-    --color-ink: #edeeec;
-    --color-ink-soft: #c7cac6;
-    --color-muted-fg: #969a9c;
+    --color-ink: #f1e8d7; /* parchment */
+    --color-ink-soft: #d2c6ae;
+    --color-muted-fg: #a29578;
 
-    /* Lifted so it stays legible on the dark surface and as button text. */
-    --color-accent: #4aa8b3;
-    --color-accent-dark: #63c0ca; /* hover is lighter in dark */
-    --color-accent-soft: #10292c;
+    /* Lifted so it stays legible on the dark surface; hover lightens further. */
+    --color-accent: #8fb3ea;
+    --color-accent-dark: #aec9f5;
+    --color-accent-soft: #1d2b42;
 
-    --color-state-good: #4fae86;
-    --color-state-warn: #cf9a3f;
-    --color-state-bad: #e0776a;
-    --color-state-mute: #969a9c;
+    --color-tile: #59c2b6;
+    --color-tile-ink: #59c2b6;
+    --color-tile-soft: #143430;
+    --color-ember: #e18f74;
+    --color-ember-soft: #40241c;
+    --color-gild: #d7a54e;
+
+    --color-state-good: #66b98d;
+    --color-state-warn: #d6a44c;
+    --color-state-bad: #e2836f;
+    --color-state-mute: #a29578;
   }
+}
+
+/* "Night tile" — the Registan-at-dusk surface used by the footer (and nothing
+   else). It re-declares the semantic tokens locally, so ordinary components
+   dropped inside it recolour themselves: parchment text, gild-as-action links.
+   Identical in light and dark mode on purpose — night is night. */
+.surface-night {
+  color-scheme: dark;
+
+  --color-canvas: #132a52;
+  --color-surface: #1a3460;
+  --color-rule: #2c4270;
+  --color-rule-strong: #3d5687;
+
+  --color-ink: #f1e8d7;
+  --color-ink-soft: #dcd5c3;
+  --color-muted-fg: #b9c3d9;
+
+  --color-accent: #d7a54e; /* inside the night surface, gold is the action */
+  --color-accent-dark: #e7c078;
+  --color-accent-soft: #1e3a6b;
+
+  --color-tile: #6fc9bd;
+  --color-gild: #d7a54e;
+
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
 
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* One focus treatment for the whole site, in the action colour. Buttons and
+   inputs that style their own borders still get this ring, which keeps keyboard
+   navigation visible on decorated surfaces. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: var(--color-surface);
 }
 
 /* Author-entered plain text (abstracts, content blocks) is not markup.
@@ -105,6 +162,45 @@ body {
    left side-bearing at scale and otherwise looks indented against a rule. */
 .display-flush {
   margin-left: -0.06em;
+}
+
+/* Illuminated initial. At most ONE per page (the lead abstract) — an initial on
+   every block stops being illumination. Sized to sit three lines deep. */
+.dropcap::first-letter {
+  float: left;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 3.5em;
+  line-height: 0.82;
+  padding-right: 0.12em;
+  padding-top: 0.04em;
+  color: var(--color-accent);
+}
+
+/* Garamond's oldstyle figures, for display numbers (issue №, list indices). */
+.oldstyle-nums {
+  font-variant-numeric: oldstyle-nums;
+}
+
+/* Animated underline for nav links: draws from the left on hover, stays put on
+   the active page (data-active). Uses transform so nothing repaints. */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.2em;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 220ms var(--ease-out-strong);
+}
+.link-underline:hover::after,
+.link-underline[data-active="true"]::after {
+  transform: scaleX(1);
 }
 
 /* Reduced motion is honoured by each Motion component via useReducedMotion.

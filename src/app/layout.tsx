@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { EB_Garamond, Geist } from "next/font/google";
 import { SiteHeader } from "@/app/_components/SiteHeader";
 import { SiteFooter } from "@/app/_components/SiteFooter";
@@ -19,6 +19,15 @@ const displaySerif = EB_Garamond({
   subsets: ["latin"],
   display: "swap",
 });
+
+// Tints the browser chrome (mobile URL bar, PWA title bar) to match the paper
+// in each scheme, so the page doesn't sit inside a mismatched grey frame.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f9f4e8" },
+    { media: "(prefers-color-scheme: dark)", color: "#171310" },
+  ],
+};
 
 export const metadata: Metadata = {
   // metadataBase resolves the relative canonical/OG URLs used per-page. Without
@@ -43,11 +52,21 @@ export default function RootLayout({
       className={`${geistSans.variable} ${displaySerif.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        {/* Keyboard users get past the decorated chrome in one tab. Visible only
+            while focused; sits above everything so no header stacking hides it. */}
+        <a
+          href="#content"
+          className="sr-only z-50 rounded bg-accent px-4 py-2 text-sm font-medium text-surface focus:not-sr-only focus:absolute focus:left-4 focus:top-4"
+        >
+          Skip to content
+        </a>
         <SiteHeader />
         {/* No width constraint here: the homepage runs full-bleed sections while
             article pages set their own narrow measure. Constraining globally would
             box the hero in. */}
-        <main className="flex-1">{children}</main>
+        <main id="content" className="flex-1">
+          {children}
+        </main>
         <SiteFooter />
       </body>
     </html>
