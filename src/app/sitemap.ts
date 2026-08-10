@@ -21,8 +21,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     select: { slug: true, updatedAt: true },
   });
 
+  const newest = papers[0]?.updatedAt ?? new Date();
+
   return [
-    { url: base, lastModified: papers[0]?.updatedAt ?? new Date(), priority: 1 },
+    { url: base, lastModified: newest, priority: 1 },
+    // Index pages: /papers and /issues change whenever anything publishes;
+    // /about only changes with a deploy, but a stale lastModified there is
+    // harmless and a second timestamp source is not worth carrying.
+    { url: `${base}/papers`, lastModified: newest, priority: 0.9 },
+    { url: `${base}/issues`, lastModified: newest, priority: 0.7 },
+    { url: `${base}/about`, lastModified: newest, priority: 0.5 },
     ...papers.map((paper) => ({
       url: `${base}/p/${paper.slug}`,
       lastModified: paper.updatedAt,
