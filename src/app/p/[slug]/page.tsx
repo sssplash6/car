@@ -10,8 +10,14 @@ import {
 import { prisma } from "@/lib/prisma";
 import { getOptionalUser } from "@/lib/dal";
 import { PAPER_STATUS } from "@/lib/papers";
+import { issueFor } from "@/lib/issues";
 import { SITE_NAME, formatDate, siteUrl } from "@/lib/site";
 import { paperImage } from "@/lib/placeholderImage";
+import {
+  Corners,
+  PatternField,
+  TileBand,
+} from "@/app/_components/Ornament";
 
 // A published paper's abstract page. Public and crawlable: the PDF behind it is
 // gated, so this page carries all of the paper's search weight.
@@ -19,6 +25,10 @@ import { paperImage } from "@/lib/placeholderImage";
 // Only PUBLISHED papers resolve here. An author checking their own pending
 // submission does that from /submissions, which keeps this page's visibility rule
 // to a single condition.
+//
+// Deliberately calm: a reader lands here from search mid-thought, so there is no
+// entrance choreography — the ornament budget goes to the patterned header, one
+// tile band, and the framed download panel.
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -73,7 +83,23 @@ export default async function PaperPage({ params }: PageProps) {
 
   if (!paper) notFound();
 
-  const user = await getOptionalUser();
+  // The user check and the issue lookup are independent — run them together.
+  const [user, publishDates] = await Promise.all([
+    getOptionalUser(),
+    prisma.paper.findMany({
+      where: { status: PAPER_STATUS.PUBLISHED },
+      select: { publishedAt: true },
+    }),
+  ]);
+
+  // Which quarterly issue this paper belongs to (src/lib/issues.ts). Citing the
+  // issue on the paper itself is what makes the derived archive feel bound.
+  const issue = paper.publishedAt
+    ? issueFor(
+        publishDates.flatMap((p) => (p.publishedAt ? [p.publishedAt] : [])),
+        paper.publishedAt,
+      )
+    : null;
 
   // Flexible sampling markup. The abstract on this page is free and identical for
   // everyone, so there is no cloaking here, but the full paper genuinely requires
@@ -113,17 +139,22 @@ export default async function PaperPage({ params }: PageProps) {
 
       {/* Header sits on a wider measure than the body, so the title can breathe
           while the abstract stays at a readable line length. */}
-      <header className="border-b border-rule bg-surface">
-        <div className="mx-auto w-full max-w-4xl px-6 pb-12 pt-10">
+      <header className="relative overflow-hidden border-b border-rule bg-surface">
+        <PatternField className="text-gild opacity-[0.045]" />
+        <div className="relative mx-auto w-full max-w-4xl px-6 pb-12 pt-10">
           <Link
             href="/papers"
-            className="inline-flex items-center gap-1.5 text-sm text-muted-fg transition-colors hover:text-accent"
+            className="group inline-flex items-center gap-1.5 text-sm text-muted-fg transition-colors hover:text-accent"
           >
-            <ArrowLeftIcon size={15} aria-hidden="true" />
+            <ArrowLeftIcon
+              size={15}
+              aria-hidden="true"
+              className="transition-transform duration-200 ease-[var(--ease-out-strong)] group-hover:-translate-x-0.5"
+            />
             All papers
           </Link>
 
-          <h1 className="display-flush mt-7 font-serif text-[2.25rem] leading-[1.1] tracking-tight text-ink sm:text-[3rem]">
+          <h1 className="display-flush mt-7 font-serif text-[clamp(2.25rem,1.4rem+3.2vw,3rem)] leading-[1.1] tracking-tight text-ink">
             {paper.title}
           </h1>
 
@@ -133,38 +164,58 @@ export default async function PaperPage({ params }: PageProps) {
           {paper.publishedAt && (
             <p className="mt-1 text-sm text-muted-fg">
               Published {formatDate(paper.publishedAt)}
+              {issue && (
+                <>
+                  {" · "}
+                  <Link
+                    href={`/issues#${issue.anchor}`}
+                    className="oldstyle-nums transition-colors hover:text-accent"
+                  >
+                    Issue № {issue.number}, {issue.label}
+                  </Link>
+                </>
+              )}
             </p>
           )}
         </div>
+        {/* The page's one tile band: the threshold between front matter and
+            the work itself. */}
+        <TileBand className="relative text-tile/70" />
       </header>
 
-      <div className="relative mx-auto aspect-16/9 w-full max-w-4xl overflow-hidden sm:aspect-21/9">
-        <Image
-          src={paperImage(paper.slug, 1400, 600)}
-          alt=""
-          fill
-          priority
-          sizes="(max-width: 896px) 100vw, 56rem"
-          className="object-cover"
-        />
+      <div className="mx-auto w-full max-w-4xl px-6">
+        <div className="relative -mt-px aspect-16/9 w-full overflow-hidden sm:aspect-21/9">
+          <Image
+            src={paperImage(paper.slug, 1400, 600)}
+            alt=""
+            fill
+            priority
+            sizes="(max-width: 896px) 100vw, 56rem"
+            className="object-cover"
+          />
+        </div>
       </div>
 
       <div className="mx-auto w-full max-w-4xl px-6 py-14">
         <div className="max-w-[62ch]">
           <h2 className="font-serif text-xl text-ink">Abstract</h2>
-          <p className="prose-plain mt-4 text-[1.0625rem] leading-[1.75] text-ink-soft">
+          {/* The site's one illuminated initial (DESIGN.md): the first letter
+              of the abstract, set in lapis Garamond three lines deep. */}
+          <p className="prose-plain dropcap mt-4 text-[1.0625rem] leading-[1.75] text-ink-soft">
             {paper.abstract}
           </p>
         </div>
 
-        {/* The gated moment. Named by the JSON-LD cssSelector above, so renaming
-            this class silently breaks the metered-content declaration. */}
-        <div className="gated-download mt-14 border-t border-rule-strong pt-10">
+        {/* The gated moment, framed like a bookplate. Named by the JSON-LD
+            cssSelector above, so renaming this class silently breaks the
+            metered-content declaration. */}
+        <div className="gated-download relative mt-14 border border-rule-strong bg-surface p-7 sm:p-9">
+          <Corners className="text-gild" />
           {user ? (
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <a
                 href={`/api/papers/${paper.id}/file`}
-                className="inline-flex items-center gap-2 rounded bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark active:translate-y-px"
+                className="inline-flex items-center gap-2 rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
               >
                 <DownloadSimpleIcon size={17} aria-hidden="true" />
                 Download the full paper
@@ -189,7 +240,7 @@ export default async function PaperPage({ params }: PageProps) {
               </p>
               <Link
                 href={`/login?next=/p/${paper.slug}`}
-                className="mt-5 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark active:translate-y-px"
+                className="mt-5 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
               >
                 Sign in to continue
               </Link>

@@ -45,7 +45,7 @@ export default async function AdminLayout({
               >
                 {tab.label}
                 {typeof tab.count === "number" && tab.count > 0 && (
-                  <span className="rounded-full bg-accent px-1.5 text-[11px] font-medium leading-5 text-white">
+                  <span className="rounded-full bg-accent px-1.5 text-[11px] font-medium leading-5 text-surface">
                     {tab.count}
                   </span>
                 )}

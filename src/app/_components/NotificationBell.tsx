@@ -22,7 +22,7 @@ export function NotificationBell({ count }: { count: number }) {
       <BellIcon size={19} weight="regular" aria-hidden="true" />
 
       {count > 0 && (
-        <span className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium leading-4 text-white">
+        <span className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium leading-4 text-surface">
           {badge}
         </span>
       )}

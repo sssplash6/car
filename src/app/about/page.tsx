@@ -5,6 +5,7 @@ import { COPY } from "@/lib/content";
 import { PUBLISHER_NAME, REGION_COUNTRIES } from "@/lib/site";
 import { slotImage } from "@/lib/placeholderImage";
 import { Reveal } from "@/app/_components/Reveal";
+import { Diamond, IkatDivider } from "@/app/_components/Ornament";
 
 export const metadata: Metadata = {
   title: "About",
@@ -18,7 +19,8 @@ export const metadata: Metadata = {
 // No eyebrows on this page: the homepage already spends the page-level budget, and
 // each section here has a real heading doing the same job. The label-left,
 // body-right split is its own layout family, distinct from anything on the
-// homepage.
+// homepage. Ornament budget: one ikat threshold and the gild lozenges on the
+// coverage list — the header stays plain so the words carry it.
 export default function AboutPage() {
   const { main, masthead, submissions } = COPY.about;
 
@@ -26,7 +28,7 @@ export default function AboutPage() {
     <>
       <header className="border-b border-rule bg-surface">
         <div className="mx-auto w-full max-w-4xl px-6 pb-12 pt-14">
-          <h1 className="display-flush max-w-2xl font-serif text-[2.5rem] leading-[1.08] tracking-tight text-ink sm:text-[3.25rem]">
+          <h1 className="display-flush max-w-2xl font-serif text-[clamp(2.5rem,1.5rem+3.4vw,3.25rem)] leading-[1.08] tracking-tight text-ink">
             {main.title}
           </h1>
         </div>
@@ -37,18 +39,24 @@ export default function AboutPage() {
           <p className="prose-plain max-w-[60ch] text-[1.0625rem] leading-[1.75] text-ink-soft">
             {main.body}
           </p>
-          <div className="relative aspect-4/5 w-full overflow-hidden">
-            <Image
-              src={slotImage("about-editorial", 600, 750)}
-              alt=""
-              fill
-              sizes="(max-width: 1024px) 100vw, 34vw"
-              className="object-cover"
-            />
+          {/* Mounted like the plates elsewhere on the site, so the About page
+              speaks the same museum language as the papers. */}
+          <div className="self-start border border-rule-strong bg-surface p-1.5">
+            <div className="relative aspect-4/5 w-full overflow-hidden">
+              <Image
+                src={slotImage("about-editorial", 600, 750)}
+                alt=""
+                fill
+                sizes="(max-width: 1024px) 100vw, 34vw"
+                className="object-cover"
+              />
+            </div>
           </div>
         </div>
 
-        <Reveal className="border-t border-rule py-12">
+        <IkatDivider className="text-tile" />
+
+        <Reveal className="py-12">
           <div className="grid gap-8 sm:grid-cols-[14rem_1fr] sm:gap-12">
             <h2 className="font-serif text-2xl leading-tight text-ink">
               {masthead.title}
@@ -70,7 +78,7 @@ export default function AboutPage() {
               </p>
               <Link
                 href="/submit"
-                className="mt-6 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark active:translate-y-px"
+                className="mt-6 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
               >
                 Submit a paper
               </Link>
@@ -84,9 +92,12 @@ export default function AboutPage() {
             <div>
               {/* Placeholder region list from lib/site.ts. Confirm the framing
                   with the editors before treating it as final. */}
-              <ul className="grid gap-x-8 gap-y-2 text-ink-soft sm:grid-cols-2">
+              <ul className="grid gap-x-8 gap-y-2.5 text-ink-soft sm:grid-cols-2">
                 {REGION_COUNTRIES.map((country) => (
-                  <li key={country}>{country}</li>
+                  <li key={country} className="flex items-center gap-2.5">
+                    <Diamond className="text-gild" />
+                    {country}
+                  </li>
                 ))}
               </ul>
               <p className="mt-8 text-sm text-muted-fg">

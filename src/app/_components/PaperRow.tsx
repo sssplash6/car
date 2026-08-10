@@ -19,17 +19,20 @@ export function PaperRow({ paper }: { paper: PaperRowData }) {
     <article className="grid gap-5 border-b border-rule py-7 sm:grid-cols-[9rem_1fr] sm:gap-7">
       <Link
         href={`/p/${paper.slug}`}
-        className="group relative block aspect-3/2 overflow-hidden sm:aspect-4/3"
+        className="group relative block border border-rule bg-surface p-1 transition-colors hover:border-accent"
         tabIndex={-1}
         aria-hidden="true"
       >
-        <Image
-          src={paperImage(paper.slug, 360, 270)}
-          alt=""
-          fill
-          sizes="(max-width: 640px) 100vw, 9rem"
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-        />
+        {/* Mounted like a plate in a catalogue: hairline, mount, then image. */}
+        <span className="relative block aspect-3/2 overflow-hidden sm:aspect-4/3">
+          <Image
+            src={paperImage(paper.slug, 360, 270)}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 100vw, 9rem"
+            className="object-cover transition-transform duration-500 ease-[var(--ease-out-strong)] group-hover:scale-[1.04]"
+          />
+        </span>
       </Link>
 
       <div className="min-w-0">

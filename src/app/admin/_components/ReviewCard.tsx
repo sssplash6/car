@@ -42,7 +42,7 @@ export function ReviewCard({
           <input type="hidden" name="id" value={id} />
           <button
             type="submit"
-            className="cursor-pointer rounded bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dark"
+            className="cursor-pointer rounded bg-accent px-4 py-2 text-sm font-medium text-surface transition-colors hover:bg-accent-dark"
           >
             Publish
           </button>

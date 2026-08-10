@@ -1,11 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
 import { COPY } from "@/lib/content";
 import { REGION_COUNTRIES, formatDate } from "@/lib/site";
 import { paperImage, slotImage } from "@/lib/placeholderImage";
 import { Reveal } from "@/app/_components/Reveal";
+import { ClipReveal } from "@/app/_components/ClipReveal";
+import {
+  ArchFrame,
+  Corners,
+  Diamond,
+  IkatDivider,
+  PatternField,
+} from "@/app/_components/Ornament";
 
 // Homepage. No auth check anywhere in this file: this page and the abstract pages
 // are the site's entire search presence, so gating them would delete its search
@@ -13,9 +22,10 @@ import { Reveal } from "@/app/_components/Reveal";
 //
 // All copy is placeholder text from src/lib/content.ts.
 //
-// Layout families are deliberately varied so no two sections share a shape:
-// asymmetric split hero, full-bleed lead article, divided list plus aside, and a
-// coverage strip. Eyebrows are rationed to two on the whole page.
+// This page carries the site's one orchestrated entrance (the hero) and its
+// biggest ornament (the arch). Everything after the hero reveals on scroll and
+// keeps to hairlines, one ikat threshold, and one framed panel — the rationing
+// rules live in DESIGN.md.
 
 export default async function HomePage() {
   const { hero, editorial, callForPapers } = COPY.home;
@@ -38,62 +48,89 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ---- Hero: asymmetric split ---- */}
-      <section className="border-b border-rule bg-surface">
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-6 pb-12 pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:pb-16 lg:pt-20">
+      {/* ---- Hero: asymmetric split, text against a pishtaq-arched image ---- */}
+      <section className="relative overflow-hidden border-b border-rule bg-surface">
+        {/* Star lattice barely surfacing out of the paper. Hero, paper header
+            and footer are the only surfaces allowed this field. */}
+        <PatternField className="text-gild opacity-[0.05]" />
+
+        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-14 pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:pb-20 lg:pt-16">
           <div>
-            <h1 className="display-flush max-w-xl font-serif text-[2.75rem] leading-[1.06] tracking-tight text-ink sm:text-[3.5rem]">
-              {hero.title}
-            </h1>
-            <p className="prose-plain mt-5 max-w-md text-lg leading-relaxed text-ink-soft">
-              {hero.body}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/papers"
-                className="rounded bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent-dark active:translate-y-px"
-              >
-                Browse papers
-              </Link>
-              <Link
-                href="/submit"
-                className="rounded border border-rule-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
-              >
-                Submit a paper
-              </Link>
-            </div>
+            <Reveal load>
+              <h1 className="display-flush max-w-xl font-serif text-[clamp(2.75rem,1.2rem+5.2vw,4.5rem)] leading-[1.04] tracking-tight text-ink">
+                {hero.title}
+              </h1>
+            </Reveal>
+            <Reveal load delay={0.08}>
+              <p className="prose-plain mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
+                {hero.body}
+              </p>
+            </Reveal>
+            <Reveal load delay={0.16}>
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/papers"
+                  className="rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
+                >
+                  Browse papers
+                </Link>
+                <Link
+                  href="/submit"
+                  className="rounded border border-rule-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+                >
+                  Submit a paper
+                </Link>
+              </div>
+            </Reveal>
           </div>
 
-          {/* priority: this is the LCP element, so it must not lazy-load. */}
-          <div className="relative aspect-4/3 w-full overflow-hidden lg:aspect-3/2">
-            <Image
-              src={slotImage("hero-region", 1200, 800)}
-              alt=""
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 46vw"
-              className="object-cover"
-            />
-          </div>
+          {/* The one arch on the site. priority: this is the LCP element, so it
+              must not lazy-load; the clip reveal animates clip-path only, so the
+              image element itself is painted (and measured) immediately. */}
+          <ClipReveal delay={0.12} className="mx-auto w-full max-w-md lg:max-w-none">
+            <ArchFrame className="aspect-4/5 w-full sm:aspect-3/4 lg:aspect-4/5">
+              <div className="relative h-full w-full">
+                <Image
+                  src={slotImage("hero-region", 900, 1200)}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 44vw"
+                  className="object-cover"
+                />
+              </div>
+            </ArchFrame>
+          </ClipReveal>
         </div>
       </section>
 
       <div className="mx-auto w-full max-w-6xl px-6">
-        {/* ---- Lead paper: full-bleed image over text ---- */}
+        {/* ---- Lead paper: a framed plate over text ---- */}
         {lead ? (
-          <Reveal className="border-b border-rule py-14">
+          <Reveal className="py-14">
             <article className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-14">
+              {/* Eyebrow 1 of 2 on this page, tying the lead to the archive. */}
+              <div className="lg:col-span-2">
+                <p className="eyebrow flex items-center gap-2.5">
+                  <Diamond className="text-gild" />
+                  From the latest issue
+                </p>
+              </div>
+
               <Link
                 href={`/p/${lead.slug}`}
-                className="group relative block aspect-3/2 overflow-hidden"
+                className="group relative block border border-rule-strong bg-surface p-1.5 transition-colors hover:border-accent"
               >
-                <Image
-                  src={paperImage(lead.slug, 900, 600)}
-                  alt=""
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 42vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                />
+                {/* Framed like a museum plate: hairline, then mount, then image. */}
+                <span className="relative block aspect-3/2 overflow-hidden">
+                  <Image
+                    src={paperImage(lead.slug, 900, 600)}
+                    alt=""
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 42vw"
+                    className="object-cover transition-transform duration-500 ease-[var(--ease-out-strong)] group-hover:scale-[1.03]"
+                  />
+                </span>
               </Link>
 
               <div>
@@ -114,9 +151,14 @@ export default async function HomePage() {
                 </p>
                 <Link
                   href={`/p/${lead.slug}`}
-                  className="mt-5 inline-block text-sm text-accent transition-colors hover:text-accent-dark"
+                  className="group mt-5 inline-flex items-center gap-1.5 text-sm text-accent transition-colors hover:text-accent-dark"
                 >
                   Read the abstract
+                  <ArrowRightIcon
+                    size={15}
+                    aria-hidden="true"
+                    className="transition-transform duration-200 ease-[var(--ease-out-strong)] group-hover:translate-x-0.5"
+                  />
                 </Link>
               </div>
             </article>
@@ -137,17 +179,24 @@ export default async function HomePage() {
           </section>
         )}
 
+        {/* The ikat threshold: the page turns from the lead to the stream. */}
+        <IkatDivider className="text-tile" />
+
         {/* ---- Recent list plus editorial aside ---- */}
         <div className="grid gap-12 py-14 lg:grid-cols-[1fr_17rem] lg:gap-16">
           <section>
-            {/* Eyebrow 1 of 2 on this page. */}
             <div className="flex items-baseline justify-between border-b border-rule-strong pb-3">
-              <p className="eyebrow">Recent submissions</p>
+              <h2 className="font-serif text-xl text-ink">Recently published</h2>
               <Link
                 href="/papers"
-                className="text-sm text-accent transition-colors hover:text-accent-dark"
+                className="group inline-flex items-center gap-1.5 text-sm text-accent transition-colors hover:text-accent-dark"
               >
                 All papers
+                <ArrowRightIcon
+                  size={14}
+                  aria-hidden="true"
+                  className="transition-transform duration-200 ease-[var(--ease-out-strong)] group-hover:translate-x-0.5"
+                />
               </Link>
             </div>
 
@@ -161,12 +210,13 @@ export default async function HomePage() {
               <ol>
                 {rest.map((paper, i) => (
                   <Reveal key={paper.id} delay={i * 0.04}>
-                    <article className="grid grid-cols-[3rem_1fr] gap-5 border-b border-rule py-6 sm:grid-cols-[3.5rem_1fr]">
+                    <article className="group grid grid-cols-[3rem_1fr] gap-5 border-b border-rule py-6 sm:grid-cols-[3.5rem_1fr]">
                       {/* Numbered rather than bulleted: the list is ordered by
                           recency, and the number carries that ordering where a
                           decorative dot would not. The lead paper above is
-                          unnumbered, so this list starts at 01. */}
-                      <span className="pt-1 font-serif text-xl text-muted-fg">
+                          unnumbered, so this list starts at 01. Oldstyle figures
+                          because these are Garamond display numbers. */}
+                      <span className="oldstyle-nums pt-1 font-serif text-xl text-muted-fg transition-colors group-hover:text-accent">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0">
@@ -194,45 +244,54 @@ export default async function HomePage() {
             )}
           </section>
 
-          <aside className="space-y-9 lg:border-l lg:border-rule lg:pl-8">
-            <section>
-              <h2 className="font-serif text-lg text-ink">{editorial.title}</h2>
-              <p className="prose-plain mt-2.5 text-sm leading-relaxed text-ink-soft">
-                {editorial.body}
-              </p>
-            </section>
+          <Reveal delay={0.1}>
+            <aside className="space-y-9 lg:border-l lg:border-rule lg:pl-8">
+              <section>
+                <h2 className="font-serif text-lg text-ink">{editorial.title}</h2>
+                <p className="prose-plain mt-2.5 text-sm leading-relaxed text-ink-soft">
+                  {editorial.body}
+                </p>
+              </section>
 
-            <section className="border-t border-rule pt-8">
-              <h2 className="font-serif text-lg text-ink">
-                {callForPapers.title}
-              </h2>
-              <p className="prose-plain mt-2.5 text-sm leading-relaxed text-ink-soft">
-                {callForPapers.body}
-              </p>
-              <Link
-                href="/about"
-                className="mt-3.5 inline-block text-sm text-accent transition-colors hover:text-accent-dark"
-              >
-                Guidance for contributors
-              </Link>
-            </section>
-          </aside>
+              {/* The page's one framed moment: the standing invitation. */}
+              <section className="relative bg-accent-soft p-5">
+                <Corners className="text-accent/50" />
+                <h2 className="font-serif text-lg text-ink">
+                  {callForPapers.title}
+                </h2>
+                <p className="prose-plain mt-2.5 text-sm leading-relaxed text-ink-soft">
+                  {callForPapers.body}
+                </p>
+                <Link
+                  href="/about"
+                  className="mt-3.5 inline-block text-sm font-medium text-accent transition-colors hover:text-accent-dark"
+                >
+                  Guidance for contributors
+                </Link>
+              </section>
+            </aside>
+          </Reveal>
         </div>
+      </div>
 
-        {/* ---- Coverage strip ----
-             Deliberately typographic, with no photography. A photo captioned with
-             a country name asserts that the image depicts that country, and
-             placeholder stock cannot honour that claim. Decorative imagery is fine
-             beside an article; it is not fine standing in for a place. */}
-        <Reveal className="border-t border-rule-strong py-14">
+      {/* ---- Coverage strip ----
+           Deliberately typographic, with no photography. A photo captioned with
+           a country name asserts that the image depicts that country, and
+           placeholder stock cannot honour that claim. The gild lozenges are
+           punctuation, not attribution — geometry is shared heritage. */}
+      <section className="border-t border-rule-strong bg-surface">
+        <Reveal className="mx-auto w-full max-w-6xl px-6 py-14">
           {/* Eyebrow 2 of 2 on this page. */}
           <p className="eyebrow">Coverage</p>
-          <ul className="mt-7 flex flex-wrap items-baseline gap-x-8 gap-y-3">
-            {REGION_COUNTRIES.map((country) => (
+          <ul className="mt-7 flex flex-wrap items-baseline gap-x-5 gap-y-3">
+            {REGION_COUNTRIES.map((country, i) => (
               <li
                 key={country}
-                className="font-serif text-2xl text-ink sm:text-[1.75rem]"
+                className="flex items-baseline gap-x-5 font-serif text-2xl text-ink sm:text-[1.75rem]"
               >
+                {i > 0 && (
+                  <Diamond className="size-2 self-center text-gild" />
+                )}
                 {country}
               </li>
             ))}
@@ -242,7 +301,7 @@ export default async function HomePage() {
             these five countries.
           </p>
         </Reveal>
-      </div>
+      </section>
     </>
   );
 }
