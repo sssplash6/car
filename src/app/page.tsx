@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
+import { issueFor } from "@/lib/issues";
 import { COPY } from "@/lib/content";
 import { REGION_COUNTRIES, formatDate } from "@/lib/site";
 import {
@@ -52,6 +53,16 @@ export default async function HomePage() {
 
   const [lead, ...rest] = published;
 
+  // The cover is a dated object: the current issue's imprint sits above the
+  // headline, and the lead section names the same issue. Derived from the
+  // lead paper's quarter, so the cover can never disagree with /issues.
+  const leadIssue = lead?.publishedAt
+    ? issueFor(
+        published.flatMap((p) => (p.publishedAt ? [p.publishedAt] : [])),
+        lead.publishedAt,
+      )
+    : null;
+
   return (
     <>
       {/* ---- Hero: the journal's COVER ----
@@ -70,6 +81,14 @@ export default async function HomePage() {
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:pb-24 lg:pt-20">
           <div>
             <Reveal load>
+              {/* The imprint: a cover is a dated object, not a timeless
+                  banner. Gild small caps — the cover's own metal. */}
+              {leadIssue && (
+                <p className="mb-7 flex items-center gap-2.5 text-[0.6875rem] uppercase tracking-[0.18em] text-gild">
+                  <Diamond className="size-1.5" />
+                  Issue № {leadIssue.number} · {leadIssue.label}
+                </p>
+              )}
               {/* Enormous on purpose: a cover carries one line of type, and
                   parchment on lapis is the identity at full commitment.
                   text-balance keeps the phrase from orphaning mid-thought. */}
@@ -142,11 +161,21 @@ export default async function HomePage() {
         {lead ? (
           <Reveal className="py-14">
             <article className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start lg:gap-14">
-              {/* Eyebrow 1 of 2 on this page, tying the lead to the archive. */}
+              {/* Eyebrow 1 of 2 on this page, tying the lead to the archive —
+                  and now carrying the real issue, linked to its cover. */}
               <div className="lg:col-span-2">
                 <p className="eyebrow flex items-center gap-2.5">
                   <Diamond className="text-gild" />
-                  From the latest issue
+                  {leadIssue ? (
+                    <Link
+                      href={`/issues#${leadIssue.anchor}`}
+                      className="oldstyle-nums transition-colors hover:text-accent"
+                    >
+                      From Issue № {leadIssue.number} · {leadIssue.label}
+                    </Link>
+                  ) : (
+                    "From the latest issue"
+                  )}
                 </p>
               </div>
 

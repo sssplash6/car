@@ -250,21 +250,19 @@ export default async function PaperPage({ params }: PageProps) {
             {paper.authorLine}
           </p>
           {paper.publishedAt && (
-            <p className="mt-1 text-sm text-muted-fg">
-              Published {formatDate(paper.publishedAt)}
+            <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-fg">
+              <span>Published {formatDate(paper.publishedAt)}</span>
               {issue && (
-                <>
-                  {" · "}
-                  {/* Accent, because it acts: everything else in this line is
-                      static metadata, and a link the same colour as its
-                      neighbours is an affordance nobody finds. */}
-                  <Link
-                    href={`/issues#${issue.anchor}`}
-                    className="oldstyle-nums text-accent transition-colors hover:text-accent-dark"
-                  >
-                    Issue № {issue.number}, {issue.label}
-                  </Link>
-                </>
+                // A typographic chip, not a bare link: the issue is an object
+                // on this site (the archive shelves its covers), so its
+                // citation dresses like one — and the border makes the
+                // affordance visible where colour alone hid it.
+                <Link
+                  href={`/issues#${issue.anchor}`}
+                  className="press-ink oldstyle-nums inline-flex items-center border border-rule-strong px-2 py-0.5 text-xs text-ink hover:border-accent hover:text-accent"
+                >
+                  № {issue.number} · {issue.label}
+                </Link>
               )}
             </p>
           )}
