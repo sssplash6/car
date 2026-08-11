@@ -14,7 +14,7 @@ export function SiteFooter() {
     <footer className="surface-night relative mt-24 print:hidden">
       {/* Gilded frieze on the threshold, then the star lattice barely surfacing
           out of the field — the two ornaments this surface is allowed. */}
-      <TileBand className="relative z-10 text-gild/80" />
+      <TileBand className="relative z-10 text-gild" />
       <PatternField className="text-tile opacity-[0.06]" />
 
       <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-6 pb-14 pt-12 sm:grid-cols-[1.6fr_1fr_1fr]">
@@ -52,17 +52,23 @@ export function SiteFooter() {
               <FooterLink href="/submit">Submit a paper</FooterLink>
             </li>
             <li>
-              <FooterLink href="/submissions">Your submissions</FooterLink>
+              {/* Same label as the page and menu: two names for one place
+                  reads as two places. */}
+              <FooterLink href="/submissions">My submissions</FooterLink>
             </li>
           </ul>
         </nav>
       </div>
 
       <div className="relative border-t border-rule px-6 py-6">
-        <p className="mx-auto max-w-6xl text-xs text-muted-fg">
+        <p className="mx-auto flex max-w-6xl flex-wrap items-baseline gap-x-5 gap-y-1 text-xs text-muted-fg">
           {/* Year is rendered server-side; the layout is already dynamic because
               the header reads the session, so this costs nothing extra. */}
-          © {new Date().getFullYear()} {SITE_NAME}. Published by {PUBLISHER_NAME}.
+          <span>
+            © {new Date().getFullYear()} {SITE_NAME}. Published by {PUBLISHER_NAME}.
+          </span>
+          <FooterLink href="/privacy">Privacy</FooterLink>
+          <FooterLink href="/feed.xml">Atom feed</FooterLink>
         </p>
       </div>
     </footer>

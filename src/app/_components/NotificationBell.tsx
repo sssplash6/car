@@ -22,7 +22,12 @@ export function NotificationBell({ count }: { count: number }) {
       <BellIcon size={19} weight="regular" aria-hidden="true" />
 
       {count > 0 && (
-        <span className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium leading-4 text-surface">
+        // aria-hidden: the link's aria-label already carries the exact count;
+        // announcing "9+" on top of it would double-speak.
+        <span
+          aria-hidden="true"
+          className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium leading-4 text-surface"
+        >
           {badge}
         </span>
       )}

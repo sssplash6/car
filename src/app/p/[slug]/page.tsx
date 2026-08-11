@@ -266,7 +266,9 @@ export default async function PaperPage({ params }: PageProps) {
         </div>
         {/* The page's one tile band: the threshold between front matter and
             the work itself. */}
-        <TileBand className="relative text-tile/70 print:hidden" />
+        {/* Full-strength tile: at /70 the band fell below the doctrine's own
+            3:1 ornament floor in light mode. */}
+        <TileBand className="relative text-tile print:hidden" />
       </header>
 
       <div className="mx-auto w-full max-w-4xl px-6 py-12">

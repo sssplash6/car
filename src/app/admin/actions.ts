@@ -137,8 +137,9 @@ async function announceDecision(id: string, published: boolean) {
       ? `"${paper.title}" is published`
       : `"${paper.title}" needs revision`,
     body: published
-      ? "Your paper is now live and readable on the site."
-      : (paper.reviewNote ?? "An editor returned your paper for revision."),
+      ? "Your paper is published; readers can now find it on the site."
+      : (paper.reviewNote ??
+        "An editor returned your paper for revision. Revise it and submit the new version when ready."),
     href: published ? `/p/${paper.slug}` : "/submissions",
   });
 

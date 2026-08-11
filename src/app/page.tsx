@@ -221,10 +221,13 @@ export default async function HomePage() {
             ) : (
               <ol>
                 {rest.map((paper, i) => (
-                  // No stagger: each row scrolls in alone, so a delay would
-                  // read as lag rather than choreography.
-                  <Reveal key={paper.id}>
-                    <article className="group grid grid-cols-[3rem_1fr] gap-5 border-b border-rule py-6 sm:grid-cols-[3.5rem_1fr]">
+                  // li first, Reveal inside: an <ol> whose children are divs
+                  // is invalid markup and loses list semantics for AT. No
+                  // stagger: each row scrolls in alone, so a delay would read
+                  // as lag rather than choreography.
+                  <li key={paper.id}>
+                    <Reveal>
+                      <article className="group grid grid-cols-[3rem_1fr] gap-5 border-b border-rule py-6 sm:grid-cols-[3.5rem_1fr]">
                       {/* Numbered rather than bulleted: the list is ordered by
                           recency, and the number carries that ordering where a
                           decorative dot would not. The lead paper above is
@@ -251,8 +254,9 @@ export default async function HomePage() {
                           {paper.abstract}
                         </p>
                       </div>
-                    </article>
-                  </Reveal>
+                      </article>
+                    </Reveal>
+                  </li>
                 ))}
               </ol>
             )}
@@ -288,7 +292,9 @@ export default async function HomePage() {
 
               {/* The page's one framed moment: the standing invitation. */}
               <section className="relative bg-accent-soft p-5">
-                <Corners className="text-accent/50" />
+                {/* Full accent: the halved opacity sat under the 3:1 ornament
+                    floor on the tinted field. */}
+                <Corners className="text-accent" />
                 <h2 className="font-serif text-lg text-ink">
                   {callForPapers.title}
                 </h2>

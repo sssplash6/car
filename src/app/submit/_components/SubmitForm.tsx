@@ -174,6 +174,12 @@ export function SubmitForm() {
       </div>
 
       <div className="mt-10">
+        {/* The one rights sentence, at the commit point. Kept to a factual
+            confirmation; anything grander is the editors' call, not the
+            form's. */}
+        <p className="mb-3 max-w-md text-xs leading-relaxed text-muted-fg">
+          By submitting you confirm the work is yours to publish here.
+        </p>
         <SubmitButton blocked={fileError !== null} />
         <p className="mt-3 max-w-md text-xs leading-relaxed text-muted-fg">
           An editor reads every submission, and you will be emailed when a

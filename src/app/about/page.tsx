@@ -14,7 +14,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-// Every section here is placeholder text from src/lib/content.ts.
+// Copy lives in src/lib/content.ts. There is deliberately no masthead section:
+// a masthead signed by placeholder names reads as fabricated, which is worse
+// than a young review having none — add it back only with real names.
 //
 // No eyebrows on this page: the homepage already spends the page-level budget, and
 // each section here has a real heading doing the same job. The label-left,
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
 // homepage. Ornament budget: one ikat threshold and the gild lozenges on the
 // coverage list — the header stays plain so the words carry it.
 export default function AboutPage() {
-  const { main, masthead, submissions } = COPY.about;
+  const { main, submissions } = COPY.about;
 
   return (
     <>
@@ -40,8 +42,9 @@ export default function AboutPage() {
             {main.body}
           </p>
           {/* Mounted like the plates elsewhere on the site, so the About page
-              speaks the same museum language as the papers. */}
-          <div className="self-start border border-rule-strong bg-surface p-1.5">
+              speaks the same museum language as the papers. Named slots carry
+              their provenance visibly (public/regional/CREDITS.md). */}
+          <figure className="self-start border border-rule-strong bg-surface p-1.5">
             <div className="relative aspect-4/5 w-full overflow-hidden">
               <Image
                 src={aboutSuzani}
@@ -52,25 +55,17 @@ export default function AboutPage() {
                 className="object-cover"
               />
             </div>
-          </div>
+            <figcaption className="px-1 pb-0.5 pt-2 text-xs leading-relaxed text-muted-fg">
+              Suzani embroidery, Bukhara · Doris Duke Foundation for Islamic Art
+            </figcaption>
+          </figure>
         </div>
 
         <IkatDivider className="text-tile" />
 
-        <Reveal className="py-12">
-          <div className="grid gap-8 sm:grid-cols-[14rem_1fr] sm:gap-12">
-            <h2 className="font-serif text-2xl leading-tight text-ink">
-              {masthead.title}
-            </h2>
-            <p className="prose-plain max-w-[52ch] leading-[1.9] text-ink-soft">
-              {masthead.body}
-            </p>
-          </div>
-        </Reveal>
-
         {/* id + scroll-mt: the homepage's "Guidance for contributors" link
             lands here, not at the top of the page. */}
-        <Reveal className="border-t border-rule py-12">
+        <Reveal className="py-12">
           <div
             id="contributors"
             className="grid scroll-mt-6 gap-8 sm:grid-cols-[14rem_1fr] sm:gap-12"

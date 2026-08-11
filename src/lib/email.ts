@@ -65,7 +65,16 @@ async function deliver(
     return { status: "SKIPPED" };
   }
 
+  // The resend.dev fallback exists for local testing only. In production an
+  // unset MAIL_FROM must fail loudly into the email log rather than quietly
+  // sending a scholarly review's decisions from onboarding@resend.dev.
   const from = process.env.MAIL_FROM || `${SITE_NAME} <onboarding@resend.dev>`;
+  if (!process.env.MAIL_FROM && process.env.NODE_ENV === "production") {
+    return {
+      status: "FAILED",
+      error: "MAIL_FROM is unset; refusing the resend.dev fallback in production.",
+    };
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), SEND_TIMEOUT_MS);
 
@@ -117,7 +126,8 @@ export async function notifyDecision(opts: {
     ? `<p>Your paper <strong>${escapeHtml(opts.title)}</strong> is now published.</p>
        <p><a href="${siteUrl()}/p/${opts.slug}">Read it here</a></p>`
     : `<p>Your paper <strong>${escapeHtml(opts.title)}</strong> was reviewed and needs revision before publication.</p>
-       ${opts.reviewNote ? `<p><strong>Reviewer note:</strong> ${escapeHtml(opts.reviewNote)}</p>` : ""}
+       ${opts.reviewNote ? `<p><strong>Note from the editor:</strong> ${escapeHtml(opts.reviewNote)}</p>` : ""}
+       <p>When you have revised it, submit the new version and it will rejoin the queue.</p>
        <p><a href="${siteUrl()}/submissions">View your submissions</a></p>`;
 
   await sendEmail({
@@ -139,7 +149,7 @@ export async function notifyEditorsOfSubmission(opts: {
   const html = wrap(
     `<p>A new paper is waiting for review.</p>
      <p><strong>${escapeHtml(opts.title)}</strong><br/>${escapeHtml(opts.authorLine)}</p>
-     <p><a href="${siteUrl()}/admin">Open the review queue</a></p>`,
+     <p><a href="${siteUrl()}/admin/queue">Open the review queue</a></p>`,
   );
 
   // Sequential rather than Promise.all: this runs inside a user-facing submit
