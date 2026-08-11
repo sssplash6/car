@@ -79,7 +79,7 @@ export default async function IssuesPage() {
             const open =
               issue.year === now.year && issue.quarter === now.quarter;
             return (
-              <Reveal key={issue.anchor} delay={Math.min(i * 0.05, 0.15)}>
+              <Reveal key={issue.anchor}>
                 <section
                   id={issue.anchor}
                   aria-labelledby={`${issue.anchor}-title`}

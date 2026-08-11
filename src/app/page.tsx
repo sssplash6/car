@@ -219,7 +219,9 @@ export default async function HomePage() {
             ) : (
               <ol>
                 {rest.map((paper, i) => (
-                  <Reveal key={paper.id} delay={i * 0.04}>
+                  // No stagger: each row scrolls in alone, so a delay would
+                  // read as lag rather than choreography.
+                  <Reveal key={paper.id}>
                     <article className="group grid grid-cols-[3rem_1fr] gap-5 border-b border-rule py-6 sm:grid-cols-[3.5rem_1fr]">
                       {/* Numbered rather than bulleted: the list is ordered by
                           recency, and the number carries that ordering where a
@@ -254,7 +256,7 @@ export default async function HomePage() {
             )}
           </section>
 
-          <Reveal delay={0.1}>
+          <Reveal delay={0.08}>
             <aside className="space-y-9 lg:border-l lg:border-rule lg:pl-8">
               {/* A leaf from the Baburnama beside the editors' voice — the one
                   place the site shows manuscript art itself. The visible museum

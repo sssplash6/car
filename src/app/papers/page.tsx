@@ -43,10 +43,10 @@ export default async function PapersPage() {
         <>
           <IkatDivider className="mt-8 text-tile" />
           <div className="mt-2">
-            {papers.map((paper: PaperRowData, i: number) => (
-              // Delay is capped so deep rows entering the viewport later do not
-              // feel laggy — the stagger is for the first screenful only.
-              <Reveal key={paper.id} delay={Math.min(i * 0.04, 0.16)}>
+            {papers.map((paper: PaperRowData) => (
+              // No stagger: rows reveal individually as they scroll in, and
+              // anything already on screen at load renders without motion.
+              <Reveal key={paper.id}>
                 <PaperRow paper={paper} />
               </Reveal>
             ))}

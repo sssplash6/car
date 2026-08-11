@@ -203,8 +203,66 @@ body {
   transform: scaleX(1);
 }
 
-/* Reduced motion is honoured by each Motion component via useReducedMotion.
-   This is the belt-and-braces CSS fallback for anything purely declarative. */
+/* ---- Entrance motion (Reveal / ClipReveal) ----
+   Entrances materialize: opacity + 14px rise + a blur that resolves. The
+   server always renders content visible; scroll mode hides an element only
+   AFTER hydration and only while it is still below the fold (Reveal.tsx sets
+   data-reveal="pending"), so crawlers and no-JS readers never meet an
+   opacity-0 page. Load mode and the hero clip are keyframes, which play with
+   the first paint and need no JavaScript at all. */
+.reveal-scroll {
+  transition:
+    opacity 0.6s var(--ease-out-strong),
+    transform 0.6s var(--ease-out-strong),
+    filter 0.6s var(--ease-out-strong);
+  /* Stagger for siblings that enter together; 0 when an element arrives alone. */
+  transition-delay: var(--reveal-delay, 0s);
+}
+.reveal-scroll[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(14px);
+  filter: blur(6px);
+}
+
+.reveal-load {
+  /* `both` keeps the element hidden through its stagger delay, then holds the
+     end state — the same materialize curve as scroll mode. */
+  animation: reveal-rise 0.6s var(--ease-out-strong) both;
+  animation-delay: var(--reveal-delay, 0s);
+}
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+  }
+}
+
+/* Hero image ceremony: unveiled from the ground up while a slight scale
+   settles. 0.78s + the homepage's 0.12s delay lands exactly on the hero's
+   0.9s orchestration budget (DESIGN.md). */
+.clip-reveal {
+  animation: clip-rise 0.78s var(--ease-out-strong) both;
+  animation-delay: var(--reveal-delay, 0s);
+}
+.clip-reveal-inner {
+  animation: clip-settle 0.78s var(--ease-out-strong) both;
+  animation-delay: var(--reveal-delay, 0s);
+}
+@keyframes clip-rise {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+@keyframes clip-settle {
+  from {
+    transform: scale(1.06);
+  }
+}
+
+/* Reduced motion: Reveal also checks the media query before hiding anything;
+   this is the belt-and-braces CSS fallback that flattens every declarative
+   animation and transition above. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
