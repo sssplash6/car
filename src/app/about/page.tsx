@@ -68,8 +68,13 @@ export default function AboutPage() {
           </div>
         </Reveal>
 
+        {/* id + scroll-mt: the homepage's "Guidance for contributors" link
+            lands here, not at the top of the page. */}
         <Reveal className="border-t border-rule py-12">
-          <div className="grid gap-8 sm:grid-cols-[14rem_1fr] sm:gap-12">
+          <div
+            id="contributors"
+            className="grid scroll-mt-6 gap-8 sm:grid-cols-[14rem_1fr] sm:gap-12"
+          >
             <h2 className="font-serif text-2xl leading-tight text-ink">
               {submissions.title}
             </h2>

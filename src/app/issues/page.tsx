@@ -88,12 +88,16 @@ export default async function IssuesPage() {
                   }`}
                 >
                   <div>
-                    <p
+                    {/* An h2, so the outline reads h1 → issue → paper; and in
+                        ink, not accent — the numeral is display, not action,
+                        and lapis on a non-link teaches readers to stop
+                        trusting the action colour. */}
+                    <h2
                       id={`${issue.anchor}-title`}
-                      className="oldstyle-nums font-serif text-[3.25rem] leading-none tracking-tight text-accent"
+                      className="oldstyle-nums font-serif text-[3.25rem] leading-none tracking-tight text-ink"
                     >
                       № {issue.number}
-                    </p>
+                    </h2>
                     <p className="mt-2 font-serif text-xl text-ink">
                       {issue.label}
                     </p>

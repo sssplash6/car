@@ -62,7 +62,9 @@ export default async function HomePage() {
         <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-14 pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:pb-20 lg:pt-16">
           <div>
             <Reveal load>
-              <h1 className="display-flush max-w-xl font-serif text-[clamp(2.75rem,1.2rem+5.2vw,4.5rem)] leading-[1.04] tracking-tight text-ink">
+              {/* text-balance keeps the headline from orphaning mid-phrase
+                  ("Research on Central / Asia") at awkward widths. */}
+              <h1 className="display-flush max-w-xl text-balance font-serif text-[clamp(2.75rem,1.2rem+5.2vw,4.5rem)] leading-[1.04] tracking-tight text-ink">
                 {hero.title}
               </h1>
             </Reveal>
@@ -294,7 +296,7 @@ export default async function HomePage() {
                   {callForPapers.body}
                 </p>
                 <Link
-                  href="/about"
+                  href="/about#contributors"
                   className="mt-3.5 inline-block text-sm font-medium text-accent transition-colors hover:text-accent-dark"
                 >
                   Guidance for contributors
@@ -310,7 +312,9 @@ export default async function HomePage() {
              the place is a claim the image can keep. ---- */}
         <Reveal className="pb-16">
           <figure className="border border-rule-strong bg-surface p-1.5">
-            <div className="relative aspect-21/9 w-full overflow-hidden sm:aspect-8/3">
+            {/* 16/9 below sm: the 21/9 letterbox compressed to a 146px sliver
+                on a phone, too shallow to read as a plate. */}
+            <div className="relative aspect-16/9 w-full overflow-hidden sm:aspect-8/3">
               <Image
                 src={interludeSongKul}
                 alt="Yurts on the summer pasture at Song-Kul, Kyrgyzstan"
@@ -336,15 +340,17 @@ export default async function HomePage() {
         <Reveal className="mx-auto w-full max-w-6xl px-6 py-14">
           {/* Eyebrow 2 of 2 on this page. */}
           <p className="eyebrow">Coverage</p>
-          <ul className="mt-7 flex flex-wrap items-baseline gap-x-5 gap-y-3">
-            {REGION_COUNTRIES.map((country, i) => (
+          {/* Every country carries its own leading lozenge (the same marker
+              the About coverage list uses): a marker per item survives line
+              wrapping, where an in-between separator strands diamonds at line
+              starts. */}
+          <ul className="mt-7 flex flex-wrap items-baseline gap-x-7 gap-y-3">
+            {REGION_COUNTRIES.map((country) => (
               <li
                 key={country}
-                className="flex items-baseline gap-x-5 font-serif text-2xl text-ink sm:text-[1.75rem]"
+                className="flex items-baseline gap-x-3 font-serif text-2xl text-ink sm:text-[1.75rem]"
               >
-                {i > 0 && (
-                  <Diamond className="size-2 self-center text-gild" />
-                )}
+                <Diamond className="size-2 self-center text-gild" />
                 {country}
               </li>
             ))}

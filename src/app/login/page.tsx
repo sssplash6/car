@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { GoogleLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { Corners, Rosette } from "@/app/_components/Ornament";
+import { Corners } from "@/app/_components/Ornament";
 import { googleEnabled } from "@/auth.config";
 import { devLoginEnabled } from "@/auth";
 import { signInAsDev, signInWithGoogle } from "@/app/_actions/auth";
@@ -24,15 +24,18 @@ export default async function LoginPage({ searchParams }: PageProps) {
     <div className="mx-auto w-full max-w-md px-6 py-16">
       {/* A doorway, so it gets the frame: the same treatment as the gated
           download panel, because both mark the same threshold. */}
+      {/* The illumination corners alone frame the doorway. No Rosette here:
+          the device belongs to the masthead 150px above, and repeating it
+          demotes it from device to decoration (DESIGN.md placement rule). */}
       <div className="relative border border-rule-strong bg-surface p-8 sm:p-10">
         <Corners className="text-gild" />
-        <Rosette className="size-10 text-accent" />
-        <h1 className="display-flush mt-5 font-serif text-[2.5rem] leading-tight tracking-tight text-ink">
+        <h1 className="display-flush font-serif text-[2.5rem] leading-tight tracking-tight text-ink">
           Sign in
         </h1>
         <p className="mt-4 leading-relaxed text-ink-soft">
-          Abstracts are free to read without an account. Sign in to download full
-          papers or to submit your own work.
+          Abstracts are free to read without an account. Sign in to download
+          full papers or to submit your own work. New here? Continuing with
+          Google creates your account; there is no separate registration.
         </p>
 
         {error && (

@@ -56,12 +56,18 @@ const PAPER_POOL: StaticImageData[] = [
  * structure that the weak hash visibly clumped (three neighbouring papers drew
  * the same textile). Collisions can never be eliminated with a finite pool —
  * only made no-worse-than-random.
+ *
+ * `bump` steps to the next pool slot and exists for ONE caller: the papers
+ * index, which advances a colliding row so two identical plates never sit in
+ * one screenful. Everywhere else (paper page, share card) must call this with
+ * no bump — that hash is the paper's canonical image, and nobody compares an
+ * index thumbnail against a share card, while adjacent twins read as a bug.
  */
-export function paperImage(slug: string): StaticImageData {
+export function paperImage(slug: string, bump = 0): StaticImageData {
   let hash = 0x811c9dc5;
   for (let i = 0; i < slug.length; i += 1) {
     hash ^= slug.charCodeAt(i);
     hash = Math.imul(hash, 0x01000193) >>> 0;
   }
-  return PAPER_POOL[hash % PAPER_POOL.length];
+  return PAPER_POOL[(hash + bump) % PAPER_POOL.length];
 }
