@@ -42,7 +42,7 @@ export async function SiteHeader() {
   const isAdmin = roleRow?.role === "ADMIN";
 
   return (
-    <header className="border-b border-rule bg-canvas">
+    <header className="border-b border-rule bg-canvas print:hidden">
       <WovenTrim />
 
       <div className="mx-auto flex w-full max-w-6xl items-end justify-between gap-6 px-6 pt-6">

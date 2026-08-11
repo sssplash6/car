@@ -11,7 +11,7 @@ import { PatternField, Rosette, TileBand } from "@/app/_components/Ornament";
 // Academy is named here rather than in the masthead.
 export function SiteFooter() {
   return (
-    <footer className="surface-night relative mt-24">
+    <footer className="surface-night relative mt-24 print:hidden">
       {/* Gilded frieze on the threshold, then the star lattice barely surfacing
           out of the field — the two ornaments this surface is allowed. */}
       <TileBand className="relative z-10 text-gild/80" />
