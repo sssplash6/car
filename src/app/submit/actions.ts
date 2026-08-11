@@ -17,7 +17,13 @@ const MAX_ABSTRACT = 5000;
 const MAX_AUTHOR_LINE = 300;
 const MIN_ABSTRACT = 100;
 
-export type SubmitState = { error?: string };
+export type SubmitState = {
+  error?: string;
+  /** Echoed back with every error: React 19 resets uncontrolled fields after
+      the action round-trip, so without this a validation failure wipes the
+      author's entire abstract. */
+  values?: { title: string; authorLine: string; abstract: string };
+};
 
 /**
  * Create a paper and put it straight into review.
@@ -37,26 +43,35 @@ export async function submitPaper(
   const authorLine = String(formData.get("authorLine") ?? "").trim();
   const file = formData.get("file");
 
-  if (!title) return { error: "Give the paper a title." };
+  // Everything the author typed rides along with every error, so no failure
+  // costs them their text. The file cannot be echoed — browsers do not allow
+  // programmatically refilling a file input — which the form copy explains.
+  const values = { title, authorLine, abstract };
+
+  if (!title) return { error: "Give the paper a title.", values };
   if (title.length > MAX_TITLE) {
-    return { error: `Titles are limited to ${MAX_TITLE} characters.` };
+    return { error: `Titles are limited to ${MAX_TITLE} characters.`, values };
   }
   if (!authorLine) {
-    return { error: "List the authors, separated by commas." };
+    return { error: "List the authors, separated by commas.", values };
   }
   if (authorLine.length > MAX_AUTHOR_LINE) {
-    return { error: `The author line is limited to ${MAX_AUTHOR_LINE} characters.` };
+    return {
+      error: `The author line is limited to ${MAX_AUTHOR_LINE} characters.`,
+      values,
+    };
   }
   if (abstract.length < MIN_ABSTRACT) {
     return {
       error: `The abstract is the only part search engines can read, so it needs at least ${MIN_ABSTRACT} characters.`,
+      values,
     };
   }
   if (abstract.length > MAX_ABSTRACT) {
-    return { error: `Abstracts are limited to ${MAX_ABSTRACT} characters.` };
+    return { error: `Abstracts are limited to ${MAX_ABSTRACT} characters.`, values };
   }
   if (!(file instanceof File) || file.size === 0) {
-    return { error: "Attach the paper as a PDF." };
+    return { error: "Attach the paper as a PDF.", values };
   }
 
   // Write the file before the row: an orphaned file wastes a little disk, but a
@@ -65,9 +80,9 @@ export async function submitPaper(
   try {
     stored = await savePdf(file);
   } catch (err) {
-    if (err instanceof UploadError) return { error: err.message };
+    if (err instanceof UploadError) return { error: err.message, values };
     console.error("[submit] upload failed:", err);
-    return { error: "That upload failed. Please try again." };
+    return { error: "That upload failed. Please try again.", values };
   }
 
   const slug = await buildUniqueSlug(title, async (candidate) => {

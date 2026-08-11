@@ -93,3 +93,15 @@ export async function markAllRead(userId: string): Promise<void> {
     data: { readAt: new Date() },
   });
 }
+
+/**
+ * Mark a single notification read — the side effect of opening it. Same
+ * ownership-in-the-query rule as markAllRead; an id belonging to someone else
+ * updates zero rows.
+ */
+export async function markOneRead(userId: string, id: string): Promise<void> {
+  await prisma.notification.updateMany({
+    where: { id, userId, readAt: null },
+    data: { readAt: new Date() },
+  });
+}

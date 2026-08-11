@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { GoogleLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { Corners } from "@/app/_components/Ornament";
+import { siteUrl } from "@/lib/site";
 import { googleEnabled } from "@/auth.config";
 import { devLoginEnabled } from "@/auth";
 import { signInAsDev, signInWithGoogle } from "@/app/_actions/auth";
@@ -14,11 +15,32 @@ export const metadata: Metadata = {
 };
 
 type PageProps = {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; callbackUrl?: string; error?: string }>;
 };
 
+/**
+ * Reduce a post-login destination to a same-site path. `next` is app-written
+ * and relative; `callbackUrl` is what Auth.js appends when the proxy bounces a
+ * signed-out visitor here, and arrives as an absolute URL. Anything else
+ * (other origins, protocol-relative tricks) is dropped.
+ */
+function safePath(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+  try {
+    const url = new URL(raw);
+    if (url.origin === siteUrl()) return url.pathname + url.search;
+  } catch {
+    // Not a URL at all — fall through to undefined.
+  }
+  return undefined;
+}
+
 export default async function LoginPage({ searchParams }: PageProps) {
-  const { next, error } = await searchParams;
+  const { next: rawNext, callbackUrl, error } = await searchParams;
+  // Without this, the proxy's round trip loses the destination: a reader sent
+  // here from /submit signed in and landed somewhere else entirely.
+  const next = safePath(rawNext) ?? safePath(callbackUrl);
 
   return (
     <div className="mx-auto w-full max-w-md px-6 py-16">

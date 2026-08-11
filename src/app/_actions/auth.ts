@@ -9,7 +9,11 @@ import { signIn, signOut } from "@/auth";
 export async function signInWithGoogle(next?: string) {
   // redirectTo is validated by Auth.js against the site origin, so a crafted
   // ?next= cannot bounce the user to an external domain after sign-in.
-  await signIn("google", { redirectTo: next || "/submissions" });
+  //
+  // Default is the homepage: most sign-ins without a destination come from the
+  // header's button, and landing a new reader on an empty "My submissions"
+  // page reads as a wrong turn. Gated flows always carry their destination.
+  await signIn("google", { redirectTo: next || "/" });
 }
 
 export async function signOutAction() {
