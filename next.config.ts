@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   experimental: {
+    // React's <ViewTransition> integration: the paper title morphs from index
+    // row to title leaf on navigation (TitleCarry.tsx); the theme flip rides
+    // the same API. Progressive — browsers without support get plain cuts.
+    viewTransition: true,
+
     serverActions: {
       // Server action bodies are capped at 1 MB by default, which rejects almost
       // every real paper. Must stay >= MAX_UPLOAD_BYTES in src/lib/storage.ts —

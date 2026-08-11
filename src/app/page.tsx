@@ -14,6 +14,7 @@ import {
 } from "@/lib/regionalImages";
 import { Reveal } from "@/app/_components/Reveal";
 import { ClipReveal } from "@/app/_components/ClipReveal";
+import { TitleCarry } from "@/app/_components/TitleCarry";
 import {
   ArchFrame,
   Corners,
@@ -200,14 +201,16 @@ export default async function HomePage() {
               </Link>
 
               <div>
-                <h2 className="font-serif text-[2rem] leading-[1.14] tracking-tight sm:text-[2.5rem]">
-                  <Link
-                    href={`/p/${lead.slug}`}
-                    className="title-link text-ink hover:text-accent"
-                  >
-                    {lead.title}
-                  </Link>
-                </h2>
+                <TitleCarry slug={lead.slug}>
+                  <h2 className="font-serif text-[2rem] leading-[1.14] tracking-tight sm:text-[2.5rem]">
+                    <Link
+                      href={`/p/${lead.slug}`}
+                      className="title-link text-ink hover:text-accent"
+                    >
+                      {lead.title}
+                    </Link>
+                  </h2>
+                </TitleCarry>
                 <p className="mt-3 text-sm text-muted-fg">
                   {lead.authorLine}
                   {lead.publishedAt && ` · ${formatDate(lead.publishedAt)}`}
@@ -291,14 +294,16 @@ export default async function HomePage() {
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0">
-                        <h3 className="font-serif text-xl leading-snug">
-                          <Link
-                            href={`/p/${paper.slug}`}
-                            className="title-link text-ink hover:text-accent"
-                          >
-                            {paper.title}
-                          </Link>
-                        </h3>
+                        <TitleCarry slug={paper.slug}>
+                          <h3 className="font-serif text-xl leading-snug">
+                            <Link
+                              href={`/p/${paper.slug}`}
+                              className="title-link text-ink hover:text-accent"
+                            >
+                              {paper.title}
+                            </Link>
+                          </h3>
+                        </TitleCarry>
                         <p className="mt-1.5 text-sm text-muted-fg">
                           {paper.authorLine}
                           {paper.publishedAt &&

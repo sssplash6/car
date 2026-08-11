@@ -14,6 +14,7 @@ import { issueFor, tashkentQuarter } from "@/lib/issues";
 import { SITE_NAME, formatDate, siteUrl } from "@/lib/site";
 import { paperImage } from "@/lib/regionalImages";
 import { CopyButton } from "@/app/_components/CopyButton";
+import { TitleCarry } from "@/app/_components/TitleCarry";
 import {
   Corners,
   Diamond,
@@ -247,9 +248,11 @@ export default async function PaperPage({ params }: PageProps) {
 
           <Headpiece className="mx-auto mt-8 h-10 w-full max-w-sm text-gild print:hidden" />
 
-          <h1 className="mx-auto mt-7 max-w-3xl text-balance text-center font-serif text-[clamp(2.5rem,1.4rem+4.2vw,4.25rem)] leading-[1.05] tracking-tight text-ink">
-            {paper.title}
-          </h1>
+          <TitleCarry slug={paper.slug}>
+            <h1 className="mx-auto mt-7 max-w-3xl text-balance text-center font-serif text-[clamp(2.5rem,1.4rem+4.2vw,4.25rem)] leading-[1.05] tracking-tight text-ink">
+              {paper.title}
+            </h1>
+          </TitleCarry>
 
           <p className="mt-6 text-center font-serif text-xl text-ink">
             {paper.authorLine}
@@ -420,14 +423,16 @@ export default async function PaperPage({ params }: PageProps) {
             <ol className="mt-3">
               {alsoInIssue.map((p) => (
                 <li key={p.id} className="border-b border-rule py-5 last:border-b-0">
-                  <h3 className="font-serif text-lg leading-snug">
-                    <Link
-                      href={`/p/${p.slug}`}
-                      className="title-link text-ink hover:text-accent"
-                    >
-                      {p.title}
-                    </Link>
-                  </h3>
+                  <TitleCarry slug={p.slug}>
+                    <h3 className="font-serif text-lg leading-snug">
+                      <Link
+                        href={`/p/${p.slug}`}
+                        className="title-link text-ink hover:text-accent"
+                      >
+                        {p.title}
+                      </Link>
+                    </h3>
+                  </TitleCarry>
                   <p className="mt-1 text-sm text-muted-fg">
                     {p.authorLine} · {formatDate(p.publishedAt)}
                   </p>

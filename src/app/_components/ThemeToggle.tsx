@@ -64,11 +64,19 @@ export function ThemeToggle() {
     // event, so the paper cross-fades (tuned in globals.css) while the woven
     // chrome — identical in both modes — holds still. Reader-initiated and
     // rare, which is what earns it motion; everyone else gets the plain flip.
+    //
+    // Typed "theme" so the fade CSS cannot leak onto route transitions
+    // (which are deliberate cuts). The object form is newer than
+    // startViewTransition itself, hence the fallback chain.
     if (
       "startViewTransition" in document &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      document.startViewTransition(apply);
+      try {
+        document.startViewTransition({ update: apply, types: ["theme"] });
+      } catch {
+        document.startViewTransition(apply);
+      }
     } else {
       apply();
     }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { StaticImageData } from "next/image";
 import { formatDate } from "@/lib/site";
 import { paperImage } from "@/lib/regionalImages";
+import { TitleCarry } from "@/app/_components/TitleCarry";
 
 export type PaperRowData = {
   id: string;
@@ -49,14 +50,16 @@ export function PaperRow({
       </Link>
 
       <div className="min-w-0 max-w-[65ch]">
-        <h3 className="font-serif text-xl leading-snug">
-          <Link
-            href={`/p/${paper.slug}`}
-            className="title-link text-ink hover:text-accent"
-          >
-            {paper.title}
-          </Link>
-        </h3>
+        <TitleCarry slug={paper.slug}>
+          <h3 className="font-serif text-xl leading-snug">
+            <Link
+              href={`/p/${paper.slug}`}
+              className="title-link text-ink hover:text-accent"
+            >
+              {paper.title}
+            </Link>
+          </h3>
+        </TitleCarry>
         <p className="mt-1.5 text-sm text-muted-fg">
           {paper.authorLine}
           {paper.publishedAt && ` · ${formatDate(paper.publishedAt)}`}

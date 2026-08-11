@@ -436,15 +436,35 @@ html {
   }
 }
 
-/* Theme flip: the site's ONE new sanctioned ceremony (reader-initiated, a
-   few times per visit). The paper cross-fades while the woven chrome — the
-   trim and night surfaces that are identical in both modes — holds still:
-   the lamp dims, the cloth stays. Fired via document.startViewTransition in
-   ThemeToggle; these tune it. Exit faster than enter, on purpose. */
-::view-transition-old(root) {
+/* View transitions carry exactly two meanings here, kept apart by type.
+   Route swaps stay CUTS — the one thing that persists is the paper's title
+   (TitleCarry names it on both ends), morphing from index row to title leaf
+   with a breath of blur masking the Garamond rescale mid-flight.
+   The THEME flip (typed "theme" by ThemeToggle) is the one full cross-fade:
+   the paper dims while the woven chrome, identical in both modes, holds. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(.paper-title) {
+  animation-duration: 260ms;
+  animation-timing-function: var(--ease-in-out-strong);
+}
+::view-transition-image-pair(.paper-title) {
+  animation-name: vt-carry-blur;
+  animation-duration: 260ms;
+  animation-timing-function: var(--ease-in-out-strong);
+}
+@keyframes vt-carry-blur {
+  30% {
+    filter: blur(2px);
+  }
+}
+
+:root:active-view-transition-type(theme)::view-transition-old(root) {
   animation: vt-cross 200ms var(--ease-out-strong) both reverse;
 }
-::view-transition-new(root) {
+:root:active-view-transition-type(theme)::view-transition-new(root) {
   animation: vt-cross 340ms var(--ease-out-strong) both;
 }
 @keyframes vt-cross {

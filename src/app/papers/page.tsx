@@ -9,6 +9,7 @@ import { tashkentQuarter } from "@/lib/issues";
 import { formatDate } from "@/lib/site";
 import { paperImage } from "@/lib/regionalImages";
 import { PaperRow } from "@/app/_components/PaperRow";
+import { TitleCarry } from "@/app/_components/TitleCarry";
 import { Diamond, IkatDivider, Rosette } from "@/app/_components/Ornament";
 import { Reveal } from "@/app/_components/Reveal";
 
@@ -184,14 +185,16 @@ export default async function PapersPage({ searchParams }: PageProps) {
                 <Reveal className="reveal-plate">
                   <article className="grid gap-6 border-b border-rule pb-8 sm:grid-cols-[1fr_15rem] sm:items-start">
                     <div className="max-w-[65ch]">
-                      <h3 className="font-serif text-[1.65rem] leading-tight">
-                        <Link
-                          href={`/p/${first.paper.slug}`}
-                          className="title-link text-ink hover:text-accent"
-                        >
-                          {first.paper.title}
-                        </Link>
-                      </h3>
+                      <TitleCarry slug={first.paper.slug}>
+                        <h3 className="font-serif text-[1.65rem] leading-tight">
+                          <Link
+                            href={`/p/${first.paper.slug}`}
+                            className="title-link text-ink hover:text-accent"
+                          >
+                            {first.paper.title}
+                          </Link>
+                        </h3>
+                      </TitleCarry>
                       <p className="mt-2 text-sm text-muted-fg">
                         {first.paper.authorLine}
                         {first.paper.publishedAt &&
