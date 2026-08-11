@@ -50,8 +50,20 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${displaySerif.variable} h-full antialiased`}
+      // The pre-paint script below may set data-theme before hydration, which
+      // React must not treat as a mismatch to repair.
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
+        {/* Pre-paint theme pin. Parser-blocking on purpose: it must run before
+            anything renders, or a reader who pinned dark gets a light flash on
+            every load. All colour logic stays in the light-dark() tokens in
+            globals.css — this only sets the attribute those tokens react to. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
+          }}
+        />
         {/* Keyboard users get past the decorated chrome in one tab. Visible only
             while focused; sits above everything so no header stacking hides it. */}
         <a

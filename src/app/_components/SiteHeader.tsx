@@ -6,6 +6,7 @@ import { SITE_NAME } from "@/lib/site";
 import { NavLinks } from "@/app/_components/NavLinks";
 import { NotificationBell } from "@/app/_components/NotificationBell";
 import { ProfileMenu } from "@/app/_components/ProfileMenu";
+import { ThemeToggle } from "@/app/_components/ThemeToggle";
 import { Rosette, WovenTrim } from "@/app/_components/Ornament";
 
 // Site chrome. Rendered on every page including public ones, so nothing here may
@@ -60,6 +61,7 @@ export async function SiteHeader() {
         </Link>
 
         <div className="flex shrink-0 items-center gap-1.5">
+          <ThemeToggle />
           {userId ? (
             <>
               <NotificationBell count={unread} />

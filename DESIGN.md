@@ -2,10 +2,14 @@
 
 The implementation lives in `src/app/globals.css` (tokens, utilities) and
 `src/app/_components/Ornament.tsx` (the SVG ornament library). Components read
-semantic tokens (`bg-canvas`, `text-ink`, `border-rule`), never raw hex, so
-dark mode overrides tokens rather than components. Every value below was
-validated for WCAG contrast — re-run the check before changing one
-(see the "contrast" note at the bottom).
+semantic tokens (`bg-canvas`, `text-ink`, `border-rule`), never raw hex. Every
+token is a `light-dark()` pair resolved by `color-scheme`: the OS preference by
+default, or the reader's pinned choice via `[data-theme]` — set before first
+paint by the inline script in `layout.tsx` and cycled by the header's
+`ThemeToggle` (system → dark → light). Keeping both steps in one declaration is
+what enforces "light and dark in step". Every value below was validated for
+WCAG contrast — re-run the check before changing one (see the "contrast" note
+at the bottom).
 
 ## Palette — "Timurid manuscript"
 
@@ -19,6 +23,7 @@ ornament and small marks, not in body UI.
 | `surface` | `#fefcf4` | `#211a14` | raised areas, inputs |
 | `rule` | `#e8dcc2` | `#3a3024` | hairlines |
 | `rule-strong` | `#cbbb96` | `#564936` | deliberate dividers |
+| `field` | `#9c8c6c` | `#7a6a52` | input borders only — a control's boundary is information, ≥3:1 on `surface` (WCAG 1.4.11) |
 | `ink` | `#262019` | `#f1e8d7` | primary text (sepia-black / parchment) |
 | `ink-soft` | `#4d4536` | `#d2c6ae` | body copy at length |
 | `muted-fg` | `#6e6450` | `#a29578` | metadata, captions |
