@@ -19,6 +19,7 @@ import {
   Diamond,
   IkatDivider,
   PatternField,
+  TileBand,
 } from "@/app/_components/Ornament";
 
 // Homepage. No auth check anywhere in this file: this page and the abstract pages
@@ -53,37 +54,48 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ---- Hero: asymmetric split, text against a pishtaq-arched image ---- */}
-      <section className="relative overflow-hidden border-b border-rule bg-surface">
-        {/* Star lattice barely surfacing out of the paper. Hero, paper header
-            and footer are the only surfaces allowed this field. */}
-        <PatternField className="text-gild opacity-[0.05]" />
+      {/* ---- Hero: the journal's COVER ----
+           The brand's physical object is a hand-bound journal whose cover is
+           cloth and tile (PRODUCT.md), and the site's night-lapis surface was
+           spending its life in the footer. Promoted here, the page opens on
+           the cover and turns to paper: parchment Garamond at display scale,
+           the arch glowing against the dark, a gilded frieze at the fold.
+           Every colour comes from the surface-night token scoping — inside
+           it, the action colour IS gold. */}
+      <section className="surface-night relative overflow-hidden">
+        {/* Star lattice sunk into the night field — the same pairing the
+            footer is allowed, mirrored at the site's opening. */}
+        <PatternField className="text-tile opacity-[0.06]" />
 
-        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-14 pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-20 lg:pb-20 lg:pt-16">
+        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:pb-24 lg:pt-20">
           <div>
             <Reveal load>
-              {/* text-balance keeps the headline from orphaning mid-phrase
-                  ("Research on Central / Asia") at awkward widths. */}
-              <h1 className="display-flush max-w-xl text-balance font-serif text-[clamp(2.75rem,1.2rem+5.2vw,4.5rem)] leading-[1.04] tracking-tight text-ink">
+              {/* Enormous on purpose: a cover carries one line of type, and
+                  parchment on lapis is the identity at full commitment.
+                  text-balance keeps the phrase from orphaning mid-thought. */}
+              <h1 className="display-flush text-balance font-serif text-[clamp(3rem,1.1rem+6.4vw,6.25rem)] leading-[1.02] tracking-tight text-ink">
                 {hero.title}
               </h1>
             </Reveal>
             <Reveal load delay={0.08}>
-              <p className="prose-plain mt-6 max-w-md text-lg leading-relaxed text-ink-soft">
+              <p className="prose-plain mt-7 max-w-md text-lg leading-relaxed text-ink-soft">
                 {hero.body}
               </p>
             </Reveal>
             <Reveal load delay={0.16}>
-              <div className="mt-9 flex flex-wrap items-center gap-3">
+              <div className="mt-10 flex flex-wrap items-center gap-3">
+                {/* accent resolves to gild inside the night surface: the gold
+                    button against lapis is the cover's clasp. Dark text via
+                    the scoped surface token (night blue on gold, 5.6:1). */}
                 <Link
                   href="/papers"
-                  className="rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
+                  className="rounded bg-accent px-6 py-3 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
                 >
                   Browse papers
                 </Link>
                 <Link
                   href="/submit"
-                  className="rounded border border-rule-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+                  className="rounded border border-rule-strong px-6 py-3 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
                 >
                   Submit a paper
                 </Link>
@@ -113,6 +125,11 @@ export default async function HomePage() {
             </ArchFrame>
           </ClipReveal>
         </div>
+
+        {/* The cover closes with the gilded frieze — the same threshold the
+            footer opens with, so night bookends paper. This is the page's one
+            major-boundary TileBand. */}
+        <TileBand className="relative text-gild" />
       </section>
 
       <div className="mx-auto w-full max-w-6xl px-6">
