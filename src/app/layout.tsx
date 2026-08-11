@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { EB_Garamond, Geist } from "next/font/google";
 import { SiteHeader } from "@/app/_components/SiteHeader";
 import { SiteFooter } from "@/app/_components/SiteFooter";
-import { SITE_NAME, siteUrl } from "@/lib/site";
+import { PUBLISHER_NAME, SITE_NAME, siteUrl } from "@/lib/site";
+import { heroRegistan } from "@/lib/regionalImages";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,11 +35,40 @@ export const metadata: Metadata = {
   // it Next emits relative og:url values, which most crawlers ignore.
   metadataBase: new URL(siteUrl()),
   title: {
-    default: `${SITE_NAME}: research and analysis on Central Asia`,
+    // The masthead already says Central Asian; the clause says what it is.
+    default: `${SITE_NAME}: research on the region's politics, economies and societies`,
     template: `%s · ${SITE_NAME}`,
   },
   description:
     "Research, analysis and essays on the politics, economies and societies of Central Asia.",
+  alternates: {
+    // Advertise the feed on every page; readers' feed buttons look here.
+    types: { "application/atom+xml": [{ url: "/feed.xml", title: SITE_NAME }] },
+  },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    // Default share card: the site's own hero image. Paper pages override
+    // this with their pool plate.
+    images: [
+      {
+        url: heroRegistan.src,
+        width: heroRegistan.width,
+        height: heroRegistan.height,
+      },
+    ],
+  },
+};
+
+// Site-level structured data: the review as a publication, not just a set of
+// articles. Paper pages add ScholarlyArticle themselves; this names what the
+// articles are part of.
+const siteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Periodical",
+  name: SITE_NAME,
+  url: siteUrl(),
+  publisher: { "@type": "Organization", name: PUBLISHER_NAME },
 };
 
 export default function RootLayout({
@@ -63,6 +93,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}`,
           }}
+        />
+        <script
+          type="application/ld+json"
+          // Static, code-authored JSON — nothing user-supplied reaches it.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteJsonLd) }}
         />
         {/* Keyboard users get past the decorated chrome in one tab. Visible only
             while focused; sits above everything so no header stacking hides it. */}
