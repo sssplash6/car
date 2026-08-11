@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "@/lib/site";
+import { formatDateTime } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Email log",
@@ -72,17 +72,19 @@ export default async function AdminEmailsPage() {
           <table className="w-full min-w-xl text-left text-sm">
             <thead>
               <tr className="border-y border-rule text-xs uppercase tracking-wider text-muted-fg">
-                <th className="py-3 pr-4 font-medium">When</th>
-                <th className="py-3 pr-4 font-medium">Recipient</th>
-                <th className="py-3 pr-4 font-medium">Subject</th>
-                <th className="py-3 font-medium">Status</th>
+                <th scope="col" className="py-3 pr-4 font-medium">When</th>
+                <th scope="col" className="py-3 pr-4 font-medium">Recipient</th>
+                <th scope="col" className="py-3 pr-4 font-medium">Subject</th>
+                <th scope="col" className="py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
               {logs.map((log) => (
                 <tr key={log.id} className="border-b border-rule align-top">
+                  {/* Minutes matter in a delivery log: "which attempt was
+                      this" is unanswerable at day granularity. */}
                   <td className="whitespace-nowrap py-3 pr-4 text-muted-fg">
-                    {formatDate(log.createdAt)}
+                    {formatDateTime(log.createdAt)}
                   </td>
                   <td className="py-3 pr-4 text-ink-soft">{log.recipient}</td>
                   <td className="py-3 pr-4 text-ink">

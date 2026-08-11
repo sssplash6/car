@@ -21,6 +21,13 @@ export async function GET(
   const { id } = await params;
   const user = await getOptionalUser();
 
+  // ?disposition=inline opens the PDF in the browser instead of downloading —
+  // the review queue reads papers in a tab beside the queue, and forcing every
+  // one through the Downloads folder taxed the editors' core loop. Anything
+  // other than the exact string keeps the safe attachment default.
+  const inline =
+    new URL(_request.url).searchParams.get("disposition") === "inline";
+
   const paper = await prisma.paper.findUnique({
     where: { id },
     select: {
@@ -72,7 +79,7 @@ export async function GET(
       // to start with %PDF, so this is accurate, and it stops a mislabelled
       // upload from being served as something the browser would execute.
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${asciiFilename(paper.originalName)}"`,
+      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${asciiFilename(paper.originalName)}"`,
       "Content-Length": String(bytes.byteLength),
       // Gated content must never be cached by a shared cache, or a CDN could
       // serve one reader's download to an anonymous visitor.

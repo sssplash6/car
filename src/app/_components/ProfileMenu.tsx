@@ -49,18 +49,27 @@ export function ProfileMenu({
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-haspopup="menu"
+        aria-label={`Account: ${label}`}
         className="flex cursor-pointer items-center gap-2 rounded border border-rule py-1 pl-1 pr-2.5 transition-colors hover:border-accent"
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-accent-soft font-medium text-accent">
+        <span
+          aria-hidden="true"
+          className="flex size-7 items-center justify-center rounded-full bg-accent-soft font-medium text-accent"
+        >
           {initial}
         </span>
-        <span className="max-w-28 truncate text-sm text-ink">{label}</span>
+        <span className="max-w-28 truncate text-sm text-ink max-sm:hidden">
+          {label}
+        </span>
       </button>
 
+      {/* A disclosure of plain links, deliberately NOT role="menu": the ARIA
+          menu pattern contracts arrow-key navigation and focus wrapping this
+          popover does not implement, and links-in-a-popover work correctly as
+          links. Tab order, Escape, and outside-click cover the interactions. */}
       {open && (
-        <div
-          role="menu"
+        <nav
+          aria-label="Account"
           className="absolute right-0 z-20 mt-2 w-56 rounded border border-rule bg-surface py-2 shadow-lg"
         >
           <div className="border-b border-rule px-4 pb-2">
@@ -93,7 +102,7 @@ export function ProfileMenu({
               Sign out
             </button>
           </form>
-        </div>
+        </nav>
       )}
     </div>
   );
@@ -111,7 +120,6 @@ function MenuLink({
   return (
     <Link
       href={href}
-      role="menuitem"
       onClick={onNavigate}
       className="block px-4 py-2 text-sm text-ink transition-colors hover:bg-canvas"
     >

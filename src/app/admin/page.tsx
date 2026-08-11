@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
-import { formatDate } from "@/lib/site";
+import { daysAgo, formatDate } from "@/lib/site";
 import { StatusPill } from "@/app/_components/StatusPill";
 
 export const metadata: Metadata = {
@@ -32,8 +32,11 @@ export default async function AdminOverviewPage() {
       }),
       // Surfaced up front because a failed decision email is invisible otherwise:
       // the send is deliberately fire-and-forget so a mail outage cannot roll back
-      // a publish.
-      prisma.emailLog.count({ where: { status: "FAILED" } }),
+      // a publish. Windowed to a week: an all-time count could never be cleared
+      // and would train editors to ignore the banner.
+      prisma.emailLog.count({
+        where: { status: "FAILED", createdAt: { gte: daysAgo(7) } },
+      }),
     ]);
 
   return (
@@ -50,7 +53,7 @@ export default async function AdminOverviewPage() {
       {mailFailures > 0 && (
         <p className="mt-6 rounded border border-state-bad/40 px-4 py-3 text-sm text-state-bad">
           {mailFailures} notification email
-          {mailFailures === 1 ? "" : "s"} failed to send.{" "}
+          {mailFailures === 1 ? "" : "s"} failed to send in the last week.{" "}
           <Link href="/admin/emails" className="underline">
             Open the email log
           </Link>
@@ -121,7 +124,9 @@ function Stat({
   emphasis?: boolean;
 }) {
   const body = (
-    <div className="bg-surface p-5 transition-colors hover:bg-canvas">
+    // Hover feedback only where there is somewhere to go — a non-link cell
+    // that lights up promises an interaction it does not have.
+    <div className={`bg-surface p-5 ${href ? "transition-colors hover:bg-canvas" : ""}`}>
       <p className="text-xs uppercase tracking-wider text-muted-fg">{label}</p>
       <p
         className={`mt-2 font-serif text-3xl ${emphasis && value > 0 ? "text-accent" : "text-ink"}`}

@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
 import { PageShell } from "@/app/_components/PageShell";
+import { AdminTabs } from "@/app/admin/_components/AdminTabs";
 
 // Admin shell.
 //
@@ -27,6 +27,7 @@ export default async function AdminLayout({
   const tabs = [
     { href: "/admin", label: "Overview" },
     { href: "/admin/queue", label: "Review queue", count: pending },
+    { href: "/admin/papers", label: "All papers" },
     { href: "/admin/users", label: "Readers" },
     { href: "/admin/emails", label: "Email log" },
   ];
@@ -35,24 +36,8 @@ export default async function AdminLayout({
     <PageShell wide>
       <p className="eyebrow">Editor dashboard</p>
 
-      <nav className="mt-4 border-b border-rule">
-        <ul className="-mb-px flex flex-wrap gap-x-6 text-sm">
-          {tabs.map((tab) => (
-            <li key={tab.href}>
-              <Link
-                href={tab.href}
-                className="inline-flex items-center gap-2 border-b-2 border-transparent pb-3 text-ink-soft transition-colors hover:border-accent hover:text-accent"
-              >
-                {tab.label}
-                {typeof tab.count === "number" && tab.count > 0 && (
-                  <span className="rounded-full bg-accent px-1.5 text-[11px] font-medium leading-5 text-surface">
-                    {tab.count}
-                  </span>
-                )}
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <nav aria-label="Editor sections" className="mt-4 border-b border-rule">
+        <AdminTabs items={tabs} />
       </nav>
 
       <div className="mt-10">{children}</div>

@@ -43,3 +43,24 @@ export function formatDate(value: Date | string): string {
     timeZone: "Asia/Tashkent",
   }).format(new Date(value));
 }
+
+/** A Date n whole days before now, for query windows ("failures this week"). */
+export function daysAgo(n: number): Date {
+  return new Date(Date.now() - n * 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Date plus time of day, for operational logs (the email log) where "which
+ * attempt was this" needs minutes, not just a date. Same fixed timezone as
+ * formatDate for the same hydration reason.
+ */
+export function formatDateTime(value: Date | string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Tashkent",
+  }).format(new Date(value));
+}

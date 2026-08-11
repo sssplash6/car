@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
@@ -33,7 +34,7 @@ export async function publishPaper(formData: FormData) {
     },
   });
 
-  if (count === 0) return;
+  if (count === 0) return alreadyDecided();
 
   await announceDecision(id, true);
   revalidateAfterDecision();
@@ -55,10 +56,53 @@ export async function rejectPaper(formData: FormData) {
     },
   });
 
-  if (count === 0) return;
+  if (count === 0) return alreadyDecided();
 
   await announceDecision(id, false);
   revalidateAfterDecision();
+}
+
+/**
+ * Take a published paper back to the review queue. This exists for one
+ * reason: Publish is a single click, and before this action a misclick was
+ * unrecoverable in the UI — the wrong paper stayed publicly live until
+ * someone edited the database by hand.
+ *
+ * Deliberately quiet: no author notification. The author's durable record is
+ * the eventual real decision, which re-notifies through the normal path; a
+ * "published, no wait" message would only alarm.
+ */
+export async function withdrawPaper(formData: FormData) {
+  await requireAdmin();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return;
+
+  const { count } = await prisma.paper.updateMany({
+    where: { id, status: PAPER_STATUS.PUBLISHED },
+    data: {
+      status: PAPER_STATUS.SUBMITTED,
+      publishedAt: null,
+    },
+  });
+
+  if (count === 0) return alreadyDecided();
+
+  revalidateAfterDecision();
+  // Land on the queue, where the paper now waits (its original submittedAt
+  // puts it at the front) for the decision that should have been made.
+  redirect("/admin/queue");
+}
+
+/**
+ * A decision hit a paper that is no longer SUBMITTED — another editor or an
+ * older tab got there first. Without this the button just went dead: zero
+ * rows updated, no revalidation, the stale card still on screen inviting
+ * retries. Refresh the queue and say what happened.
+ */
+function alreadyDecided(): never {
+  revalidateAfterDecision();
+  redirect("/admin/queue?notice=already-decided");
 }
 
 /**
@@ -113,7 +157,9 @@ function revalidateAfterDecision() {
   // and every admin surface. The layout scope also refreshes the header bell.
   revalidatePath("/", "layout");
   revalidatePath("/papers");
+  revalidatePath("/issues");
   revalidatePath("/admin");
   revalidatePath("/admin/queue");
+  revalidatePath("/admin/papers");
   revalidatePath("/submissions");
 }
