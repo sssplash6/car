@@ -24,14 +24,21 @@ export function CopyButton({ text, label }: { text: string; label: string }) {
     <button
       type="button"
       onClick={copy}
-      className="inline-flex cursor-pointer items-center gap-1.5 rounded border border-rule-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+      className="press-ink inline-flex cursor-pointer items-center rounded border border-rule-strong px-3 py-1.5 text-sm text-ink hover:border-accent hover:text-accent"
     >
-      {copied ? (
-        <CheckIcon size={15} aria-hidden="true" className="text-state-good" />
-      ) : (
-        <CopySimpleIcon size={15} aria-hidden="true" />
-      )}
-      {copied ? "Copied" : label}
+      {/* Keyed remount: the confirmation materializes (180ms of the site's
+          own entrance grammar at button scale) instead of hard-swapping. */}
+      <span
+        key={String(copied)}
+        className="copy-swap inline-flex items-center gap-1.5"
+      >
+        {copied ? (
+          <CheckIcon size={15} aria-hidden="true" className="text-state-good" />
+        ) : (
+          <CopySimpleIcon size={15} aria-hidden="true" />
+        )}
+        {copied ? "Copied" : label}
+      </span>
       {/* Announced for screen readers; the visual label swap above is not. */}
       <span aria-live="polite" className="sr-only">
         {copied ? "Copied to clipboard" : ""}

@@ -52,7 +52,7 @@ export function PaperRow({
         <h3 className="font-serif text-xl leading-snug">
           <Link
             href={`/p/${paper.slug}`}
-            className="text-ink transition-colors hover:text-accent"
+            className="title-link text-ink hover:text-accent"
           >
             {paper.title}
           </Link>

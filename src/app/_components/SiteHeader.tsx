@@ -74,7 +74,7 @@ export async function SiteHeader() {
           ) : (
             <Link
               href="/login"
-              className="rounded border border-rule-strong px-3.5 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+              className="rounded border border-rule-strong px-3.5 py-1.5 text-sm text-ink press-ink hover:border-accent hover:text-accent"
             >
               Sign in
             </Link>

@@ -79,7 +79,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
             >
               <button
                 type="submit"
-                className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded bg-accent px-4 py-3 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
+                className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded bg-accent px-4 py-3 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
               >
                 <GoogleLogoIcon size={17} weight="bold" aria-hidden="true" />
                 Continue with Google
@@ -114,7 +114,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
                 >
                   <button
                     type="submit"
-                    className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+                    className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink press-ink hover:border-accent hover:text-accent"
                   >
                     Continue as reader
                   </button>
@@ -127,7 +127,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
                 >
                   <button
                     type="submit"
-                    className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+                    className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink press-ink hover:border-accent hover:text-accent"
                   >
                     Continue as editor
                   </button>

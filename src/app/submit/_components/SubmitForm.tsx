@@ -21,7 +21,7 @@ function SubmitButton({ blocked }: { blocked: boolean }) {
     <button
       type="submit"
       disabled={pending || blocked}
-      className="cursor-pointer rounded bg-accent px-4 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60"
+      className="press-ink cursor-pointer rounded bg-accent px-4 py-2.5 text-sm font-medium text-surface hover:bg-accent-dark disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "Uploading…" : "Submit for review"}
     </button>

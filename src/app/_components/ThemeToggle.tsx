@@ -51,10 +51,26 @@ export function ThemeToggle() {
       // Storage can be unavailable (private mode); the attribute still works
       // for this page view.
     }
-    if (next === "system") {
-      document.documentElement.removeAttribute("data-theme");
+
+    const apply = () => {
+      if (next === "system") {
+        document.documentElement.removeAttribute("data-theme");
+      } else {
+        document.documentElement.setAttribute("data-theme", next);
+      }
+    };
+
+    // The site's one new ceremony: day/night on a manuscript is a physical
+    // event, so the paper cross-fades (tuned in globals.css) while the woven
+    // chrome — identical in both modes — holds still. Reader-initiated and
+    // rare, which is what earns it motion; everyone else gets the plain flip.
+    if (
+      "startViewTransition" in document &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      document.startViewTransition(apply);
     } else {
-      document.documentElement.setAttribute("data-theme", next);
+      apply();
     }
   }
 
@@ -67,7 +83,7 @@ export function ThemeToggle() {
       onClick={cycle}
       aria-label={`${LABEL[mode]}. Switch to ${LABEL[NEXT[mode]].toLowerCase()}`}
       title={LABEL[mode]}
-      className="flex size-9 cursor-pointer items-center justify-center rounded text-muted-fg transition-colors hover:bg-accent-soft hover:text-accent"
+      className="press-ink flex size-9 cursor-pointer items-center justify-center rounded text-muted-fg hover:bg-accent-soft hover:text-accent"
     >
       <Icon size={19} weight="regular" aria-hidden="true" />
     </button>

@@ -25,13 +25,13 @@ export default function NotFound() {
       <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/papers"
-          className="rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
+          className="rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
         >
           Browse the papers
         </Link>
         <Link
           href="/"
-          className="rounded border border-rule-strong px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+          className="rounded border border-rule-strong px-5 py-2.5 text-sm font-medium text-ink press-ink hover:border-accent hover:text-accent"
         >
           Go to the homepage
         </Link>

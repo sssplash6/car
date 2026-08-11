@@ -210,6 +210,78 @@ export function PatternField({ className }: { className?: string }) {
   );
 }
 
+/** The ʿunwān — the illuminated headpiece a manuscript sets above the opening
+    of a work. A filled khatam half-medallion flanked by ikat steps fading to
+    hairline terminals. ONE place only: the frontispiece of a paper page —
+    "ornament marks beginnings", and a paper's title is the site's most
+    important beginning. */
+export function Headpiece({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 320 44"
+      aria-hidden="true"
+      preserveAspectRatio="xMidYMid meet"
+      className={`block ${className ?? ""}`}
+      style={{
+        maskImage:
+          "linear-gradient(90deg, transparent, black 12%, black 88%, transparent)",
+      }}
+    >
+      {/* Central medallion: the khatam, halved by the header rule it sits on. */}
+      <polygon points={starPoints(160, 22, 17, 9.2)} fill="currentColor" />
+      <circle cx={160} cy={22} r={3} fill="var(--color-surface)" />
+      {/* Flanking hairlines with ikat steps diminishing outward. */}
+      {[1, -1].map((dir) => (
+        <g key={dir} transform={dir === -1 ? "translate(320 0) scale(-1 1)" : undefined}>
+          <rect x={0} y={21.4} width={130} height={1.2} fill="currentColor" />
+          {[112, 96, 82].map((x, i) => (
+            <rect
+              key={x}
+              x={x}
+              y={22 - (5 - i * 1.2)}
+              width={2.4}
+              height={(5 - i * 1.2) * 2}
+              fill="currentColor"
+            />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/** The device at dome scale — the shanyrak as you actually see it: overhead,
+    architectural, enormous. Outer and inner rings joined by the uyk spokes,
+    the khatam within. For ONE cropped architectural moment (the About
+    header) and the 404 endpaper; never body-copy decoration. */
+export function RosetteGrand({ className }: { className?: string }) {
+  const spokes = Array.from({ length: 32 }, (_, i) => (i * Math.PI) / 16);
+  return (
+    <svg viewBox="0 0 200 200" aria-hidden="true" className={className}>
+      <circle cx={100} cy={100} r={96} fill="none" stroke="currentColor" strokeWidth={1} />
+      <circle cx={100} cy={100} r={64} fill="none" stroke="currentColor" strokeWidth={1} />
+      {spokes.map((a) => (
+        <line
+          key={a}
+          x1={100 + 64 * Math.cos(a)}
+          y1={100 + 64 * Math.sin(a)}
+          x2={100 + 96 * Math.cos(a)}
+          y2={100 + 96 * Math.sin(a)}
+          stroke="currentColor"
+          strokeWidth={1}
+        />
+      ))}
+      <polygon
+        points={starPoints(100, 100, 40, 21.6)}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1}
+      />
+      <circle cx={100} cy={100} r={4} fill="currentColor" />
+    </svg>
+  );
+}
+
 /** Illumination corners for ONE framed moment per page. Parent must be
     relative; the brackets sit just inside its edges. */
 export function Corners({ className }: { className?: string }) {
@@ -324,6 +396,11 @@ export function ArchFrame({
           stroke="currentColor"
           strokeWidth={1.25}
           vectorEffect="non-scaling-stroke"
+          // pathLength=1 normalizes the dash space so the ceremony's
+          // keyline-draw (globals.css) can animate 1 → 0 regardless of the
+          // path's true length. Inert outside .clip-reveal.
+          pathLength={1}
+          className="arch-keyline"
         />
       </svg>
     </div>

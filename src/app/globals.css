@@ -90,6 +90,10 @@
    Identical in light and dark mode on purpose — night is night. */
 .surface-night {
   color-scheme: dark;
+  /* The night surface is cloth, not paper — the same grain reads as weave.
+     Declared before the token block's `background` so the shorthand at the
+     bottom must not be reintroduced (it would wipe this layer). */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 
   --color-canvas: #132a52;
   --color-surface: #1a3460;
@@ -112,7 +116,15 @@
 }
 
 body {
-  background: var(--color-canvas);
+  background-color: var(--color-canvas);
+  /* Paper tooth: a tiling of mid-gray turbulence flecks at 5% alpha. Gray
+     works in BOTH schemes without a second asset — darker than warm paper,
+     lighter than the lacquered night. It rides background-image on the same
+     element as the ground color, so raised bg-surface plates stay optically
+     smooth: mounted plates SIT ON the paper, which is the correct print
+     physics. Inline data URI per the "decoration costs near-zero" rule; it
+     does not print. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   color: var(--color-ink);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
@@ -125,9 +137,27 @@ body {
   outline-offset: 2px;
 }
 
+/* Selection is gilt marking, not action: a lapis slab over a long abstract
+   shouted; a 28% gold wash reads as a highlighter on paper. Resolves per
+   scheme and inside .surface-night through the scoped tokens (ink stays
+   ≥8:1 on the wash in every case — re-run the contrast script if changed). */
 ::selection {
-  background: var(--color-accent);
-  color: var(--color-surface);
+  background: color-mix(in oklab, var(--color-gild) 28%, var(--color-canvas));
+  color: var(--color-ink);
+}
+
+/* The unseen folio: details nobody names but everyone feels. You write with
+   lapis ink; the scroll rail is a hairline of the system; native controls
+   come up in the action colour. */
+input,
+textarea {
+  caret-color: var(--color-accent);
+}
+html {
+  scrollbar-color: var(--color-rule-strong) transparent;
+}
+:root {
+  accent-color: var(--color-accent);
 }
 
 /* Author-entered plain text (abstracts, content blocks) is not markup.
@@ -168,8 +198,11 @@ body {
   font-variant-numeric: oldstyle-nums;
 }
 
-/* Animated underline for nav links: draws from the left on hover, stays put on
-   the active page (data-active). Uses transform so nothing repaints. */
+/* Animated underline for nav links: the thread is pulled THROUGH the cloth —
+   hover-in draws left to right, and because transform-origin flips (it is not
+   a transitioned property), hover-out continues out to the right instead of
+   rewinding. Stays put on the active page (data-active). Transform only, so
+   nothing repaints. */
 .link-underline {
   position: relative;
 }
@@ -182,12 +215,250 @@ body {
   height: 1px;
   background: currentColor;
   transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 200ms var(--ease-out-strong);
+}
+.link-underline:hover::after {
   transform-origin: left center;
-  transition: transform 220ms var(--ease-out-strong);
 }
 .link-underline:hover::after,
 .link-underline[data-active="true"]::after {
   transform: scaleX(1);
+}
+
+/* ---- The craft layer ----
+   The brand's object is a hand-bound journal; these utilities are the
+   physical facts of that object CSS can honestly render. All colours ride
+   the token system, so both schemes and the night surface come free. */
+
+/* Warm lift: sepia-tinted, heavily diffused — never a grey shadow-md. The
+   inset parchment hairline carries the top edge in dark mode, where shadow
+   dies against near-black. For mounted plates and framed panels only. */
+.shadow-plate {
+  box-shadow:
+    0 1px 2px light-dark(rgb(76 60 34 / 0.1), rgb(0 0 0 / 0.35)),
+    0 14px 32px -14px light-dark(rgb(76 60 34 / 0.16), rgb(0 0 0 / 0.5)),
+    inset 0 1px 0 light-dark(transparent, rgb(241 232 215 / 0.05));
+}
+
+/* Gilded fillet: the inner gold bevel a framer sets between mount and image.
+   Rationed to major plates (wider than ~20rem) so it stays a mark of
+   importance. Parent needs position:relative + overflow-hidden. */
+.fillet::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--color-gild) 45%, transparent);
+}
+
+/* Foil: gold on a bound cover is stamped foil, and a directional sheen is
+   the one thing CSS can honestly say about it. One sweep on hover, settles,
+   nothing loops. Explicit gild steps because this is night-surface material
+   (used on the cover clasp); text on it must be the night surface blue. */
+.foil {
+  background-image: linear-gradient(
+    115deg,
+    #d7a54e 0%,
+    #e7c078 38%,
+    #d7a54e 62%
+  );
+  background-size: 180% 100%;
+  background-position: 85% 0;
+  transition: background-position 200ms var(--ease-out-strong);
+}
+.foil:hover {
+  background-position: 15% 0;
+}
+
+/* Blind emboss: ink-free relief, computed from the surface token so it reads
+   as pressed paper in both schemes. For the one framed moment's watermark. */
+.emboss {
+  color: var(--color-surface);
+  filter: drop-shadow(0 1px 0 light-dark(rgb(255 255 255 / 0.65), rgb(255 255 255 / 0.05)))
+    drop-shadow(0 -1px 0 light-dark(rgb(76 60 34 / 0.22), rgb(0 0 0 / 0.5)));
+}
+
+/* Letterpress press: type pressed into paper, release eases home. The old
+   active:translate-y-px snapped with no transition, so releasing felt dead. */
+.press-ink {
+  transition:
+    transform 160ms var(--ease-out-strong),
+    color 180ms var(--ease-out-strong),
+    background-color 180ms var(--ease-out-strong),
+    border-color 180ms var(--ease-out-strong),
+    background-position 200ms var(--ease-out-strong);
+}
+.press-ink:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+/* Copy confirmation materializes on remount (CopyButton keys the span). The
+   outgoing state exits instantly — the system responds fast, the
+   confirmation settles gently. */
+.copy-swap {
+  animation: copy-in 180ms var(--ease-out-strong);
+}
+@keyframes copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+    filter: blur(2px);
+  }
+}
+
+/* Rubricated title links: an underline that materializes in place says
+   "doorway" without moving anything, and unlike the nav's scaleX trick it
+   survives multi-line Garamond titles. Rides currentColor, so it inherits
+   the ink→accent hover for free. */
+.title-link {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+  text-decoration-color: transparent;
+  transition:
+    color 180ms var(--ease-out-strong),
+    text-decoration-color 180ms var(--ease-out-strong);
+}
+.title-link:hover {
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+/* Small-caps apparatus label: scholarly furniture ("Abstract", "Cite this
+   paper") steps back so the serif voice belongs exclusively to the work.
+   A register up from .eyebrow, which keeps the eyebrow ration honest. */
+.folio-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted-fg);
+}
+
+/* Contents-leaf leader: the dotted line from title to locator on a table of
+   contents. Flex row: title, .leader, right-aligned date. */
+.leader {
+  flex: 1 1 2rem;
+  min-width: 2rem;
+  align-self: baseline;
+  transform: translateY(-0.2em);
+  margin-inline: 0.6em;
+  border-bottom: 1px dotted var(--color-rule-strong);
+}
+
+/* Plates settle, type materializes: transitioning 6px of blur on a 1100px
+   photograph is the site's most expensive animated surface, and blurring an
+   image that is itself blur-up loading turns to mud. Plates get a scale
+   settle instead — laid onto the mount — slightly slower because they are
+   the largest thing moving. Add alongside reveal-scroll via className. */
+.reveal-plate {
+  transition:
+    opacity 0.7s var(--ease-out-strong),
+    transform 0.7s var(--ease-out-strong);
+}
+.reveal-plate[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(14px) scale(0.985);
+  filter: none;
+}
+
+/* The reader's shuttle: a gild thread along the bottom edge growing with
+   scroll progress on the reading page. Scroll-driven animations ignore
+   animation-duration, so the reduced-motion guard here is mandatory — the
+   global 0.01ms fallback cannot neutralize them. Hidden wherever
+   unsupported. */
+.reading-thread {
+  display: none;
+}
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reading-thread {
+      display: block;
+      position: fixed;
+      inset-inline: 0;
+      bottom: 0;
+      height: 2px;
+      background: var(--color-gild);
+      transform-origin: left;
+      transform: scaleX(0);
+      animation: thread-grow linear both;
+      animation-timeline: scroll(root);
+      z-index: 40;
+    }
+    @keyframes thread-grow {
+      to {
+        transform: scaleX(1);
+      }
+    }
+  }
+}
+
+/* The cover lifts: as the reader scrolls off the homepage hero, headline and
+   arch lag the page and slide beneath the gilded frieze (the section's
+   overflow-hidden clips them) — the cover physically closes. Same mandatory
+   reduced-motion guard as above. Transform-only, zero JS. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .cover-lift-near {
+      animation: cover-lift linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+    }
+    .cover-lift-far {
+      animation: cover-lift-far linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+    }
+    @keyframes cover-lift {
+      to {
+        transform: translateY(28px);
+      }
+    }
+    @keyframes cover-lift-far {
+      to {
+        transform: translateY(44px);
+      }
+    }
+  }
+}
+
+/* The ceremony's final gesture: the gilded keyline draws itself around the
+   arch — base to apex to base — as the clip crest passes, finishing at
+   0.4s + 0.5s = 0.9s, exactly the hero budget. Scoped to the ceremony. */
+.clip-reveal .arch-keyline {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: keyline-draw 0.5s var(--ease-out-strong) 0.4s both;
+}
+@keyframes keyline-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Theme flip: the site's ONE new sanctioned ceremony (reader-initiated, a
+   few times per visit). The paper cross-fades while the woven chrome — the
+   trim and night surfaces that are identical in both modes — holds still:
+   the lamp dims, the cloth stays. Fired via document.startViewTransition in
+   ThemeToggle; these tune it. Exit faster than enter, on purpose. */
+::view-transition-old(root) {
+  animation: vt-cross 200ms var(--ease-out-strong) both reverse;
+}
+::view-transition-new(root) {
+  animation: vt-cross 340ms var(--ease-out-strong) both;
+}
+@keyframes vt-cross {
+  from {
+    opacity: 0;
+  }
+}
+/* The * fallback below does not reach view-transition pseudo-elements. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* ---- Entrance motion (Reveal / ClipReveal) ----
@@ -227,9 +498,12 @@ body {
 
 /* Hero image ceremony: unveiled from the ground up while a slight scale
    settles. 0.78s + the homepage's 0.12s delay lands exactly on the hero's
-   0.9s orchestration budget (DESIGN.md). */
+   0.9s orchestration budget (DESIGN.md). In-out on the clip — masonry has
+   weight (slow start, fast middle, settle) — while the inner scale keeps
+   the out curve, so the two desynchronize subtly instead of moving as one
+   rigid object. */
 .clip-reveal {
-  animation: clip-rise 0.78s var(--ease-out-strong) both;
+  animation: clip-rise 0.78s var(--ease-in-out-strong) both;
   animation-delay: var(--reveal-delay, 0s);
 }
 .clip-reveal-inner {

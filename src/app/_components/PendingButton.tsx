@@ -24,7 +24,7 @@ export function PendingButton({
     <button
       type="submit"
       disabled={pending}
-      className={`cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${className ?? ""}`}
+      className={`press-ink cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 ${className ?? ""}`}
     >
       {pending ? pendingLabel : children}
     </button>

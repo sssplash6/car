@@ -17,6 +17,7 @@ import { CopyButton } from "@/app/_components/CopyButton";
 import {
   Corners,
   PatternField,
+  Rosette,
   TileBand,
 } from "@/app/_components/Ornament";
 
@@ -211,6 +212,10 @@ export default async function PaperPage({ params }: PageProps) {
 
   return (
     <article>
+      {/* The reader's shuttle: a gild thread along the viewport's bottom edge
+          growing with scroll progress — the one scroll-driven mark on the
+          reading page, at its edge so the column itself stays calm. */}
+      <div aria-hidden="true" className="reading-thread print:hidden" />
       <script
         type="application/ld+json"
         // Escaping "<" prevents a title containing "</script>" from breaking out
@@ -285,8 +290,8 @@ export default async function PaperPage({ params }: PageProps) {
             (hairline, mount, image) and placed as an interlude AFTER the
             abstract: it decorates beside the work, it is not the work. Hidden
             in print — it is decoration, and it would cost the reader ink. */}
-        <figure className="mt-12 border border-rule-strong bg-surface p-1.5 print:hidden">
-          <div className="relative aspect-16/9 w-full overflow-hidden sm:aspect-21/9">
+        <figure className="shadow-plate mt-12 border border-rule-strong bg-surface p-1.5 print:hidden">
+          <div className="fillet relative aspect-16/9 w-full overflow-hidden sm:aspect-21/9">
             <Image
               src={paperImage(paper.slug)}
               alt=""
@@ -301,15 +306,19 @@ export default async function PaperPage({ params }: PageProps) {
         {/* The gated moment, framed like a bookplate. Named by the JSON-LD
             cssSelector above, so renaming this class silently breaks the
             metered-content declaration. */}
-        <div className="gated-download relative mt-12 border border-rule-strong bg-surface p-7 print:hidden sm:p-9">
+        <div className="gated-download shadow-plate relative mt-12 overflow-hidden border border-rule-strong bg-surface p-7 print:hidden sm:p-9">
           <Corners className="text-gild" />
+          {/* Blind emboss: the press's device in ink-free relief, pressed into
+              the bookplate behind the text. Same colour as the ground, so it
+              reads as paper, not a second ornament. */}
+          <Rosette className="emboss pointer-events-none absolute -right-6 top-1/2 size-40 -translate-y-1/2 max-sm:hidden" />
           {user ? (
-            <div>
+            <div className="relative">
               <h2 className="font-serif text-xl text-ink">The full paper</h2>
               <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
                 <a
                   href={`/api/papers/${paper.id}/file`}
-                  className="inline-flex items-center gap-2 rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
+                  className="inline-flex items-center gap-2 rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
                 >
                   <DownloadSimpleIcon size={17} aria-hidden="true" />
                   Download the PDF
@@ -320,7 +329,7 @@ export default async function PaperPage({ params }: PageProps) {
               </div>
             </div>
           ) : (
-            <div className="max-w-md">
+            <div className="relative max-w-md">
               <h2 className="flex items-center gap-2 font-serif text-xl text-ink">
                 <LockSimpleIcon
                   size={18}
@@ -335,7 +344,7 @@ export default async function PaperPage({ params }: PageProps) {
               </p>
               <Link
                 href={`/login?next=/p/${paper.slug}`}
-                className="mt-5 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
+                className="mt-5 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
               >
                 Sign in to download
               </Link>
@@ -376,7 +385,7 @@ export default async function PaperPage({ params }: PageProps) {
                   <h3 className="font-serif text-lg leading-snug">
                     <Link
                       href={`/p/${p.slug}`}
-                      className="text-ink transition-colors hover:text-accent"
+                      className="title-link text-ink hover:text-accent"
                     >
                       {p.title}
                     </Link>

@@ -89,13 +89,13 @@ export default async function HomePage() {
                     the scoped surface token (night blue on gold, 5.6:1). */}
                 <Link
                   href="/papers"
-                  className="rounded bg-accent px-6 py-3 text-sm font-medium text-surface transition-colors hover:bg-accent-dark active:translate-y-px"
+                  className="foil press-ink rounded px-6 py-3 text-sm font-medium text-surface"
                 >
                   Browse papers
                 </Link>
                 <Link
                   href="/submit"
-                  className="rounded border border-rule-strong px-6 py-3 text-sm font-medium text-ink transition-colors hover:border-accent hover:text-accent active:translate-y-px"
+                  className="press-ink rounded border border-rule-strong px-6 py-3 text-sm font-medium text-ink hover:border-accent hover:text-accent"
                 >
                   Submit a paper
                 </Link>
@@ -106,7 +106,12 @@ export default async function HomePage() {
           {/* The one arch on the site. priority: this is the LCP element, so it
               must not lazy-load; the clip reveal animates clip-path only, so the
               image element itself is painted (and measured) immediately. */}
-          <ClipReveal delay={0.12} className="mx-auto w-full max-w-md lg:max-w-none">
+          {/* The arch-shaped drop shadow (filter follows the clip-path) seats
+              the portal into the night surface instead of stickering it on. */}
+          <ClipReveal
+            delay={0.12}
+            className="mx-auto w-full max-w-md [filter:drop-shadow(0_22px_36px_rgb(0_0_0/0.38))] lg:max-w-none"
+          >
             <ArchFrame className="aspect-4/5 w-full sm:aspect-3/4 lg:aspect-4/5">
               <div className="relative h-full w-full">
                 <Image
@@ -147,17 +152,18 @@ export default async function HomePage() {
 
               <Link
                 href={`/p/${lead.slug}`}
-                className="group relative block border border-rule-strong bg-surface p-1.5 transition-colors hover:border-accent"
+                className="group shadow-plate relative block border border-rule-strong bg-surface p-1.5 transition-colors hover:border-accent"
               >
-                {/* Framed like a museum plate: hairline, then mount, then image. */}
-                <span className="relative block aspect-3/2 overflow-hidden">
+                {/* Framed like a museum plate: hairline, mount, gilded fillet,
+                    then image. */}
+                <span className="fillet relative block aspect-3/2 overflow-hidden">
                   <Image
                     src={paperImage(lead.slug)}
                     alt=""
                     fill
                     placeholder="blur"
                     sizes="(max-width: 1024px) 100vw, 42vw"
-                    className="object-cover transition-transform duration-500 ease-[var(--ease-out-strong)] group-hover:scale-[1.03]"
+                    className="object-cover transition-transform duration-200 ease-[var(--ease-out-strong)] group-hover:scale-[1.03]"
                   />
                 </span>
               </Link>
@@ -166,7 +172,7 @@ export default async function HomePage() {
                 <h2 className="font-serif text-[2rem] leading-[1.14] tracking-tight sm:text-[2.5rem]">
                   <Link
                     href={`/p/${lead.slug}`}
-                    className="text-ink transition-colors hover:text-accent"
+                    className="title-link text-ink hover:text-accent"
                   >
                     {lead.title}
                   </Link>
@@ -257,7 +263,7 @@ export default async function HomePage() {
                         <h3 className="font-serif text-xl leading-snug">
                           <Link
                             href={`/p/${paper.slug}`}
-                            className="text-ink transition-colors hover:text-accent"
+                            className="title-link text-ink hover:text-accent"
                           >
                             {paper.title}
                           </Link>
@@ -279,12 +285,12 @@ export default async function HomePage() {
             )}
           </section>
 
-          <Reveal delay={0.08}>
+          <Reveal delay={0.08} className="reveal-plate">
             <aside className="space-y-9 lg:border-l lg:border-rule lg:pl-8">
               {/* A leaf from the Baburnama beside the editors' voice — the one
                   place the site shows manuscript art itself. The visible museum
                   credit is deliberate: provenance is part of the register. */}
-              <figure className="border border-rule-strong bg-surface p-1">
+              <figure className="shadow-plate border border-rule-strong bg-surface p-1">
                 <div className="relative aspect-3/4 w-full overflow-hidden">
                   <Image
                     src={asideBaburnama}
@@ -333,11 +339,11 @@ export default async function HomePage() {
              breath between the archive and its map. Honest caption — this is
              verified CC0 photography (public/regional/CREDITS.md), so naming
              the place is a claim the image can keep. ---- */}
-        <Reveal className="pb-16">
-          <figure className="border border-rule-strong bg-surface p-1.5">
+        <Reveal className="reveal-plate pb-16">
+          <figure className="shadow-plate border border-rule-strong bg-surface p-1.5">
             {/* 16/9 below sm: the 21/9 letterbox compressed to a 146px sliver
                 on a phone, too shallow to read as a plate. */}
-            <div className="relative aspect-16/9 w-full overflow-hidden sm:aspect-8/3">
+            <div className="fillet relative aspect-16/9 w-full overflow-hidden sm:aspect-8/3">
               <Image
                 src={interludeSongKul}
                 alt="Yurts on the summer pasture at Song-Kul, Kyrgyzstan"

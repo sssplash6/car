@@ -102,7 +102,7 @@ export default async function PapersPage({ searchParams }: PageProps) {
             <button
               type="submit"
               aria-label="Search"
-              className="cursor-pointer rounded-r border border-l-0 border-field px-3.5 text-muted-fg transition-colors hover:border-accent hover:text-accent"
+              className="press-ink cursor-pointer rounded-r border border-l-0 border-field px-3.5 text-muted-fg hover:border-accent hover:text-accent"
             >
               <MagnifyingGlassIcon size={18} aria-hidden="true" />
             </button>
