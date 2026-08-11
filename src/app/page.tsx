@@ -75,10 +75,12 @@ export default async function HomePage() {
            it, the action colour IS gold. */}
       <section className="surface-night relative overflow-hidden">
         {/* Star lattice sunk into the night field — the same pairing the
-            footer is allowed, mirrored at the site's opening. */}
-        <PatternField className="text-tile opacity-[0.06]" />
+            footer is allowed, mirrored at the site's opening. The lift
+            classes let the cover close under the gilded frieze as the reader
+            scrolls off it (scroll-driven, guarded in globals.css). */}
+        <PatternField className="cover-lift-far text-tile opacity-[0.06]" />
 
-        <div className="relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:pb-24 lg:pt-20">
+        <div className="cover-lift-near relative mx-auto grid w-full max-w-6xl items-center gap-12 px-6 pb-16 pt-14 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20 lg:pb-24 lg:pt-20">
           <div>
             <Reveal load>
               {/* The imprint: a cover is a dated object, not a timeless
@@ -335,13 +337,6 @@ export default async function HomePage() {
                 </figcaption>
               </figure>
 
-              <section>
-                <h2 className="font-serif text-lg text-ink">{editorial.title}</h2>
-                <p className="prose-plain mt-2.5 text-sm leading-relaxed text-ink-soft">
-                  {editorial.body}
-                </p>
-              </section>
-
               {/* The page's one framed moment: the standing invitation. */}
               <section className="relative bg-accent-soft p-5">
                 {/* Full accent: the halved opacity sat under the 3:1 ornament
@@ -363,6 +358,19 @@ export default async function HomePage() {
             </aside>
           </Reveal>
         </div>
+
+        {/* ---- The editors' statement, at full measure. This is the page's
+             trust-carrying sentence; it was whispering at text-sm in a
+             sidebar. Whitespace is the frame — no box, no new ornament. ---- */}
+        <Reveal>
+          <section className="py-16 text-center lg:py-24">
+            <Diamond className="mx-auto size-2.5 text-gild" />
+            <p className="prose-plain mx-auto mt-8 max-w-3xl text-balance font-serif text-[clamp(1.5rem,1rem+2vw,2.25rem)] leading-[1.45] text-ink">
+              {editorial.body}
+            </p>
+            <p className="mt-7 text-sm text-muted-fg">{editorial.title}</p>
+          </section>
+        </Reveal>
 
         {/* ---- Interlude: the region itself, one wide mounted plate as a
              breath between the archive and its map. Honest caption — this is
@@ -395,25 +403,25 @@ export default async function HomePage() {
            placeholder stock cannot honour that claim. The gild lozenges are
            punctuation, not attribution — geometry is shared heritage. */}
       <section className="border-t border-rule-strong bg-surface">
-        <Reveal className="mx-auto w-full max-w-6xl px-6 py-14">
+        <Reveal className="mx-auto w-full max-w-6xl px-6 py-16 lg:py-24">
           {/* Eyebrow 2 of 2 on this page. */}
           <p className="eyebrow">Coverage</p>
-          {/* Every country carries its own leading lozenge (the same marker
-              the About coverage list uses): a marker per item survives line
-              wrapping, where an in-between separator strands diamonds at line
-              starts. */}
-          <ul className="mt-7 flex flex-wrap items-baseline gap-x-7 gap-y-3">
+          {/* A woven inscription: the five names span the full measure
+              between selvedge rules, set just shy of display scale — the
+              page's quiet closing chord before the night footer. A marker
+              per item survives line wrapping. */}
+          <ul className="mt-8 flex flex-wrap items-baseline gap-x-10 gap-y-5 border-y border-rule-strong py-7">
             {REGION_COUNTRIES.map((country) => (
               <li
                 key={country}
-                className="flex items-baseline gap-x-3 font-serif text-2xl text-ink sm:text-[1.75rem]"
+                className="flex items-baseline gap-x-3.5 font-serif text-[clamp(1.75rem,1.1rem+2.2vw,2.75rem)] leading-tight text-ink"
               >
-                <Diamond className="size-2 self-center text-gild" />
+                <Diamond className="size-2.5 self-center text-gild" />
                 {country}
               </li>
             ))}
           </ul>
-          <p className="mt-6 max-w-lg text-sm leading-relaxed text-muted-fg">
+          <p className="mt-7 max-w-lg text-sm leading-relaxed text-muted-fg">
             The review also publishes work on the wider region where it bears on
             these five countries.
           </p>

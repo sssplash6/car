@@ -5,7 +5,11 @@ import { COPY } from "@/lib/content";
 import { PUBLISHER_NAME, REGION_COUNTRIES } from "@/lib/site";
 import { aboutSuzani } from "@/lib/regionalImages";
 import { Reveal } from "@/app/_components/Reveal";
-import { Diamond, IkatDivider } from "@/app/_components/Ornament";
+import {
+  Diamond,
+  IkatDivider,
+  RosetteGrand,
+} from "@/app/_components/Ornament";
 
 export const metadata: Metadata = {
   title: "About",
@@ -28,9 +32,14 @@ export default function AboutPage() {
 
   return (
     <>
-      <header className="border-b border-rule bg-surface">
-        <div className="mx-auto w-full max-w-4xl px-6 pb-12 pt-14">
-          <h1 className="display-flush max-w-2xl font-serif text-[clamp(2.5rem,1.5rem+3.4vw,3.25rem)] leading-[1.08] tracking-tight text-ink">
+      {/* The device at dome scale: the shanyrak as you actually see it —
+          overhead, architectural, cropped by the page edge so it reads as
+          structure rather than a sticker. rule-strong keeps it
+          sub-ornamental in both schemes. */}
+      <header className="relative overflow-hidden border-b border-rule bg-surface">
+        <RosetteGrand className="pointer-events-none absolute -right-24 -top-32 size-[30rem] text-rule-strong opacity-60 max-lg:hidden" />
+        <div className="relative mx-auto w-full max-w-4xl px-6 pb-14 pt-16">
+          <h1 className="display-flush max-w-2xl font-serif text-[clamp(2.75rem,1.6rem+4.2vw,4.75rem)] leading-[1.02] tracking-tight text-ink">
             {main.title}
           </h1>
         </div>
@@ -101,10 +110,23 @@ export default function AboutPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-8 text-sm text-muted-fg">
-                Published by {PUBLISHER_NAME}.
-              </p>
             </div>
+          </div>
+        </Reveal>
+
+        {/* The colophon: a manuscript ends with the scribe's tapering record
+            of how the thing was made. Pure typography plus the system's
+            smallest ornament; every claim is factual. */}
+        <Reveal className="border-t border-rule py-16 text-center">
+          <Diamond className="mx-auto size-2 text-gild" />
+          <div className="mx-auto mt-6 space-y-1.5 text-xs uppercase tracking-[0.14em] text-muted-fg">
+            <p className="mx-auto max-w-md">
+              Set in EB Garamond and Geist on warm paper
+            </p>
+            <p className="mx-auto max-w-xs">
+              Issues follow the Tashkent quarters
+            </p>
+            <p>Published by {PUBLISHER_NAME}</p>
           </div>
         </Reveal>
       </div>

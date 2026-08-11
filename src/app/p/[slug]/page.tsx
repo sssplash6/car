@@ -16,7 +16,8 @@ import { paperImage } from "@/lib/regionalImages";
 import { CopyButton } from "@/app/_components/CopyButton";
 import {
   Corners,
-  PatternField,
+  Diamond,
+  Headpiece,
   Rosette,
   TileBand,
 } from "@/app/_components/Ornament";
@@ -225,11 +226,13 @@ export default async function PaperPage({ params }: PageProps) {
         }}
       />
 
-      {/* Header sits on a wider measure than the body, so the title can breathe
-          while the abstract stays at a readable line length. */}
-      <header className="relative overflow-hidden border-b border-rule bg-surface print:border-0">
-        <PatternField className="text-gild opacity-[0.045] print:hidden" />
-        <div className="relative mx-auto w-full max-w-4xl px-6 pb-12 pt-10">
+      {/* The frontispiece: front matter set as a manuscript's title leaf. The
+          ʿunwān headpiece takes the ornament slot the pattern wash held (a
+          swap, so the viewport budget stays flat), the title is centered at
+          title-page scale, and the authors are promoted to the page's second
+          voice — they are content, not metadata. */}
+      <header className="border-b border-rule bg-surface print:border-0">
+        <div className="mx-auto w-full max-w-4xl px-6 pb-14 pt-10">
           <Link
             href="/papers"
             className="group inline-flex items-center gap-1.5 text-sm text-muted-fg transition-colors hover:text-accent print:hidden"
@@ -242,15 +245,17 @@ export default async function PaperPage({ params }: PageProps) {
             All papers
           </Link>
 
-          <h1 className="display-flush mt-7 font-serif text-[clamp(2.25rem,1.4rem+3.2vw,3rem)] leading-[1.1] tracking-tight text-ink">
+          <Headpiece className="mx-auto mt-8 h-10 w-full max-w-sm text-gild print:hidden" />
+
+          <h1 className="mx-auto mt-7 max-w-3xl text-balance text-center font-serif text-[clamp(2.5rem,1.4rem+4.2vw,4.25rem)] leading-[1.05] tracking-tight text-ink">
             {paper.title}
           </h1>
 
-          <p className="mt-5 text-[0.9375rem] text-ink-soft">
+          <p className="mt-6 text-center font-serif text-xl text-ink">
             {paper.authorLine}
           </p>
           {paper.publishedAt && (
-            <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-fg">
+            <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-muted-fg">
               <span>Published {formatDate(paper.publishedAt)}</span>
               {issue && (
                 // A typographic chip, not a bare link: the issue is an object
@@ -276,11 +281,19 @@ export default async function PaperPage({ params }: PageProps) {
 
       <div className="mx-auto w-full max-w-4xl px-6 py-12">
         <div className="max-w-[62ch]">
-          <h2 className="font-serif text-xl text-ink">Abstract</h2>
+          {/* Small caps for the apparatus, serif for the work: the furniture
+              steps back so Garamond belongs to the scholarship alone. */}
+          <h2 className="folio-label">Abstract</h2>
           {/* The site's one illuminated initial (DESIGN.md): the first letter
-              of the abstract, set in lapis Garamond three lines deep. */}
-          <p className="prose-plain dropcap mt-4 text-[1.0625rem] leading-[1.75] text-ink-soft">
+              of the abstract, set in lapis Garamond three lines deep. The
+              gild lozenge closes the passage — the scribe's end-mark pairing
+              with the dropcap that opened it. */}
+          <p className="prose-plain dropcap mt-5 text-[1.125rem] leading-[1.75] text-ink-soft">
             {paper.abstract}
+            <span aria-hidden="true">
+              {" "}
+              <Diamond className="text-gild" />
+            </span>
           </p>
         </div>
 
@@ -354,7 +367,7 @@ export default async function PaperPage({ params }: PageProps) {
             review's product is being citable. Plain hairline, no new ornament —
             this page's ornament budget is already spent. */}
         <section className="mt-12 border-t border-rule pt-9">
-          <h2 className="font-serif text-xl text-ink">Cite this paper</h2>
+          <h2 className="folio-label">Cite this paper</h2>
           <p className="mt-4 max-w-[62ch] text-[0.9375rem] leading-relaxed text-ink-soft">
             {citation}
           </p>
@@ -364,11 +377,38 @@ export default async function PaperPage({ params }: PageProps) {
           </div>
         </section>
 
+        {/* The colophon: the scribe's closing record of what this document
+            is. Ruled jadval cells (1px grout over the rule token); every
+            value is already on the page. */}
+        <section className="mt-12 border-t border-rule pt-9">
+          <h2 className="folio-label">Colophon</h2>
+          <dl className="mt-5 grid gap-px border border-rule bg-rule sm:grid-cols-3">
+            {[
+              [
+                "Published",
+                paper.publishedAt ? formatDate(paper.publishedAt) : "—",
+              ],
+              ["Issue", issue ? `№ ${issue.number}, ${issue.label}` : "—"],
+              ["Format", formatFileSize(paper.fileSize)],
+              ["Journal", SITE_NAME],
+              ["Citation key", `${paper.slug}${year ? `-${year}` : ""}`],
+              ["Access", "Abstract open · PDF with a free account"],
+            ].map(([term, value]) => (
+              <div key={term} className="bg-canvas px-4 py-3.5">
+                <dt className="eyebrow">{term}</dt>
+                <dd className="oldstyle-nums mt-1.5 font-serif text-[1.0625rem] leading-snug text-ink">
+                  {value}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+
         {alsoInIssue.length > 0 && issue && (
           <section className="mt-12 border-t border-rule pt-9 print:hidden">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className="font-serif text-xl text-ink">
-                Also in Issue <span className="oldstyle-nums">№ {issue.number}</span>
+              <h2 className="folio-label oldstyle-nums">
+                Also in Issue № {issue.number}
               </h2>
               <Link
                 href={`/issues#${issue.anchor}`}
