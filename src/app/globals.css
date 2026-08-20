@@ -481,25 +481,521 @@ html {
   }
 }
 
-/* ---- Entrance motion (Reveal / ClipReveal) ----
-   Entrances materialize: opacity + 14px rise + a blur that resolves. The
-   server always renders content visible; scroll mode hides an element only
-   AFTER hydration and only while it is still below the fold (Reveal.tsx sets
-   data-reveal="pending"), so crawlers and no-JS readers never meet an
-   opacity-0 page. Load mode and the hero clip are keyframes, which play with
-   the first paint and need no JavaScript at all. */
+/* ---- The reader's hand ----
+   What separates a scanned journal from a handled one: the page answers where
+   the reader is pointing. All of it is transform/opacity on a hairline, so a
+   list of forty rows costs nothing to hover.
+
+   The marginal mark: a gild rule drawn down the margin beside the row under
+   the pointer — the pencil line a reader leaves next to the paragraph they
+   mean to come back to. Drawn top-down, released bottom-up, so it retracts
+   the way it was made. focus-within so keyboard reading gets the same mark. */
+.mark-margin {
+  position: relative;
+}
+.mark-margin::before {
+  content: "";
+  position: absolute;
+  left: -1.1rem;
+  top: 0.55rem;
+  bottom: 0.55rem;
+  width: 2px;
+  background: var(--color-gild);
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 280ms var(--ease-out-strong);
+}
+.mark-margin:hover::before,
+.mark-margin:focus-within::before {
+  transform: scaleY(1);
+  transform-origin: top center;
+}
+
+/* The gilded thread: a short arc of gold that travels the border of the one
+   framed panel on a page — illumination as a line actually being drawn, rather
+   than a static keyline. Borrowed in spirit from the "border trail" pattern
+   (motion-primitives) and rebuilt with a conic gradient behind a mask, so it
+   is one composited element and no JavaScript.
+
+   This is the site's only looping motion, and it is deliberate: it runs ONLY
+   while the reader is over or inside the panel, which makes it a response, not
+   an ambient animation. Off the moment the pointer leaves. */
+.gild-thread {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: 1px;
+  opacity: 0;
+  background: conic-gradient(
+    from var(--thread-angle, 0deg),
+    transparent 0deg,
+    transparent 320deg,
+    color-mix(in srgb, var(--color-gild) 85%, transparent) 348deg,
+    #f3dda6 358deg,
+    transparent 360deg
+  );
+  /* Mask to the 1px frame: fill minus content-box leaves only the border. */
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  transition: opacity 300ms var(--ease-out-strong);
+}
+@property --thread-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gild-thread-host:hover .gild-thread,
+  .gild-thread-host:focus-within .gild-thread {
+    opacity: 1;
+    animation: thread-travel 4.5s linear infinite;
+  }
+}
+@keyframes thread-travel {
+  to {
+    --thread-angle: 360deg;
+  }
+}
+
+/* Plate parallax: inside a mounted frame the photograph drifts a little
+   further than the frame does, which is what makes the frame read as being in
+   front of it rather than painted on. Paired with the existing scale on
+   group-hover. */
+.plate-drift {
+  transition: transform 420ms var(--ease-out-strong);
+}
+.group:hover .plate-drift {
+  transform: scale(1.045);
+}
+
+/* ---- Running head ----
+   Journal furniture: once the masthead has scrolled off, a printed journal
+   still tells you what you are reading in the top margin of every page. The
+   site header does the same by sticking at a NEGATIVE offset — the masthead
+   rides up out of view and the nav strip pins itself — so the behaviour is
+   plain CSS and works in every browser rather than only where scroll-driven
+   animations do.
+
+   --head-h is the pinned strip's height; page-level running heads (the paper
+   page's title bar) stack under it. */
+:root {
+  --masthead-h: 5.5rem;
+  --head-h: 3rem;
+}
+@media (min-width: 640px) {
+  :root {
+    --masthead-h: 6rem;
+  }
+}
+html {
+  /* Anchor jumps (/issues#no-2, skip links) must clear the pinned strip. */
+  scroll-padding-top: calc(var(--head-h) + var(--head-extra, 0px) + 1rem);
+}
+
+/* The printer's shadow: once the strip is pinned, the page runs UNDER it, and
+   a hairline alone does not say that. A 14px wash below the strip deepens as
+   the masthead leaves. Scroll-driven, so it costs no JavaScript and simply
+   never appears where the feature is missing (the strip keeps its rule). */
+.head-strip::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 14px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    light-dark(rgb(76 60 34 / 0.14), rgb(0 0 0 / 0.42)),
+    transparent
+  );
+}
+/* The compact device in the strip, revealed as the masthead above it leaves —
+   the two are never both legible, so the mark is never redundant. */
+.head-mark {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+.head-mark:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+@supports (animation-timeline: scroll()) {
+  .head-strip::after {
+    animation: head-shade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 var(--masthead-h);
+  }
+  .head-mark {
+    animation: head-mark-in linear both;
+    animation-timeline: scroll(root);
+    /* Starts only in the last third of the masthead's exit, so the mark
+       arrives as the big wordmark clears rather than crossfading with it. */
+    animation-range: calc(var(--masthead-h) * 0.55) var(--masthead-h);
+  }
+  @keyframes head-shade {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes head-mark-in {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* ---- The card catalogue drawer ----
+   Pulled out, not popped up. The panel comes forward and settles while the
+   paper behind it dims; @starting-style plus allow-discrete is what lets a
+   native <dialog> animate BOTH ways with no JavaScript timing at all. */
+.catalogue {
+  margin: 9vh auto auto;
+  opacity: 0;
+  transform: translateY(-10px) scale(0.985);
+  transition:
+    opacity 0.2s var(--ease-out-strong),
+    transform 0.32s var(--ease-out-strong),
+    display 0.32s allow-discrete,
+    overlay 0.32s allow-discrete;
+}
+.catalogue[open] {
+  opacity: 1;
+  transform: none;
+}
+.catalogue::backdrop {
+  opacity: 0;
+  transition:
+    opacity 0.26s var(--ease-out-strong),
+    display 0.26s allow-discrete,
+    overlay 0.26s allow-discrete;
+}
+.catalogue[open]::backdrop {
+  opacity: 1;
+}
+@starting-style {
+  .catalogue[open] {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.985);
+  }
+  .catalogue[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* ---- Foil-stamped type ----
+   Gold on a bound cover is stamped foil, and the one honest thing to say about
+   foil is that it answers the light. A warm highlight sits inside the letters
+   themselves (two background layers clipped to the glyphs: the moving light
+   over a solid ink floor) and tracks the reader's pointer across the cover.
+
+   The registered custom properties are what make the light INTERPOLATE — an
+   unregistered var jumps between values instead of sweeping. One pass plays on
+   load with fill-mode:none, so the animation releases the variables back to
+   the pointer the moment the ceremony is over. */
+@property --mx {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 32%;
+}
+@property --my {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 38%;
+}
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  /* Both selectors carry the WHOLE gradient rather than sharing it through a
+     custom property: a custom property substitutes its own var() references at
+     the element that declares it, so a shared --foil would freeze every word to
+     the headline's light instead of its own.
+
+     The second selector is the load-bearing one. A word that is mid-entrance
+     has a composited transform animation, and text on its own compositor layer
+     is not part of an ancestor's background-clip:text mask — put the foil only
+     on the <h1> and every set word vanishes. Each word therefore clips its own
+     glyphs, and because the highlight's radius is absolute while its CENTRE is
+     placed per word by CoverLight, the light still reads as one continuous
+     source travelling across the whole line. */
+  .foil-type,
+  .foil-type .ink-set > span > span {
+    background-image:
+      radial-gradient(
+        34rem 26rem at var(--mx) var(--my),
+        #fffdf6 0%,
+        #f7e6bd 26%,
+        rgb(247 230 189 / 0.45) 42%,
+        transparent 66%
+      ),
+      linear-gradient(var(--color-ink) 0 100%);
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    /* One pass on load. fill-mode stays at its initial `none`, so the variable
+       is released back to the pointer the moment the ceremony is over — a
+       forwards fill would outrank the inline values CoverLight writes. */
+    .foil-type {
+      animation: foil-pass 1.9s var(--ease-in-out-strong) 0.35s;
+    }
+  }
+}
+@keyframes foil-pass {
+  from {
+    --mx: -30%;
+  }
+  to {
+    --mx: 32%;
+  }
+}
+/* High-contrast users get the ink, not the trick. */
+@media (forced-colors: active) {
+  .foil-type {
+    background: none;
+    color: CanvasText;
+  }
+}
+
+/* ---- The cover is a bound object ----
+   A double gilded keyline set in from the edges is the single mark that turns
+   a dark band into a book cover. Drawn with two rings on one pseudo-element so
+   it costs nothing, and drawn OPEN (scaled from the centre) as the cover
+   arrives. */
+.cover-keyline {
+  position: absolute;
+  inset: clamp(0.75rem, 1.6vw, 1.5rem);
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--color-gild) 42%, transparent);
+  box-shadow:
+    inset 0 0 0 1px transparent,
+    inset 0 0 0 4px transparent,
+    inset 0 0 0 5px color-mix(in srgb, var(--color-gild) 22%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cover-keyline {
+    animation: keyline-open 1.1s var(--ease-out-strong) 0.25s both;
+  }
+}
+@keyframes keyline-open {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+/* The lamp behind the portal: a warm bloom seated under the arch so the
+   photograph reads as an opening in the cover rather than a sticker on it. */
+.arch-lamp {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 116%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(226 182 104 / 0.42),
+    rgb(215 165 78 / 0.16) 44%,
+    transparent 70%
+  );
+  filter: blur(10px);
+}
+
+/* ---- Woven cloth ----
+   Resist-dyed warp: bands of colour whose edges feather instead of ruling,
+   crossed by a faint weft. Pure gradients — the cloth is the site's largest
+   decorative surface and must not cost an image request. The colour-mix keeps
+   it on the token system, so it reweaves itself in dark mode and inside the
+   night surface. */
+.ikat-cloth {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 20px,
+      color-mix(in srgb, var(--color-tile) 4%, transparent) 22px,
+      color-mix(in srgb, var(--color-tile) 12%, transparent) 26px 32px,
+      color-mix(in srgb, var(--color-tile) 4%, transparent) 36px,
+      transparent 38px 66px,
+      color-mix(in srgb, var(--color-gild) 4%, transparent) 68px,
+      color-mix(in srgb, var(--color-gild) 15%, transparent) 71px 75px,
+      color-mix(in srgb, var(--color-gild) 4%, transparent) 78px,
+      transparent 80px 116px,
+      color-mix(in srgb, var(--color-ember) 3%, transparent) 118px,
+      color-mix(in srgb, var(--color-ember) 10%, transparent) 121px 124px,
+      color-mix(in srgb, var(--color-ember) 3%, transparent) 127px,
+      transparent 129px 176px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      color-mix(in srgb, var(--color-ink) 5%, transparent) 0 1px,
+      transparent 1px 4px
+    );
+}
+
+/* ---- The shelf ----
+   Issues are bound volumes, so they stand on a shelf: each cover is tipped
+   back a few degrees in real perspective, and the one under the pointer comes
+   forward and squares up — the gesture of pulling a book half out to read its
+   spine. transform only, and the whole shelf shares one perspective origin so
+   the volumes belong to one scene instead of each having its own vanishing
+   point. */
+.shelf {
+  perspective: 1400px;
+  perspective-origin: 50% 40%;
+}
+.volume {
+  transform-style: preserve-3d;
+  transform: rotateY(var(--tilt, 16deg));
+  transform-origin: left center;
+  transition: transform 480ms var(--ease-out-strong);
+}
+.shelf .volume:hover,
+.shelf .volume:focus-within {
+  transform: rotateY(0deg) translateZ(44px);
+}
+/* The dimming lives on the FACE, never on .volume: filter (like opacity, mask
+   and clip-path) forces an element's transform-style back to flat, which would
+   collapse the spine into the cover and lose the whole scene. */
+.volume-face {
+  filter: brightness(0.97);
+  transition: filter 480ms var(--ease-out-strong);
+}
+.shelf:hover .volume-face {
+  filter: brightness(0.9);
+}
+.volume:hover .volume-face,
+.volume:focus-within .volume-face {
+  filter: brightness(1.03);
+}
+
+/* The board the volumes stand on: a hairline with the run's shadow pooled
+   under it, so the shelf is a surface and not a row of floating rectangles. */
+.shelf-board {
+  height: 1px;
+  background: var(--color-rule-strong);
+  box-shadow: 0 -10px 22px -12px light-dark(rgb(76 60 34 / 0.5), rgb(0 0 0 / 0.7));
+}
+
+/* The spine: the sliver of board you see because the volume is turned. It
+   hinges on the cover's left edge and swings back into the page, so it sits
+   behind the near edge exactly the way a real board does. */
+.volume-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  /* Wide enough to survive its own foreshortening: at a 22deg turn the board
+     shows only sin(22deg) of its width, so a realistic 6mm spine would be two
+     pixels of nothing. */
+  width: 30px;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  background: linear-gradient(90deg, #0a1830, #17356a 45%, #0b1e3c);
+  box-shadow: inset -1px 0 0 rgb(215 165 78 / 0.4);
+}
+
+/* The volume's own shadow, pooled on the board behind it. A separate element so
+   it can lie back on the shelf plane while the cover turns above it. */
+.volume-shadow {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: -10px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    light-dark(rgb(76 60 34 / 0.4), rgb(0 0 0 / 0.65)),
+    transparent
+  );
+  transform: translateZ(-14px);
+  transition: opacity 480ms var(--ease-out-strong);
+}
+.volume:hover .volume-shadow,
+.volume:focus-within .volume-shadow {
+  opacity: 0.5;
+}
+
+/* ---- Deckle ----
+   The torn edge of hand-made paper, at the boundary where a section on the
+   paper field meets one that is not. A repeating mask, so the tear is the
+   element's own silhouette rather than a graphic laid over it. */
+.deckle-top {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='12' preserveAspectRatio='none'%3E%3Cpath d='M0 12V4.2c8-1.4 12 1.6 20 .8s10-3.4 18-3 11 2.9 19 2.7 12-2.5 20-2.1 12 3 20 3 12-2.6 20-2.4 12 2.4 20 2.2 12-2.6 23-1.2V12z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='12' preserveAspectRatio='none'%3E%3Cpath d='M0 12V4.2c8-1.4 12 1.6 20 .8s10-3.4 18-3 11 2.9 19 2.7 12-2.5 20-2.1 12 3 20 3 12-2.6 20-2.4 12 2.4 20 2.2 12-2.6 23-1.2V12z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-size: 160px 12px;
+  mask-size: 160px 12px;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-position: top left;
+  mask-position: top left;
+}
+
+/* ---- Reading apparatus ----
+   The paper page's running head: once the title leaf has scrolled by, the
+   reader still needs to know what they are in, and how much of it is left.
+   Sticky under the site's pinned strip. */
+.running-head {
+  position: sticky;
+  top: var(--head-h);
+  z-index: 30;
+}
+/* The gild fill under the running head, growing with the article's progress.
+   Scroll-driven animations ignore animation-duration, so the reduced-motion
+   guard here is mandatory — the global 0.01ms fallback cannot neutralize it. */
+.progress-rule {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .progress-rule {
+      animation: thread-grow linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+/* ---- Entrance motion ----
+   The grammar, not one gesture. A page where every block performs the same
+   fade is a page with no hierarchy — and the 6px blur this section used to put
+   on 1100px-wide sections was the site's most expensive paint for its least
+   specific idea. Four entrances now, each saying what the thing IS:
+
+     .reveal-scroll  a block ARRIVES     — opacity + a 10px rise, nothing else
+     .ink-set        type is SET         — word by word, out of the line
+     .rule-draw      a rule is RULED     — drawn outward from its centre
+     .folio-row      contents UNROLL     — a run of rows, stagger by index
+
+   The server always renders content VISIBLE. Public pages are the site's whole
+   search presence, so the markup must never ship hidden: a crawler, a no-JS
+   reader, or anyone on a slow connection sees the page immediately. Motion is
+   layered on top only after hydration, and only for elements still below the
+   fold (Reveal.tsx sets data-reveal="pending") — which also means a deep-linked
+   anchor never lands on invisible text. Load mode and the hero clip are
+   keyframes, which play with the first paint and need no JavaScript at all. */
+
 .reveal-scroll {
   transition:
-    opacity 0.6s var(--ease-out-strong),
-    transform 0.6s var(--ease-out-strong),
-    filter 0.6s var(--ease-out-strong);
+    opacity 0.5s var(--ease-out-strong),
+    transform 0.7s var(--ease-out-strong);
   /* Stagger for siblings that enter together; 0 when an element arrives alone. */
   transition-delay: var(--reveal-delay, 0s);
 }
 .reveal-scroll[data-reveal="pending"] {
   opacity: 0;
-  transform: translateY(14px);
-  filter: blur(6px);
+  transform: translateY(10px);
 }
 
 .reveal-load {
@@ -511,9 +1007,105 @@ html {
 @keyframes reveal-rise {
   from {
     opacity: 0;
-    transform: translateY(14px);
-    filter: blur(6px);
+    transform: translateY(10px);
   }
+}
+
+/* Flat: the wrapper only carries the TRIGGER, the child owns the motion. Used
+   wherever .ink-set or .rule-draw is the whole content, so the block does not
+   rise while its own words are already rising. */
+.reveal-scroll.reveal-flat[data-reveal="pending"] {
+  opacity: 1;
+  transform: none;
+}
+.reveal-load.reveal-flat {
+  animation: none;
+}
+
+/* ---- Type is set, not faded ----
+   Each word rises out of its own line, ~34ms behind the last: the compositor's
+   stick laying words into the line. Adapted from the "vertical cut reveal"
+   family of text entrances (21st.dev, motion-primitives) but rebuilt as
+   server-rendered spans plus CSS transitions — this site's display type is its
+   search presence and must never depend on JavaScript to become visible.
+
+   Rationed to three moments: the cover's headline, a paper's title leaf, and
+   the editors' statement. A page where every heading sets itself is a page
+   where nothing is being said. */
+.ink-set > span {
+  display: inline-block;
+  /* Clip at the word's own foot; the top and sides are let out so Garamond's
+     ascenders, its tall f and any diacritic are never shaved. clip-path rather
+     than overflow:hidden, which would change the inline-block's baseline and
+     drop every word off its line. */
+  clip-path: inset(-0.5em -0.14em 0 -0.08em);
+}
+.ink-set > span > span {
+  display: inline-block;
+  transition:
+    transform 0.72s var(--ease-out-strong),
+    opacity 0.38s linear;
+  transition-delay: calc(var(--reveal-delay, 0s) + var(--i) * var(--ink-step, 34ms));
+}
+[data-reveal="pending"] .ink-set > span > span {
+  transform: translateY(108%);
+  opacity: 0;
+}
+.reveal-load .ink-set > span > span {
+  animation: ink-set-rise 0.72s var(--ease-out-strong) both;
+  animation-delay: calc(var(--reveal-delay, 0s) + var(--i) * var(--ink-step, 34ms));
+}
+@keyframes ink-set-rise {
+  from {
+    transform: translateY(108%);
+    opacity: 0;
+  }
+}
+
+/* ---- A rule is ruled ----
+   Hairlines, ikat thresholds and tile bands draw outward from their centre
+   rather than fading up as a grey ghost. In-out, because the rule MOVES while
+   staying on screen — the curve the token system reserves for exactly that. */
+.rule-draw {
+  transform-origin: center;
+  transition:
+    transform 0.85s var(--ease-in-out-strong),
+    opacity 0.25s linear;
+  transition-delay: var(--reveal-delay, 0s);
+}
+[data-reveal="pending"] .rule-draw,
+.rule-draw[data-reveal="pending"] {
+  transform: scaleX(0.02);
+  opacity: 0;
+}
+
+/* ---- Contents unroll ----
+   A list of papers is ONE object — a leaf of contents — so its rows arrive as
+   a run with a short stagger, instead of each row fading in alone as the eye
+   reaches it. Index comes from --i on the row. */
+.folio-row {
+  transition:
+    opacity 0.45s var(--ease-out-strong),
+    transform 0.6s var(--ease-out-strong);
+  transition-delay: calc(var(--i, 0) * 52ms);
+}
+[data-reveal="pending"] .folio-row {
+  opacity: 0;
+  transform: translateY(9px);
+}
+
+/* Plates settle, type materializes: a 1100px photograph is the site's largest
+   animated surface, and it is laid onto its mount rather than floated in —
+   slightly slower, because it is the heaviest thing moving. Add alongside
+   reveal-scroll via className. */
+.reveal-plate {
+  transition:
+    opacity 0.7s var(--ease-out-strong),
+    transform 0.7s var(--ease-out-strong);
+}
+.reveal-plate[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(14px) scale(0.985);
 }
 
 /* Hero image ceremony: unveiled from the ground up while a slight scale

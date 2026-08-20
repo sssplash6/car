@@ -2,12 +2,15 @@
 
 import { useLayoutEffect, useRef } from "react";
 
-// Entrance reveal — the site's one general-purpose motion primitive.
+// Entrance reveal — the site's general-purpose motion TRIGGER.
 //
-// Entrances MATERIALIZE: opacity + a 14px rise + a slight blur that resolves
-// (globals.css owns the keyframes/transitions). The blur is the difference
-// between polish and PowerPoint; it is also cheap, because it only exists for
-// the 600ms of the entrance.
+// It no longer owns a gesture, only the moment: it decides when an element has
+// arrived and hands that over to the CSS grammar in globals.css, where the
+// gesture belongs to the thing moving (.ink-set for type, .rule-draw for a
+// rule, .folio-row for a run of contents, .reveal-plate for a photograph).
+// Used bare it still carries the default block entrance — opacity plus a 10px
+// rise, and no blur: hazing a 1100px section was one gesture applied to
+// everything, which is the same as having no gesture at all.
 //
 // The server always renders content VISIBLE. Public pages are the site's whole
 // search presence, so the markup must never ship hidden: a crawler, a no-JS
@@ -23,6 +26,7 @@ export function Reveal({
   children,
   delay = 0,
   load = false,
+  flat = false,
   className,
 }: {
   children: React.ReactNode;
@@ -32,6 +36,10 @@ export function Reveal({
   delay?: number;
   /** Animate on first paint (hero orchestration) instead of on scroll into view. */
   load?: boolean;
+  /** Carry the trigger only: the wrapper stays put while its children (.ink-set,
+      .rule-draw, .folio-row) perform. Without it a set headline would rise
+      twice — once as words, once as a block. */
+  flat?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -72,16 +80,22 @@ export function Reveal({
     ? ({ "--reveal-delay": `${delay}s` } as React.CSSProperties)
     : undefined;
 
+  const flatClass = flat ? " reveal-flat" : "";
+
   if (load) {
     return (
-      <div className={`reveal-load ${className ?? ""}`} style={style}>
+      <div className={`reveal-load${flatClass} ${className ?? ""}`} style={style}>
         {children}
       </div>
     );
   }
 
   return (
-    <div ref={ref} className={`reveal-scroll ${className ?? ""}`} style={style}>
+    <div
+      ref={ref}
+      className={`reveal-scroll${flatClass} ${className ?? ""}`}
+      style={style}
+    >
       {children}
     </div>
   );

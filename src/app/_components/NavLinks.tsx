@@ -20,7 +20,7 @@ export function NavLinks({
     (href === "/papers" && pathname.startsWith("/p/"));
 
   return (
-    <ul className="flex gap-6 text-[0.9375rem] sm:gap-7">
+    <ul className="flex items-center gap-5 text-[0.9375rem] sm:gap-7">
       {items.map((item) => {
         const active = isActive(item.href);
         return (
@@ -29,7 +29,7 @@ export function NavLinks({
               href={item.href}
               aria-current={active ? "page" : undefined}
               data-active={active || undefined}
-              className={`link-underline inline-block pb-3 transition-colors ${
+              className={`link-underline inline-block py-1 transition-colors ${
                 active ? "text-ink" : "text-ink-soft hover:text-ink"
               }`}
             >
