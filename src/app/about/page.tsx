@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { COPY } from "@/lib/content";
-import { PUBLISHER_NAME, REGION_COUNTRIES, SITE_NAME } from "@/lib/site";
+import { PUBLISHER_NAME, REGION_COUNTRIES } from "@/lib/site";
 import { aboutSuzani } from "@/lib/regionalImages";
 import { InkSet } from "@/app/_components/InkSet";
 import { Reveal } from "@/app/_components/Reveal";
@@ -172,19 +172,20 @@ export default function AboutPage() {
           </div>
         </Reveal>
 
-        {/* The colophon: a manuscript ends with the scribe's tapering record
-            of how the thing was made. Pure typography plus the system's
-            smallest ornament; every claim is factual. */}
+        {/* A manuscript ends with the scribe's tapering record. The TYPOGRAPHIC
+            colophon — what the thing is set in, how it is dated — now lives in
+            the footer on every page, so this one states the review's terms
+            instead: three lines, narrowing, each a promise the code keeps. */}
         <Reveal className="border-t border-rule py-16 text-center">
           <Diamond className="mx-auto size-2 text-gild" />
           <div className="mx-auto mt-6 space-y-1.5 text-xs uppercase tracking-[0.14em] text-muted-fg">
             <p className="mx-auto max-w-md">
-              {SITE_NAME}, set in EB Garamond and Geist on warm paper
+              Independent, published quarterly by {PUBLISHER_NAME}
             </p>
             <p className="mx-auto max-w-xs">
-              Issues follow the Tashkent quarters
+              Every submission read in full by an editor
             </p>
-            <p>Published by {PUBLISHER_NAME}</p>
+            <p>Free to read · free to submit</p>
           </div>
         </Reveal>
       </div>
