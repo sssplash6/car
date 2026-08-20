@@ -204,7 +204,9 @@ export default async function IssuesPage() {
                                 {paper.title}
                               </Link>
                             </h3>
-                            <span aria-hidden="true" className="leader" />
+                            {/* A leader leads TO something; where the locator is hidden the
+                                dots would trail off into nothing. */}
+                            <span aria-hidden="true" className="leader max-sm:hidden" />
                             <span className="oldstyle-nums whitespace-nowrap text-sm text-muted-fg max-sm:hidden">
                               {formatDate(paper.publishedAt)}
                             </span>

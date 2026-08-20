@@ -1097,7 +1097,9 @@ html {
   transition:
     opacity 0.45s var(--ease-out-strong),
     transform 0.6s var(--ease-out-strong);
-  transition-delay: calc(var(--i, 0) * 52ms);
+  /* Capped: the stagger is a run, not a queue. Uncapped, the fortieth row of a
+     long archive would wait two seconds to appear, which reads as a stall. */
+  transition-delay: calc(min(var(--i, 0), 8) * 52ms);
 }
 [data-reveal="pending"] .folio-row {
   opacity: 0;

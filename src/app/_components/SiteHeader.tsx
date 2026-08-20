@@ -69,8 +69,12 @@ export async function SiteHeader() {
               footer, not here. The rosette turns an eighth on hover — with 8-fold
               symmetry it lands on itself, a wheel clicking one notch round. */}
           <Link href="/" className="group flex min-w-0 items-center gap-3">
-            <Rosette className="size-9 shrink-0 text-accent transition-transform duration-500 ease-[var(--ease-out-strong)] group-hover:rotate-45 sm:size-10" />
-            <span className="display-flush block min-w-0 truncate font-serif text-[1.75rem] leading-[1.05] tracking-tight text-ink transition-colors group-hover:text-accent sm:text-[2.125rem]">
+            <Rosette className="size-8 shrink-0 text-accent transition-transform duration-500 ease-[var(--ease-out-strong)] group-hover:rotate-45 sm:size-10" />
+            {/* Fluid rather than fixed-then-truncated: a masthead that renders
+                as "Central Asian …" on a phone is a broken masthead. The clamp
+                lets the name shrink to fit beside the rosette and the controls
+                at 360px and stop growing at the size it wants on a desktop. */}
+            <span className="display-flush block min-w-0 font-serif text-[clamp(1.15rem,4.7vw,2.125rem)] leading-[1.05] tracking-tight text-ink transition-colors group-hover:text-accent">
               {SITE_NAME}
             </span>
           </Link>

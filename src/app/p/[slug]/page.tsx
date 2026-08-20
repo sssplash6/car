@@ -475,7 +475,9 @@ export default async function PaperPage({ params }: PageProps) {
                               </Link>
                             </h3>
                           </TitleCarry>
-                          <span aria-hidden="true" className="leader" />
+                          {/* A leader leads TO something; where the locator is hidden the
+                                dots would trail off into nothing. */}
+                            <span aria-hidden="true" className="leader max-sm:hidden" />
                           <span className="oldstyle-nums shrink-0 whitespace-nowrap text-sm text-muted-fg max-sm:hidden">
                             {formatDate(p.publishedAt)}
                           </span>

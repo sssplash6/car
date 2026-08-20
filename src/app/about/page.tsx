@@ -2,8 +2,9 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { COPY } from "@/lib/content";
-import { PUBLISHER_NAME, REGION_COUNTRIES } from "@/lib/site";
+import { PUBLISHER_NAME, REGION_COUNTRIES, SITE_NAME } from "@/lib/site";
 import { aboutSuzani } from "@/lib/regionalImages";
+import { InkSet } from "@/app/_components/InkSet";
 import { Reveal } from "@/app/_components/Reveal";
 import {
   Diamond,
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 // homepage. Ornament budget: one ikat threshold and the gild lozenges on the
 // coverage list — the header stays plain so the words carry it.
 export default function AboutPage() {
-  const { main, submissions } = COPY.about;
+  const { main, process, submissions } = COPY.about;
 
   return (
     <>
@@ -36,14 +37,24 @@ export default function AboutPage() {
           overhead, architectural, cropped by the page edge so it reads as
           structure rather than a sticker. rule-strong keeps it
           sub-ornamental in both schemes. */}
-      <header className="relative overflow-hidden border-b border-rule bg-surface">
+      <header className="relative overflow-hidden bg-surface">
         <RosetteGrand className="pointer-events-none absolute -right-24 -top-32 size-[30rem] text-rule-strong opacity-60 max-lg:hidden" />
-        <div className="relative mx-auto w-full max-w-4xl px-6 pb-14 pt-16">
-          <h1 className="display-flush max-w-2xl font-serif text-[clamp(2.75rem,1.6rem+4.2vw,4.75rem)] leading-[1.02] tracking-tight text-ink">
-            {main.title}
-          </h1>
+        <div className="relative mx-auto w-full max-w-4xl px-6 pb-16 pt-16">
+          <Reveal load flat>
+            <h1 className="display-flush max-w-2xl font-serif text-[clamp(2.75rem,1.6rem+4.2vw,4.75rem)] leading-[1.02] tracking-tight text-ink">
+              <InkSet text={main.title} />
+            </h1>
+          </Reveal>
         </div>
       </header>
+      {/* The deckle: where the raised surface ends and the paper field begins,
+          the edge is TORN rather than ruled. One masked strip, the site's only
+          use of it — a hand-made edge everywhere would be a texture, not an
+          edge. */}
+      <div
+        aria-hidden="true"
+        className="deckle-top -mt-px h-3 bg-surface"
+      />
 
       <div className="mx-auto w-full max-w-4xl px-6">
         <div className="grid gap-10 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
@@ -70,7 +81,45 @@ export default function AboutPage() {
           </figure>
         </div>
 
-        <IkatDivider className="text-tile" />
+        <Reveal flat>
+          <IkatDivider className="rule-draw text-tile" />
+        </Reveal>
+
+        {/* ---- How a paper reaches a reader ----
+             The second audience for this page is an author deciding whether the
+             venue is worth their work, and the thing they need is the actual
+             route from PDF to citation. Set as a numbered register in oldstyle
+             figures rather than a row of icon cards: the numbers ARE the
+             sequence, and a card grid is exactly the SaaS grammar the brand
+             lists as an anti-reference. Every claim here is one the code and
+             the editorial process can keep — an editor reads submissions; this
+             is not peer review and must never be dressed as it. */}
+        <Reveal flat className="block py-12">
+          <h2 className="font-serif text-2xl leading-tight text-ink">
+            How a paper reaches a reader
+          </h2>
+          <ol className="mt-8 grid gap-x-10 gap-y-9 sm:grid-cols-3">
+            {process.map((step, i) => (
+              <li
+                key={step.title}
+                className="folio-row border-t border-rule-strong pt-4"
+                style={{ "--i": i } as React.CSSProperties}
+              >
+                <p className="oldstyle-nums font-serif text-3xl leading-none text-muted-fg">
+                  {String(i + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-3 font-serif text-xl leading-snug text-ink">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-soft">
+                  {step.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </Reveal>
+
+        <div className="border-t border-rule" />
 
         {/* id + scroll-mt: the homepage's "Guidance for contributors" link
             lands here, not at the top of the page. */}
@@ -130,7 +179,7 @@ export default function AboutPage() {
           <Diamond className="mx-auto size-2 text-gild" />
           <div className="mx-auto mt-6 space-y-1.5 text-xs uppercase tracking-[0.14em] text-muted-fg">
             <p className="mx-auto max-w-md">
-              Set in EB Garamond and Geist on warm paper
+              {SITE_NAME}, set in EB Garamond and Geist on warm paper
             </p>
             <p className="mx-auto max-w-xs">
               Issues follow the Tashkent quarters

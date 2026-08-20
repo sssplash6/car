@@ -35,6 +35,24 @@ export const COPY = {
       title: "About the Review",
       body: "Central Asian Review publishes research, analysis and essays on the politics, economies and societies of Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan and Uzbekistan, together with work on the wider region where it bears on these five countries.\n\nThe review is independent and published by Freshman Academy. Every submission is read in full by an editor before anything appears. Abstracts are public so the work can be found; the papers themselves are free to registered readers. The aim is plain: a durable, citable home for careful work on a region that deserves more of it.",
     },
+    // How a paper actually reaches a reader. Every line is a claim the code
+    // and the editorial process can keep — an EDITOR reads submissions (this
+    // is not peer review and must never be described as such), publication is
+    // rolling, and nothing costs anything at any stage.
+    process: [
+      {
+        title: "You send a paper",
+        body: "A finished paper as a single PDF of up to 10 MB, with an abstract that stands alone. An account is free and a Google sign-in creates one.",
+      },
+      {
+        title: "An editor reads it",
+        body: "Every submission is read in full before anything appears on the site. You hear back by email either way; a returned paper comes with a note saying what to revise, and a revised version is welcome.",
+      },
+      {
+        title: "It publishes, then binds",
+        body: "Accepted papers go live as they clear review — the abstract public so the work can be found, the PDF free to registered readers — and are gathered into that quarter's issue.",
+      },
+    ],
     submissions: {
       title: "For contributors",
       body: "Send a finished paper as a single PDF of up to 10 MB, with an abstract that stands alone: the abstract is the only part of the paper search engines can read, so it should state the question, the method and the finding by itself.\n\nAn editor reads every submission in full, and you will hear back by email either way. If a paper is returned, the note explains what to revise, and a revised version is welcome. Publication is free at every stage.",

@@ -39,6 +39,16 @@ export default function NotFound() {
           Go to the homepage
         </Link>
       </div>
+      {/* The dead end teaches the shortcut: the catalogue is the fastest way
+          out of a wrong address, and a reader who learns ⌘K here uses it
+          everywhere after. */}
+      <p className="relative mt-8 text-sm text-muted-fg">
+        Or press{" "}
+        <kbd className="rounded border border-rule bg-surface px-1.5 py-0.5 font-sans text-xs text-ink">
+          ⌘K
+        </kbd>{" "}
+        to search the whole catalogue.
+      </p>
     </div>
   );
 }

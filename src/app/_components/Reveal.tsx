@@ -68,9 +68,15 @@ export function Reveal({
           io.disconnect();
         }
       },
-      // Fires at 20% visible so the motion is done before the element fully
-      // arrives — matching the old whileInView amount.
-      { threshold: 0.2 },
+      // Any intersection at all, with the viewport's foot pulled up a tenth:
+      // the entrance starts as the element's top crosses that line and is over
+      // by the time it is properly on screen.
+      //
+      // NOT a percentage threshold. A Reveal now wraps whole lists — a contents
+      // leaf enters as one object — and a list taller than five viewports can
+      // never be 20% visible at once, so a threshold would leave a long archive
+      // permanently hidden. This condition holds for a wrapper of any height.
+      { threshold: 0, rootMargin: "0px 0px -10% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
