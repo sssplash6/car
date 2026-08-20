@@ -14,8 +14,8 @@ import { PAPER_STATUS } from "@/lib/papers";
 import { issueFor, tashkentQuarter } from "@/lib/issues";
 import { SITE_NAME, formatDate, siteUrl } from "@/lib/site";
 import { paperImage } from "@/lib/regionalImages";
+import { AuthorLine } from "@/app/_components/AuthorLine";
 import { CopyButton } from "@/app/_components/CopyButton";
-import { InkSet } from "@/app/_components/InkSet";
 import { Reveal } from "@/app/_components/Reveal";
 import { TitleCarry } from "@/app/_components/TitleCarry";
 import {
@@ -277,8 +277,11 @@ export default async function PaperPage({ params }: PageProps) {
             </h1>
           </TitleCarry>
 
+          {/* Each name is a door into the archive: the question a reader asks
+              right after deciding a paper is worth citing is what else its
+              authors have published here. */}
           <p className="mt-6 text-center font-serif text-xl text-ink">
-            {paper.authorLine}
+            <AuthorLine line={paper.authorLine} />
           </p>
           {paper.publishedAt && (
             <p className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-sm text-muted-fg">

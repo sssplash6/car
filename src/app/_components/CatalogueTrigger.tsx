@@ -231,6 +231,13 @@ export function CatalogueTrigger() {
               setActive(0);
             }}
             onKeyDown={onKeyDown}
+            // The combobox pattern: focus never leaves the field, so the
+            // ACTIVE option has to be named here or a screen-reader user
+            // arrowing through the drawer hears nothing move.
+            aria-activedescendant={
+              entries[active] ? `catalogue-option-${active}` : undefined
+            }
+            aria-autocomplete="list"
             className="h-14 w-full bg-transparent text-[1.0625rem] text-ink outline-none focus-visible:outline-none placeholder:text-muted-fg"
           />
         </div>
@@ -248,12 +255,19 @@ export function CatalogueTrigger() {
                 : `Nothing in the catalogue matches “${query}”.`}
             </li>
           )}
+          {/* The <li> IS the option — no button inside it. Keyboard interaction
+              belongs to the input (aria-activedescendant above); a focusable
+              control per row would fight it and break the pattern. */}
           {entries.map((entry, i) => (
-            <li key={entry.key} role="option" aria-selected={i === active}>
-              <button
-                type="button"
-                onMouseMove={() => setActive(i)}
-                onClick={() => go(entry)}
+            <li
+              key={entry.key}
+              id={`catalogue-option-${i}`}
+              role="option"
+              aria-selected={i === active}
+              onMouseMove={() => setActive(i)}
+              onClick={() => go(entry)}
+            >
+              <span
                 className={`flex w-full cursor-pointer items-baseline gap-1 px-5 py-2.5 text-left transition-colors ${
                   i === active ? "bg-accent-soft" : ""
                 }`}
@@ -286,7 +300,7 @@ export function CatalogueTrigger() {
                     {entry.meta}
                   </span>
                 )}
-              </button>
+              </span>
             </li>
           ))}
         </ul>

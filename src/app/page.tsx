@@ -177,7 +177,7 @@ export default async function HomePage() {
           {/* The one arch on the site. priority: this is the LCP element, so it
               must not lazy-load; the clip reveal animates clip-path only, so the
               image element itself is painted (and measured) immediately. */}
-          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+          <div className="cover-lift-portal relative mx-auto w-full max-w-md lg:max-w-none">
             {/* The lamp: a warm bloom seated under the portal, so the arch
                 reads as an opening cut through the cloth rather than a plate
                 stuck onto it. */}

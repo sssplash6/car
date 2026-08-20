@@ -47,6 +47,9 @@ turquoise/gild ornament. Scoped by redefining the semantic tokens inside
 
 - **EB Garamond** (`--font-serif`) — masthead, headings, display numbers, drop
   caps. The academic-press serif is the identity; do not add a third family.
+  Loaded with the **Cyrillic subset**: the review names Kazakhstan, Kyrgyzstan
+  and Tajikistan in their own script (`src/lib/site.ts`), and a fallback face
+  for those three words beside Garamond would read as a mistake.
 - **Geist** (`--font-sans`) — everything else.
 - Display sizes are fluid: hero `clamp(2.75rem, 1.2rem + 5.2vw, 4.5rem)`, page
   titles `clamp(2.25rem, 1.5rem + 3vw, 3.25rem)`. Body measure ≤ 68ch.
@@ -97,18 +100,115 @@ and a blur placeholder.
 
 ## Motion
 
-Doctrine: entrances materialize (opacity + 14px rise + 6px blur), hovers are
-150–200ms, nothing loops, nothing bounces. `--ease-out-strong:
-cubic-bezier(0.16, 1, 0.3, 1)` everywhere; in-out only for on-screen movement.
+Doctrine: **the gesture belongs to the thing moving.** One universal fade
+applied to every block is the same as having no gesture at all — and a 6px
+blur across a 1100px section was the site's most expensive paint for its least
+specific idea. Nothing loops except the gilded thread (and only while the
+reader is on it), nothing bounces, hovers are 150–200ms.
+`--ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1)` everywhere; the in-out curve
+is reserved for things that MOVE while staying on screen.
 
-- `Reveal` (whileInView, once) for scroll entrances; stagger siblings by
-  0.05–0.08s. `mode="load"` variant for above-the-fold hero orchestration.
-- The homepage hero is the ONE orchestrated moment: headline → deck → CTAs →
-  arch image clip-reveal (`clip-path: inset`), ~0.9s total.
-- High-frequency surfaces (admin, forms, nav) get hover/focus transitions
-  only. Frequency rule: what an editor sees 50 times a day does not animate.
-- Everything honors `prefers-reduced-motion` (Reveal collapses to static; CSS
-  fallback zeroes durations globally).
+`Reveal` carries only the TRIGGER: it decides when an element has arrived and
+hands over to the CSS grammar. `flat` suppresses the wrapper's own gesture
+where the child already has one.
+
+| Class | Says | Used on |
+|---|---|---|
+| `.reveal-scroll` | a block ARRIVES | opacity + a 10px rise; the default |
+| `.ink-set` | type is SET | word by word out of its own line — hero, editors' statement, About title, and nowhere else |
+| `.rule-draw` | a rule is RULED | ikat thresholds, tile bands: drawn outward from the centre |
+| `.folio-row` | contents UNROLL | a run of rows, staggered by `--i`, capped at 8 steps |
+| `.reveal-plate` | a plate is LAID | photographs: scale settle, slower, no blur |
+| `.clip-reveal` | masonry RISES | the hero arch only, once per page |
+
+- `InkSet` is adapted from the vertical-cut-reveal family catalogued on
+  21st.dev / motion-primitives, rebuilt as server-rendered spans plus CSS
+  transitions: display type is the site's search presence and must never wait
+  for JavaScript to become visible. Split words are real text with real spaces,
+  so headings still copy, translate and read as one sentence. `--ink-step`
+  tunes the per-word delay for long passages.
+- `Reveal` fires on ANY intersection with the viewport's foot pulled up a
+  tenth — never a percentage threshold. A Reveal now wraps whole lists, and a
+  list taller than five viewports can never be 20% visible at once.
+- Everything honors `prefers-reduced-motion` (Reveal skips hiding; the CSS
+  fallback zeroes durations). Scroll-driven animations ignore
+  `animation-duration`, so each one carries its own explicit guard.
+
+### The three scroll-driven marks
+
+Progressive enhancement, each inside `@supports (animation-timeline: …)`, each
+absent-but-harmless where unsupported:
+
+- **The cover closes.** Lattice, page and portal leave on three different
+  rates across the same exit — which is what turns a flat band into a scene.
+- **The running head fills.** A gild rule under the paper page's running head,
+  growing with the reader's progress.
+- **The wheel turns.** The compact shanyrak in the pinned strip makes a half
+  revolution over the length of the page. Eight-fold symmetry means four clean
+  clicks, so it reads as turned, never as tilted.
+
+## Chrome
+
+- **The running head.** A printed journal keeps telling you what you are
+  reading in the top margin of every page. The header sticks at a NEGATIVE
+  offset (`top: calc(-1 * var(--masthead-h))`): the masthead rides up out of
+  view and the strip beneath it pins. Plain `position: sticky`, so it behaves
+  the same everywhere. `--head-h` is the pinned strip's height; page-level
+  running heads (the paper page's) stack under it, and `scroll-padding-top`
+  keeps anchor jumps clear of it.
+- **The card catalogue.** ⌘K or `/` anywhere pulls out a drawer holding every
+  published paper, every issue and the site's destinations. Native `<dialog>`,
+  not a combobox library — the browser owns the modal semantics, focus trap
+  and Escape. `@starting-style` + `allow-discrete` animate it both ways with no
+  JavaScript timing. Its index is fetched once from `/api/catalogue` on first
+  open, so pages nobody searches from pay nothing.
+
+## The craft layer
+
+The brand's object is a hand-bound journal; these are the physical facts of it
+CSS can honestly render. All ride the token system, so both schemes and the
+night surface come free.
+
+- **Foil** (`.foil-type`) — gold on a cover is stamped foil, and foil answers
+  the light. Two background layers clipped to the glyphs: a moving highlight
+  over a solid ink floor, tracked to the pointer by `CoverLight`. The
+  registered `--mx`/`--my` are what make the light interpolate. NOTE: a word
+  mid-entrance sits on its own compositor layer and is not part of an
+  ancestor's `background-clip: text` mask, so the foil is declared on the WORDS
+  as well as the element — put it only on the `<h1>` and every set word
+  vanishes.
+- **The bound cover** — a double gilded keyline inset from the boards, drawn
+  open as the cover arrives, with the portal lit from behind (`.arch-lamp`).
+- **The woven cloth** (`.ikat-cloth`) — resist-dyed warp built from gradients,
+  so the site's largest decorative surface costs no image request. Its threads
+  are their own tokens with alpha baked in: a warp that whispers on warm paper
+  is a set of stripes on a near-black ground, and `light-dark()` takes colours,
+  not percentages.
+- **The shelf** (`.shelf` / `.volume`) — issues stood up in perspective, tipped
+  back, spine showing, the one under the pointer pulled half out. The dimming
+  lives on `.volume-face`, NEVER on `.volume`: filter (like opacity, mask and
+  clip-path) forces `transform-style` back to flat and would collapse the
+  spine into the cover.
+- **The marginal mark** (`.mark-margin`) — a gild rule drawn down the margin
+  beside the row under the pointer: the pencil line a reader leaves beside a
+  paragraph. `:focus-within` too, so keyboard reading gets it.
+- **The gilded thread** (`.gild-thread`) — a short arc of gold travelling the
+  border of one framed panel. The site's only looping motion, and it runs only
+  while the reader is over or inside the panel, which makes it a response
+  rather than ambience.
+- **The deckle** (`.deckle-top`) — one torn edge on the whole site (the About
+  header). A hand-made edge everywhere would be a texture, not an edge.
+- Plus the originals: `.shadow-plate`, `.fillet`, `.foil`, `.emboss`,
+  `.press-ink`, `.title-link`, `.folio-label`, `.leader`, `.plate-drift`.
+
+## Print
+
+An abstract page is a thing scholars actually print. Chrome, decorative plate,
+download panel and copy buttons remove themselves at the call sites; the print
+block makes the paper white and the ink black. The load-bearing line is the
+`color-scheme` reset — every colour is a `light-dark()` pair, so a reader who
+pinned dark mode would otherwise send a near-black page to the printer, and
+`[data-theme="dark"]` outranks a bare `:root`.
 
 ## Contrast
 

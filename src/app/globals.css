@@ -419,6 +419,21 @@ html {
       animation-timeline: view();
       animation-range: exit 0% exit 100%;
     }
+    /* The portal is the nearest thing on the cover, so it leaves FIRST and
+       fastest: three rates across the same exit (lattice, page, portal) is
+       what turns a flat band into a scene with depth. Lives on the arch's
+       wrapper, never on the ClipReveal itself — two animations writing
+       transform on one element is a fight the later one always wins. */
+    .cover-lift-portal {
+      animation: cover-lift-portal linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+    }
+    @keyframes cover-lift-portal {
+      to {
+        transform: translateY(-30px) scale(1.015);
+      }
+    }
     @keyframes cover-lift {
       to {
         transform: translateY(28px);
@@ -649,6 +664,20 @@ html {
     /* Starts only in the last third of the masthead's exit, so the mark
        arrives as the big wordmark clears rather than crossfading with it. */
     animation-range: calc(var(--masthead-h) * 0.55) var(--masthead-h);
+  }
+  /* The shanyrak is a roof-WHEEL, and the reader is travelling: the mark turns
+     a half-revolution over the length of the page. With eight-fold symmetry
+     that is four clean clicks, so it never looks tilted — only turned. The
+     site's one piece of motion tied to the whole journey rather than to a
+     single element's arrival. */
+  .head-mark svg {
+    animation: wheel-turn linear both;
+    animation-timeline: scroll(root);
+  }
+  @keyframes wheel-turn {
+    to {
+      transform: rotate(180deg);
+    }
   }
   @keyframes head-shade {
     to {
@@ -913,6 +942,22 @@ html {
   transform: rotateY(90deg);
   background: linear-gradient(90deg, #0a1830, #17356a 45%, #0b1e3c);
   box-shadow: inset -1px 0 0 rgb(215 165 78 / 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Printing on the board. Foreshortened to a few pixels at the shelf's turn, it
+   is never meant to be READ — a spine with nothing stamped on it is a blank
+   block of card, and the eye knows the difference even when it cannot resolve
+   the letters. */
+.volume-spine-text {
+  writing-mode: vertical-rl;
+  font-size: 0.5rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #d7a54e;
+  opacity: 0.85;
 }
 
 /* The volume's own shadow, pooled on the board behind it. A separate element so
@@ -1142,6 +1187,45 @@ html {
 @keyframes clip-settle {
   from {
     transform: scale(1.06);
+  }
+}
+
+/* ---- Print ----
+   An abstract page is a thing scholars actually print, and a printed page of
+   this review should look like a page from the review — not like a website
+   photographed. The chrome, the decorative plate, the download panel and the
+   copy buttons already remove themselves (print:hidden at the call sites);
+   what is left here is making the PAPER white and the ink black.
+
+   The color-scheme reset is the load-bearing line. Every colour on the site is
+   a light-dark() pair, so a reader who has pinned dark mode would otherwise
+   send a near-black page to the printer — and [data-theme="dark"] outranks a
+   bare :root, which is why it is named here too. */
+@media print {
+  :root,
+  :root[data-theme="dark"] {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+    background-image: none;
+  }
+  @page {
+    margin: 18mm 16mm;
+  }
+  /* Paper carries its own texture; ours is a description of paper. */
+  .bg-surface,
+  .bg-canvas {
+    background: #fff !important;
+  }
+  .shadow-plate {
+    box-shadow: none;
+  }
+  /* Underlined blue on paper is noise: the citation block already carries the
+     canonical URL in full, which is the only address a printed page needs. */
+  a {
+    color: inherit;
+    text-decoration: none;
   }
 }
 

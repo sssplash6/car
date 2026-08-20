@@ -113,7 +113,11 @@ export default async function IssuesPage() {
                   >
                     {/* The board you see because the volume is turned, and
                         the shadow it drops on the shelf behind it. */}
-                    <span aria-hidden="true" className="volume-spine" />
+                    <span aria-hidden="true" className="volume-spine">
+                      <span className="volume-spine-text">
+                        Central Asian Review · № {issue.number}
+                      </span>
+                    </span>
                     <span aria-hidden="true" className="volume-shadow" />
                     <IssueCover
                       number={issue.number}
