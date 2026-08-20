@@ -17,7 +17,11 @@ const geistSans = Geist({
 // rather than as fashion editorial. The only webfont the site loads besides Geist.
 const displaySerif = EB_Garamond({
   variable: "--font-display",
-  subsets: ["latin"],
+  // Cyrillic is not optional here: the review names Kazakhstan, Kyrgyzstan and
+  // Tajikistan in their own script (src/lib/site.ts), and a fallback face for
+  // those three words beside Garamond would read as a mistake. Next emits one
+  // extra subset file, requested only when a Cyrillic glyph is actually used.
+  subsets: ["latin", "cyrillic"],
   display: "swap",
 });
 

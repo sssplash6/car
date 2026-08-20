@@ -18,14 +18,36 @@ export const SITE_NAME = "Central Asian Review";
 /** Shown in the footer. The review fronts its own brand; the academy publishes it. */
 export const PUBLISHER_NAME = "Freshman Academy";
 
-/** Region the review covers. Placeholder ordering — confirm with the editors. */
+/**
+ * Region the review covers, each country also named in its own official
+ * language and script.
+ *
+ * The review's stated principle is that the region is the subject, not a
+ * backdrop (PRODUCT.md) — and a publication that can only spell its own
+ * subject in English has not met that bar. A country's own name is editorial
+ * competence, not a political claim: the standing rule bans flags, state
+ * emblems and motifs captioned as belonging to one country, none of which this
+ * is.
+ *
+ * `lang` is load-bearing markup, not decoration — it tells a screen reader
+ * which voice to use and the browser which font stack and hyphenation rules
+ * apply. Kazakh, Kyrgyz and Tajik are set in Cyrillic (still each country's
+ * standard script); Turkmen and Uzbek in their official Latin orthographies,
+ * including the ʻokina-shaped U+02BB in Oʻzbekiston. The display serif loads
+ * the Cyrillic subset for exactly this.
+ *
+ * Alphabetical by English name — placeholder ordering, confirm with the editors.
+ */
 export const REGION_COUNTRIES = [
-  "Kazakhstan",
-  "Kyrgyzstan",
-  "Tajikistan",
-  "Turkmenistan",
-  "Uzbekistan",
-];
+  { en: "Kazakhstan", native: "Қазақстан", lang: "kk" },
+  { en: "Kyrgyzstan", native: "Кыргызстан", lang: "ky" },
+  { en: "Tajikistan", native: "Тоҷикистон", lang: "tg" },
+  { en: "Turkmenistan", native: "T\u00fcrkmenistan", lang: "tk" },
+  { en: "Uzbekistan", native: "O\u02bbzbekiston", lang: "uz" },
+] as const;
+
+/** Just the English names, for prose that lists them inline. */
+export const REGION_COUNTRY_NAMES = REGION_COUNTRIES.map((c) => c.en);
 
 /**
  * Format a date for display.

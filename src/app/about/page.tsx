@@ -101,12 +101,21 @@ export default function AboutPage() {
             <h2 className="font-serif text-2xl leading-tight text-ink">Coverage</h2>
             <div>
               {/* Placeholder region list from lib/site.ts. Confirm the framing
-                  with the editors before treating it as final. */}
-              <ul className="grid gap-x-8 gap-y-2.5 text-ink-soft sm:grid-cols-2">
+                  with the editors before treating it as final. Each country is
+                  also named in its own language: lang= is markup, not
+                  decoration — it tells assistive technology which voice to read
+                  the name in. */}
+              <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
                 {REGION_COUNTRIES.map((country) => (
-                  <li key={country} className="flex items-center gap-2.5">
-                    <Diamond className="text-gild" />
-                    {country}
+                  <li key={country.en} className="flex items-baseline gap-2.5">
+                    <Diamond className="self-center text-gild" />
+                    <span className="text-ink-soft">{country.en}</span>
+                    <span
+                      lang={country.lang}
+                      className="font-serif text-[0.9375rem] text-muted-fg"
+                    >
+                      {country.native}
+                    </span>
                   </li>
                 ))}
               </ul>

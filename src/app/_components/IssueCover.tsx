@@ -25,6 +25,8 @@ export function IssueCover({
   paperCount,
   open = false,
   anchorId,
+  className,
+  headingLevel: Heading = "h2",
 }: {
   number: number;
   label: string;
@@ -33,11 +35,16 @@ export function IssueCover({
   open?: boolean;
   /** id for the numeral heading, so sections can aria-labelledby it. */
   anchorId?: string;
+  className?: string;
+  /** The shelf lists volumes under its own heading, so its covers are h3s. */
+  headingLevel?: "h2" | "h3" | "p";
 }) {
   const thread = THREADS[number % THREADS.length];
 
   return (
-    <div className="shadow-plate w-full max-w-[13rem] border border-rule-strong bg-surface p-1.5">
+    <div
+      className={`shadow-plate w-full border border-rule-strong bg-surface p-1.5 ${className ?? "max-w-[13rem]"}`}
+    >
       <div
         className={
           open
@@ -54,13 +61,13 @@ export function IssueCover({
           </p>
 
           <div>
-            <h2
+            <Heading
               id={anchorId}
               className="oldstyle-nums font-serif text-5xl leading-none tracking-tight text-ink"
             >
               <span className="mr-1 align-top text-[0.45em] leading-none">№</span>
               {number}
-            </h2>
+            </Heading>
             <p className="mt-2.5 font-serif text-lg leading-tight text-ink-soft">
               {label}
             </p>

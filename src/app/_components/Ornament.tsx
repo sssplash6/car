@@ -165,6 +165,38 @@ export function IkatDivider({ className }: { className?: string }) {
   );
 }
 
+/** The cloth's finished edge. Unlike IkatDivider (a threshold INSIDE the paper,
+    faded at both ends), a selvedge runs the full width uninterrupted — it is
+    where the weaving stops. Used at the top and bottom of the woven spread;
+    `flip` mirrors it so the two edges face their own cloth. */
+export function IkatSelvedge({
+  className,
+  flip = false,
+}: {
+  className?: string;
+  flip?: boolean;
+}) {
+  const id = useId();
+  return (
+    <div aria-hidden="true" className={className}>
+      <svg
+        className={`block h-2 w-full ${flip ? "-scale-y-100" : ""}`}
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <pattern id={id} patternUnits="userSpaceOnUse" width={18} height={8}>
+            <rect width={18} height={1} y={0} fill="currentColor" opacity={0.5} />
+            <rect x={2} y={3} width={4} height={4} fill="currentColor" opacity={0.75} />
+            <rect x={9} y={4} width={2} height={2} fill="currentColor" />
+            <rect x={13} y={3.5} width={3} height={3} fill="currentColor" opacity={0.55} />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill={`url(#${id})`} />
+      </svg>
+    </div>
+  );
+}
+
 /** Star tessellation at low opacity, laid behind a band. Allowed on the
     homepage hero, the paper-page header and the footer — nowhere else. */
 export function PatternField({ className }: { className?: string }) {
