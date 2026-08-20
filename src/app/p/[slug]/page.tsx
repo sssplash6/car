@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   ArrowLeftIcon,
+  ArrowRightIcon,
   DownloadSimpleIcon,
   LockSimpleIcon,
 } from "@phosphor-icons/react/dist/ssr";
@@ -14,6 +15,8 @@ import { issueFor, tashkentQuarter } from "@/lib/issues";
 import { SITE_NAME, formatDate, siteUrl } from "@/lib/site";
 import { paperImage } from "@/lib/regionalImages";
 import { CopyButton } from "@/app/_components/CopyButton";
+import { InkSet } from "@/app/_components/InkSet";
+import { Reveal } from "@/app/_components/Reveal";
 import { TitleCarry } from "@/app/_components/TitleCarry";
 import {
   Corners,
@@ -32,10 +35,21 @@ import {
 //
 // Deliberately calm, and ordered for the reader from search: front matter flows
 // straight into the abstract (the decision content), the decorative plate sits
-// below it as an interlude, and the page ends with the scholarly furniture —
-// download, citation, the rest of the issue. No entrance choreography; the
-// ornament budget goes to the patterned header, one tile band, and the framed
-// download panel.
+// below it as an interlude, and the page ends with the scholarly furniture.
+//
+// Two things make it a READING page rather than a poster. A running head pins
+// under the site's strip once the title leaf has gone by, carrying the paper's
+// name, its volume and a gild rule that fills with the reader's progress — the
+// journal furniture a printed page keeps in its top margin. And the colophon
+// has moved out of the foot and into the MARGIN, sticky, where marginalia
+// belongs: while the reader is in the abstract, what the thing is and how to
+// cite it are beside their hand rather than a scroll away. Content order in the
+// markup is unchanged (abstract first), so the rail costs the reader from
+// search nothing.
+//
+// The ornament budget goes to the ʿunwān headpiece, one tile band, and the
+// framed download panel; the title leaf is one of the three places on the site
+// where type is SET rather than faded.
 
 type PageProps = { params: Promise<{ slug: string }> };
 
@@ -156,6 +170,16 @@ export default async function PaperPage({ params }: PageProps) {
         .slice(0, 4)
     : [];
 
+  // The page turns: the papers either side of this one across the WHOLE
+  // archive, newest first. "Also in this issue" is discovery within a volume;
+  // this is the plain gesture of reading on, and it never dead-ends.
+  const ordered = published
+    .flatMap((p) => (p.publishedAt ? [{ ...p, publishedAt: p.publishedAt }] : []))
+    .sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+  const here = ordered.findIndex((p) => p.id === paper.id);
+  const newer = here > 0 ? ordered[here - 1] : null;
+  const older = here >= 0 && here < ordered.length - 1 ? ordered[here + 1] : null;
+
   // Citation text, derived entirely from data on the page. The BibTeX author
   // field wants "A and B", not the display line's commas.
   const year = paper.publishedAt?.getFullYear();
@@ -214,10 +238,6 @@ export default async function PaperPage({ params }: PageProps) {
 
   return (
     <article>
-      {/* The reader's shuttle: a gild thread along the viewport's bottom edge
-          growing with scroll progress — the one scroll-driven mark on the
-          reading page, at its edge so the column itself stays calm. */}
-      <div aria-hidden="true" className="reading-thread print:hidden" />
       <script
         type="application/ld+json"
         // Escaping "<" prevents a title containing "</script>" from breaking out
@@ -228,10 +248,13 @@ export default async function PaperPage({ params }: PageProps) {
       />
 
       {/* The frontispiece: front matter set as a manuscript's title leaf. The
-          ʿunwān headpiece takes the ornament slot the pattern wash held (a
-          swap, so the viewport budget stays flat), the title is centered at
+          ʿunwān headpiece takes the ornament slot, the title is centered at
           title-page scale, and the authors are promoted to the page's second
-          voice — they are content, not metadata. */}
+          voice — they are content, not metadata.
+
+          The title deliberately does NOT set itself word by word: its ceremony
+          is the carry from the index row (TitleCarry), and a shared-element
+          morph landing on type that is still arriving would fight itself. */}
       <header className="border-b border-rule bg-surface print:border-0">
         <div className="mx-auto w-full max-w-4xl px-6 pb-14 pt-10">
           <Link
@@ -276,170 +299,304 @@ export default async function PaperPage({ params }: PageProps) {
           )}
         </div>
         {/* The page's one tile band: the threshold between front matter and
-            the work itself. */}
-        {/* Full-strength tile: at /70 the band fell below the doctrine's own
-            3:1 ornament floor in light mode. */}
+            the work itself. Full-strength tile — at /70 the band fell below the
+            doctrine's own 3:1 ornament floor in light mode. */}
         <TileBand className="relative text-tile print:hidden" />
       </header>
 
-      <div className="mx-auto w-full max-w-4xl px-6 py-12">
-        <div className="max-w-[62ch]">
-          {/* Small caps for the apparatus, serif for the work: the furniture
-              steps back so Garamond belongs to the scholarship alone. */}
-          <h2 className="folio-label">Abstract</h2>
-          {/* The site's one illuminated initial (DESIGN.md): the first letter
-              of the abstract, set in lapis Garamond three lines deep. The
-              gild lozenge closes the passage — the scribe's end-mark pairing
-              with the dropcap that opened it. */}
-          <p className="prose-plain dropcap mt-5 text-[1.125rem] leading-[1.75] text-ink-soft">
-            {paper.abstract}
-            <span aria-hidden="true">
-              {" "}
-              <Diamond className="text-gild" />
+      {/* ---- The running head ----
+           Journal furniture: once the title leaf has gone by, the top margin of
+           every page still says what you are reading, which volume it belongs
+           to and — the one thing paper cannot do — how far through you are.
+           Sticky under the site's own pinned strip; the gild rule at its foot
+           fills with scroll where scroll-driven animations exist. */}
+      <div className="running-head border-b border-rule bg-canvas/92 backdrop-blur-sm print:hidden">
+        <div className="mx-auto flex h-11 w-full max-w-6xl items-baseline gap-x-4 px-6">
+          <p className="min-w-0 truncate font-serif text-[0.9375rem] leading-none text-ink">
+            {paper.title}
+          </p>
+          <span aria-hidden="true" className="leader max-sm:hidden" />
+          {issue && (
+            <span className="oldstyle-nums shrink-0 text-xs text-muted-fg max-sm:hidden">
+              № {issue.number} · {issue.label}
             </span>
-          </p>
-        </div>
-
-        {/* The pool plate, mounted like every other photograph on the site
-            (hairline, mount, image) and placed as an interlude AFTER the
-            abstract: it decorates beside the work, it is not the work. Hidden
-            in print — it is decoration, and it would cost the reader ink. */}
-        <figure className="shadow-plate mt-12 border border-rule-strong bg-surface p-1.5 print:hidden">
-          <div className="fillet relative aspect-16/9 w-full overflow-hidden sm:aspect-21/9">
-            <Image
-              src={paperImage(paper.slug)}
-              alt=""
-              fill
-              placeholder="blur"
-              sizes="(max-width: 896px) 100vw, 56rem"
-              className="object-cover"
-            />
-          </div>
-        </figure>
-
-        {/* The gated moment, framed like a bookplate. Named by the JSON-LD
-            cssSelector above, so renaming this class silently breaks the
-            metered-content declaration. */}
-        <div className="gated-download shadow-plate relative mt-12 overflow-hidden border border-rule-strong bg-surface p-7 print:hidden sm:p-9">
-          <Corners className="text-gild" />
-          {/* Blind emboss: the press's device in ink-free relief, pressed into
-              the bookplate behind the text. Same colour as the ground, so it
-              reads as paper, not a second ornament. */}
-          <Rosette className="emboss pointer-events-none absolute -right-6 top-1/2 size-40 -translate-y-1/2 max-sm:hidden" />
-          {user ? (
-            <div className="relative">
-              <h2 className="font-serif text-xl text-ink">The full paper</h2>
-              <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
-                <a
-                  href={`/api/papers/${paper.id}/file`}
-                  className="inline-flex items-center gap-2 rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
-                >
-                  <DownloadSimpleIcon size={17} aria-hidden="true" />
-                  Download the PDF
-                </a>
-                <span className="text-sm text-muted-fg">
-                  {formatFileSize(paper.fileSize)}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="relative max-w-md">
-              <h2 className="flex items-center gap-2 font-serif text-xl text-ink">
-                <LockSimpleIcon
-                  size={18}
-                  className="text-muted-fg"
-                  aria-hidden="true"
-                />
-                Download the full paper
-              </h2>
-              <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
-                The abstract above is free to read. The PDF needs an account,
-                which costs nothing; signing in with Google creates one.
-              </p>
-              <Link
-                href={`/login?next=/p/${paper.slug}`}
-                className="mt-5 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
-              >
-                Sign in to download
-              </Link>
-            </div>
           )}
+          <a
+            href="#the-full-paper"
+            className="ml-auto shrink-0 text-xs text-accent transition-colors hover:text-accent-dark sm:ml-0"
+          >
+            {user ? "Download" : "Get the PDF"}
+          </a>
+        </div>
+        <div
+          aria-hidden="true"
+          className="progress-rule h-[2px] bg-gild"
+        />
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl px-6 py-12">
+        <div className="grid gap-x-14 gap-y-12 lg:grid-cols-[minmax(0,1fr)_15rem]">
+          <div className="min-w-0">
+            <div className="max-w-[62ch]">
+              {/* Small caps for the apparatus, serif for the work: the furniture
+                  steps back so Garamond belongs to the scholarship alone. */}
+              <h2 className="folio-label">Abstract</h2>
+              {/* The site's one illuminated initial (DESIGN.md): the first letter
+                  of the abstract, set in lapis Garamond three lines deep. The
+                  gild lozenge closes the passage — the scribe's end-mark pairing
+                  with the dropcap that opened it. */}
+              <p className="prose-plain dropcap mt-5 text-[1.1875rem] leading-[1.75] text-ink-soft">
+                {paper.abstract}
+                <span aria-hidden="true">
+                  {" "}
+                  <Diamond className="text-gild" />
+                </span>
+              </p>
+            </div>
+
+            {/* The pool plate, mounted like every other photograph on the site
+                (hairline, mount, image) and placed as an interlude AFTER the
+                abstract: it decorates beside the work, it is not the work.
+                Hidden in print — it is decoration, and it would cost ink. */}
+            <Reveal className="reveal-plate">
+              <figure className="group shadow-plate mt-12 border border-rule-strong bg-surface p-1.5 print:hidden">
+                <div className="fillet relative aspect-16/9 w-full overflow-hidden sm:aspect-21/9">
+                  <Image
+                    src={paperImage(paper.slug)}
+                    alt=""
+                    fill
+                    placeholder="blur"
+                    sizes="(max-width: 1152px) 100vw, 46rem"
+                    className="plate-drift object-cover"
+                  />
+                </div>
+              </figure>
+            </Reveal>
+
+            {/* The gated moment, framed like a bookplate, with the gilded
+                thread travelling its frame while the reader is on it. Named by
+                the JSON-LD cssSelector above, so renaming this class silently
+                breaks the metered-content declaration. */}
+            <div
+              id="the-full-paper"
+              className="gated-download gild-thread-host shadow-plate relative mt-12 scroll-mt-32 overflow-hidden border border-rule-strong bg-surface p-7 print:hidden sm:p-9"
+            >
+              <Corners className="text-gild" />
+              <span aria-hidden="true" className="gild-thread" />
+              {/* Blind emboss: the press's device in ink-free relief, pressed
+                  into the bookplate behind the text. Same colour as the ground,
+                  so it reads as paper, not a second ornament. */}
+              <Rosette className="emboss pointer-events-none absolute -right-6 top-1/2 size-40 -translate-y-1/2 max-sm:hidden" />
+              {user ? (
+                <div className="relative">
+                  <h2 className="font-serif text-xl text-ink">The full paper</h2>
+                  <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+                    <a
+                      href={`/api/papers/${paper.id}/file`}
+                      className="press-ink inline-flex items-center gap-2 rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface hover:bg-accent-dark"
+                    >
+                      <DownloadSimpleIcon size={17} aria-hidden="true" />
+                      Download the PDF
+                    </a>
+                    <span className="text-sm text-muted-fg">
+                      {formatFileSize(paper.fileSize)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative max-w-md">
+                  <h2 className="flex items-center gap-2 font-serif text-xl text-ink">
+                    <LockSimpleIcon
+                      size={18}
+                      className="text-muted-fg"
+                      aria-hidden="true"
+                    />
+                    Download the full paper
+                  </h2>
+                  <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">
+                    The abstract above is free to read. The PDF needs an account,
+                    which costs nothing; signing in with Google creates one.
+                  </p>
+                  <Link
+                    href={`/login?next=/p/${paper.slug}`}
+                    className="press-ink mt-5 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface hover:bg-accent-dark"
+                  >
+                    Sign in to download
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Scholarly furniture: scholars cite what is easy to cite, and the
+                review's product is being citable. Plain hairline, no new
+                ornament — this page's ornament budget is already spent. */}
+            <section className="mt-12 border-t border-rule pt-9">
+              <h2 className="folio-label">Cite this paper</h2>
+              <p className="mt-4 max-w-[62ch] text-[0.9375rem] leading-relaxed text-ink-soft">
+                {citation}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2.5 print:hidden">
+                <CopyButton text={citation} label="Copy citation" />
+                <CopyButton text={bibtex} label="Copy BibTeX" />
+              </div>
+            </section>
+
+            {alsoInIssue.length > 0 && issue && (
+              <section className="mt-12 border-t border-rule pt-9 print:hidden">
+                <div className="flex flex-wrap items-baseline justify-between gap-3">
+                  <h2 className="folio-label oldstyle-nums">
+                    Also in Issue № {issue.number}
+                  </h2>
+                  <Link
+                    href={`/issues#${issue.anchor}`}
+                    className="text-sm text-accent transition-colors hover:text-accent-dark"
+                  >
+                    The full issue
+                  </Link>
+                </div>
+                {/* Set as a contents leaf with leaders, the same register the
+                    archive uses — one grammar for "here is a list of papers". */}
+                <Reveal flat>
+                  <ol className="mt-3">
+                    {alsoInIssue.map((p, i) => (
+                      <li
+                        key={p.id}
+                        className="folio-row mark-margin border-b border-rule py-4 last:border-b-0"
+                        style={{ "--i": i } as React.CSSProperties}
+                      >
+                        <div className="flex items-baseline">
+                          <TitleCarry slug={p.slug}>
+                            <h3 className="min-w-0 font-serif text-lg leading-snug">
+                              <Link
+                                href={`/p/${p.slug}`}
+                                className="title-link text-ink hover:text-accent"
+                              >
+                                {p.title}
+                              </Link>
+                            </h3>
+                          </TitleCarry>
+                          <span aria-hidden="true" className="leader" />
+                          <span className="oldstyle-nums shrink-0 whitespace-nowrap text-sm text-muted-fg max-sm:hidden">
+                            {formatDate(p.publishedAt)}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-fg">
+                          {p.authorLine}
+                        </p>
+                      </li>
+                    ))}
+                  </ol>
+                </Reveal>
+              </section>
+            )}
+          </div>
+
+          {/* ---- The colophon, in the margin ----
+               The scribe's closing record of what this document is, moved out
+               of the foot and into the margin where marginalia belongs: while
+               the reader is inside the abstract, what the thing is stays beside
+               their hand. Sticky on wide screens; it simply follows the
+               abstract on narrow ones, which is where a foot-of-page colophon
+               was anyway. */}
+          <aside className="lg:sticky lg:top-[calc(var(--head-h)+4rem)] lg:self-start lg:border-l lg:border-rule lg:pl-7">
+            <h2 className="folio-label">Colophon</h2>
+            <dl className="mt-4 text-sm">
+              {[
+                [
+                  "Published",
+                  paper.publishedAt ? formatDate(paper.publishedAt) : "—",
+                ],
+                ["Volume", issue ? `№ ${issue.number}, ${issue.label}` : "—"],
+                ["Format", formatFileSize(paper.fileSize)],
+                ["Journal", SITE_NAME],
+                ["Citation key", `${paper.slug}${year ? `-${year}` : ""}`],
+                ["Access", "Abstract open · PDF with a free account"],
+              ].map(([term, value]) => (
+                <div
+                  key={term}
+                  className="border-t border-rule py-3 first:border-t-0 first:pt-0"
+                >
+                  <dt className="eyebrow">{term}</dt>
+                  <dd className="oldstyle-nums mt-1 font-serif text-[1.0625rem] leading-snug text-ink">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </aside>
         </div>
 
-        {/* Scholarly furniture: scholars cite what is easy to cite, and the
-            review's product is being citable. Plain hairline, no new ornament —
-            this page's ornament budget is already spent. */}
-        <section className="mt-12 border-t border-rule pt-9">
-          <h2 className="folio-label">Cite this paper</h2>
-          <p className="mt-4 max-w-[62ch] text-[0.9375rem] leading-relaxed text-ink-soft">
-            {citation}
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2.5 print:hidden">
-            <CopyButton text={citation} label="Copy citation" />
-            <CopyButton text={bibtex} label="Copy BibTeX" />
-          </div>
-        </section>
-
-        {/* The colophon: the scribe's closing record of what this document
-            is. Ruled jadval cells (1px grout over the rule token); every
-            value is already on the page. */}
-        <section className="mt-12 border-t border-rule pt-9">
-          <h2 className="folio-label">Colophon</h2>
-          <dl className="mt-5 grid gap-px border border-rule bg-rule sm:grid-cols-3">
+        {/* ---- The page turns ----
+             Reading on, plainly: the papers either side of this one across the
+             whole archive. An abstract page that ends in a wall is a page the
+             reader leaves. */}
+        {(newer || older) && (
+          <nav
+            aria-label="More papers"
+            className="mt-16 grid gap-4 border-t border-rule pt-9 sm:grid-cols-2 sm:gap-10 print:hidden"
+          >
             {[
-              [
-                "Published",
-                paper.publishedAt ? formatDate(paper.publishedAt) : "—",
-              ],
-              ["Issue", issue ? `№ ${issue.number}, ${issue.label}` : "—"],
-              ["Format", formatFileSize(paper.fileSize)],
-              ["Journal", SITE_NAME],
-              ["Citation key", `${paper.slug}${year ? `-${year}` : ""}`],
-              ["Access", "Abstract open · PDF with a free account"],
-            ].map(([term, value]) => (
-              <div key={term} className="bg-canvas px-4 py-3.5">
-                <dt className="eyebrow">{term}</dt>
-                <dd className="oldstyle-nums mt-1.5 font-serif text-[1.0625rem] leading-snug text-ink">
-                  {value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        {alsoInIssue.length > 0 && issue && (
-          <section className="mt-12 border-t border-rule pt-9 print:hidden">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className="folio-label oldstyle-nums">
-                Also in Issue № {issue.number}
-              </h2>
-              <Link
-                href={`/issues#${issue.anchor}`}
-                className="text-sm text-accent transition-colors hover:text-accent-dark"
-              >
-                The full issue
-              </Link>
-            </div>
-            <ol className="mt-3">
-              {alsoInIssue.map((p) => (
-                <li key={p.id} className="border-b border-rule py-5 last:border-b-0">
-                  <TitleCarry slug={p.slug}>
-                    <h3 className="font-serif text-lg leading-snug">
-                      <Link
-                        href={`/p/${p.slug}`}
-                        className="title-link text-ink hover:text-accent"
-                      >
-                        {p.title}
-                      </Link>
-                    </h3>
-                  </TitleCarry>
-                  <p className="mt-1 text-sm text-muted-fg">
-                    {p.authorLine} · {formatDate(p.publishedAt)}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          </section>
+              { paper: newer, label: "Newer paper", forward: false },
+              { paper: older, label: "Older paper", forward: true },
+            ].map(({ paper: neighbour, label, forward }) =>
+              neighbour ? (
+                <Link
+                  key={label}
+                  href={`/p/${neighbour.slug}`}
+                  className={`group mark-margin block py-4 ${
+                    forward ? "sm:text-right" : ""
+                  }`}
+                >
+                  <span
+                    className={`eyebrow flex items-center gap-2 ${
+                      forward ? "sm:justify-end" : ""
+                    }`}
+                  >
+                    {!forward && (
+                      <ArrowLeftIcon
+                        size={13}
+                        aria-hidden="true"
+                        className="transition-transform duration-200 ease-[var(--ease-out-strong)] group-hover:-translate-x-0.5"
+                      />
+                    )}
+                    {label}
+                    {forward && (
+                      <ArrowRightIcon
+                        size={13}
+                        aria-hidden="true"
+                        className="transition-transform duration-200 ease-[var(--ease-out-strong)] group-hover:translate-x-0.5"
+                      />
+                    )}
+                  </span>
+                  <span className="title-link mt-2 block font-serif text-xl leading-snug text-ink group-hover:text-accent">
+                    {neighbour.title}
+                  </span>
+                  <span className="mt-1 block text-sm text-muted-fg">
+                    {neighbour.authorLine}
+                  </span>
+                </Link>
+              ) : (
+                // No neighbour on this side — the reader still gets a way on,
+                // rather than a lopsided row with a hole in it.
+                <Link
+                  key={label}
+                  href="/papers"
+                  className={`group block py-4 ${forward ? "sm:text-right" : ""}`}
+                >
+                  <span
+                    className={`eyebrow flex items-center gap-2 ${
+                      forward ? "sm:justify-end" : ""
+                    }`}
+                  >
+                    {forward ? "The archive" : "The archive"}
+                  </span>
+                  <span className="title-link mt-2 block font-serif text-xl leading-snug text-ink group-hover:text-accent">
+                    {forward ? "Every paper, newest first" : "Every paper, newest first"}
+                  </span>
+                </Link>
+              ),
+            )}
+          </nav>
         )}
       </div>
     </article>

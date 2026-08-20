@@ -208,7 +208,11 @@ export function CatalogueTrigger() {
       >
         <WovenTrim />
 
-        <div className="flex items-center gap-3 border-b border-rule px-5">
+        {/* Focus rides the ROW, not the field: the site-wide focus ring drawn
+            around a full-width input inside a framed drawer reads as a second,
+            competing box. The caret plus a lapis rule under the row says the
+            same thing quietly. */}
+        <div className="flex items-center gap-3 border-b border-rule px-5 transition-colors has-[input:focus]:border-accent">
           <MagnifyingGlassIcon
             size={17}
             aria-hidden="true"
@@ -227,7 +231,7 @@ export function CatalogueTrigger() {
               setActive(0);
             }}
             onKeyDown={onKeyDown}
-            className="h-14 w-full bg-transparent text-[1.0625rem] text-ink outline-none placeholder:text-muted-fg"
+            className="h-14 w-full bg-transparent text-[1.0625rem] text-ink outline-none focus-visible:outline-none placeholder:text-muted-fg"
           />
         </div>
 

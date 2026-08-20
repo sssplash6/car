@@ -50,6 +50,16 @@
   --color-ember-soft: light-dark(#f4e0d6, #40241c);
   --color-gild: light-dark(#a87a1e, #d7a54e); /* gilded ochre, ≥3:1 as ornament */
 
+  /* Woven cloth threads (.ikat-cloth). The same three decorative hues, but
+     carrying their own alpha: a warp that reads as a whisper on warm paper is a
+     set of stripes on a near-black ground, and alpha is not something
+     light-dark() can express through a percentage — so it is baked into the
+     colour here rather than left to color-mix at the use site. */
+  --color-cloth-warp-a: light-dark(rgb(15 127 118 / 0.13), rgb(89 194 182 / 0.05));
+  --color-cloth-warp-b: light-dark(rgb(168 122 30 / 0.16), rgb(215 165 78 / 0.055));
+  --color-cloth-warp-c: light-dark(rgb(163 58 40 / 0.11), rgb(225 143 116 / 0.045));
+  --color-cloth-weft: light-dark(rgb(38 32 25 / 0.05), rgb(241 232 215 / 0.03));
+
   /* Review-status marks, kept separate from the accent: the accent means
      "action", these mean state. All clear 4.5:1 on canvas. */
   --color-state-good: light-dark(#256b48, #66b98d);
@@ -823,22 +833,22 @@ html {
     repeating-linear-gradient(
       90deg,
       transparent 0 20px,
-      color-mix(in srgb, var(--color-tile) 4%, transparent) 22px,
-      color-mix(in srgb, var(--color-tile) 12%, transparent) 26px 32px,
-      color-mix(in srgb, var(--color-tile) 4%, transparent) 36px,
+      color-mix(in srgb, var(--color-cloth-warp-a) 30%, transparent) 22px,
+      var(--color-cloth-warp-a) 26px 32px,
+      color-mix(in srgb, var(--color-cloth-warp-a) 30%, transparent) 36px,
       transparent 38px 66px,
-      color-mix(in srgb, var(--color-gild) 4%, transparent) 68px,
-      color-mix(in srgb, var(--color-gild) 15%, transparent) 71px 75px,
-      color-mix(in srgb, var(--color-gild) 4%, transparent) 78px,
+      color-mix(in srgb, var(--color-cloth-warp-b) 25%, transparent) 68px,
+      var(--color-cloth-warp-b) 71px 75px,
+      color-mix(in srgb, var(--color-cloth-warp-b) 25%, transparent) 78px,
       transparent 80px 116px,
-      color-mix(in srgb, var(--color-ember) 3%, transparent) 118px,
-      color-mix(in srgb, var(--color-ember) 10%, transparent) 121px 124px,
-      color-mix(in srgb, var(--color-ember) 3%, transparent) 127px,
+      color-mix(in srgb, var(--color-cloth-warp-c) 25%, transparent) 118px,
+      var(--color-cloth-warp-c) 121px 124px,
+      color-mix(in srgb, var(--color-cloth-warp-c) 25%, transparent) 127px,
       transparent 129px 176px
     ),
     repeating-linear-gradient(
       0deg,
-      color-mix(in srgb, var(--color-ink) 5%, transparent) 0 1px,
+      var(--color-cloth-weft) 0 1px,
       transparent 1px 4px
     );
 }

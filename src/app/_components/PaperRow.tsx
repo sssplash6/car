@@ -20,6 +20,12 @@ export type PaperRowData = {
 // The thumbnail stays a small catalogue plate at every width — full-bleed on
 // mobile it stopped being a plate and became a hero for a photo that is only
 // decoration.
+//
+// The whole row answers the pointer: the plate drifts inside its frame (which
+// is what puts the frame in front of the photograph rather than around it), the
+// mount warms toward the accent, and a gild rule is drawn down the margin — the
+// pencil line a reader leaves beside the paragraph they mean to come back to.
+// focus-within, so keyboard reading gets the same marks.
 export function PaperRow({
   paper,
   image,
@@ -29,10 +35,10 @@ export function PaperRow({
   image?: StaticImageData;
 }) {
   return (
-    <article className="grid grid-cols-[6.5rem_1fr] gap-5 border-b border-rule py-7 sm:grid-cols-[9rem_1fr] sm:gap-7">
+    <article className="group mark-margin grid grid-cols-[6.5rem_1fr] gap-5 border-b border-rule py-7 sm:grid-cols-[9rem_1fr] sm:gap-7">
       <Link
         href={`/p/${paper.slug}`}
-        className="group relative block self-start border border-rule bg-surface p-1 transition-colors hover:border-accent"
+        className="relative block self-start border border-rule bg-surface p-1 transition-colors group-hover:border-accent"
         tabIndex={-1}
         aria-hidden="true"
       >
@@ -44,7 +50,7 @@ export function PaperRow({
             fill
             placeholder="blur"
             sizes="(max-width: 640px) 6.5rem, 9rem"
-            className="object-cover transition-transform duration-200 ease-[var(--ease-out-strong)] group-hover:scale-[1.04]"
+            className="plate-drift object-cover"
           />
         </span>
       </Link>
