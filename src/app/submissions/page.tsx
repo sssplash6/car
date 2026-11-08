@@ -1,13 +1,16 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
 import { formatDate } from "@/lib/site";
-import { StatusPill } from "@/app/_components/StatusPill";
-import { PageShell } from "@/app/_components/PageShell";
+import { COPY } from "@/lib/content";
 import { CleanQuery } from "@/app/_components/CleanQuery";
-import { Rosette } from "@/app/_components/Ornament";
+import { Reveal } from "@/app/_components/motion/Reveal";
+import { Button } from "@/app/_components/ui/Button";
+import { EmptyState, Notice, StatusMark } from "@/app/_components/ui/Feedback";
+import { SubmissionTrack } from "@/app/_components/ui/SubmissionTrack";
 
 export const metadata: Metadata = {
   title: "My submissions",
@@ -16,12 +19,15 @@ export const metadata: Metadata = {
 
 type PageProps = { searchParams: Promise<{ submitted?: string }> };
 
+// An author's ledger (DESIGN.md §9.8): each paper, its status, and — when it
+// was returned — the editor's note in full, never clamped.
 export default async function SubmissionsPage({ searchParams }: PageProps) {
   const user = await requireUser();
   const { submitted } = await searchParams;
+  const copy = COPY.submissions;
 
-  // Scoped by submitterId in the where clause rather than fetched-and-filtered,
-  // per ONBOARDING.md §3 — ownership is a query constraint, not a later check.
+  // Scoped by submitterId in the where clause: ownership is a query
+  // constraint, not a later check.
   const papers = await prisma.paper.findMany({
     where: { submitterId: user.id },
     orderBy: { createdAt: "desc" },
@@ -37,104 +43,87 @@ export default async function SubmissionsPage({ searchParams }: PageProps) {
   });
 
   return (
-    <PageShell>
-      <h1 className="font-serif text-4xl text-ink">My submissions</h1>
+    <div className="wrap-list page-top page-end">
+      <div className="list-head">
+        <h1 className="t-h1">{copy.title}</h1>
+        <Button variant="secondary" size="md" href="/submit">
+          {COPY.home.hero.secondary}
+        </Button>
+      </div>
 
       {submitted && (
         <>
-          {/* One-shot banner: CleanQuery strips ?submitted=1 so a refresh or
-              bookmark does not replay it; role=status announces it once. */}
-          <p
-            role="status"
-            className="mt-6 rounded border border-state-good/40 px-4 py-3 text-sm text-state-good"
-          >
-            Received. Your paper is with the editors; you will be emailed when
-            a decision is made.
-          </p>
+          {/* One-shot: CleanQuery strips ?submitted=1 so a refresh does not
+              replay it; role=status announces it once. */}
+          <Notice tone="good" className="mt-8">
+            Received. Your paper is with the editors; you will be emailed when a decision is made.
+          </Notice>
           <CleanQuery />
         </>
       )}
 
       {papers.length === 0 ? (
-        <div className="mt-10 border-t border-rule py-14 text-center">
-          <Rosette className="mx-auto size-12 text-rule-strong" />
-          <h2 className="mt-6 font-serif text-2xl text-ink">
-            Nothing submitted yet
-          </h2>
-          <p className="mx-auto mt-3 max-w-md leading-relaxed text-muted-fg">
-            Papers you submit appear here with their review status.
-          </p>
-          <Link
-            href="/submit"
-            className="mt-6 inline-block text-sm text-accent transition-colors hover:text-accent-dark"
-          >
-            Submit a paper
-          </Link>
-        </div>
+        <EmptyState
+          className="mt-8"
+          drawing="apple"
+          title={copy.emptyTitle}
+          body={copy.emptyBody}
+          action={{ href: "/submit", label: COPY.home.hero.secondary }}
+        />
       ) : (
-        <ul className="mt-10 border-t border-rule">
-          {papers.map((paper) => (
-            <li key={paper.id} className="border-b border-rule py-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="font-serif text-lg text-ink">
+        <Reveal as="ul" gesture="rows" className="ledger">
+          {papers.map((paper, i) => (
+            <li key={paper.id} style={{ "--i": i } as CSSProperties}>
+              <div className="ledger-row">
+                <div className="min-w-0">
+                  <h2 className="t-h4">
                     {paper.status === PAPER_STATUS.PUBLISHED ? (
-                      <Link
-                        href={`/p/${paper.slug}`}
-                        className="transition-colors hover:text-accent"
-                      >
+                      <Link href={`/p/${paper.slug}`} className="prose-link">
                         {paper.title}
                       </Link>
                     ) : (
                       paper.title
                     )}
                   </h2>
-                  <p className="mt-1 text-xs text-muted-fg">
+                  <p className="t-ui-sm mt-1.5 text-ink-3">
                     {/* A draft was never submitted; saying so would claim a
                         queue position it does not have. */}
                     {paper.status === PAPER_STATUS.DRAFT ? "Started" : "Submitted"}{" "}
                     {formatDate(paper.createdAt)}
-                    {paper.publishedAt &&
-                      ` · published ${formatDate(paper.publishedAt)}`}
+                    {paper.publishedAt && ` · published ${formatDate(paper.publishedAt)}`}
+                    {" · "}
+                    {/* Authors can always fetch their own file, so they can
+                        confirm what the editor is reading. */}
+                    <a href={`/api/papers/${paper.id}/file`} className="prose-link">
+                      Your PDF
+                    </a>
                   </p>
+                  <SubmissionTrack status={paper.status} />
                 </div>
-                <StatusPill status={paper.status} />
+                <div className="ledger-side">
+                  <StatusMark status={paper.status} />
+                </div>
               </div>
 
-              {/* The reviewer note is the whole point of the REJECTED state —
-                  without it the author has no idea what to change. Attributed
-                  and framed like the site's other notices (full border, no
-                  side-stripe). */}
+              {/* The note is the whole point of a returned paper: without it
+                  the author has no idea what to change. */}
               {paper.status === PAPER_STATUS.REJECTED && (
-                <div className="mt-4 max-w-xl rounded border border-state-bad/40 px-4 py-3">
-                  <p className="text-xs font-medium text-state-bad">
-                    Note from the editor
+                <div className="note-card">
+                  <p className="t-meta">{copy.noteLabel}</p>
+                  <p className="note-text prose-plain">
+                    {paper.reviewNote ?? "The paper was returned for revision without a note."}
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-ink/80">
-                    {paper.reviewNote ??
-                      "The paper was returned for revision without a note."}
-                  </p>
-                  <Link
-                    href="/submit"
-                    className="mt-2.5 inline-block text-sm text-accent transition-colors hover:text-accent-dark"
-                  >
-                    Submit a revised version
-                  </Link>
+                  <div className="mt-3">
+                    <Button variant="link" href="/submit">
+                      {copy.revise}
+                    </Button>
+                  </div>
                 </div>
               )}
-
-              {/* Authors can always fetch their own file, published or not, so
-                  they can confirm what the reviewer is looking at. */}
-              <a
-                href={`/api/papers/${paper.id}/file`}
-                className="mt-3 inline-block text-sm text-accent transition-colors hover:text-accent-dark"
-              >
-                Download what you uploaded
-              </a>
             </li>
           ))}
-        </ul>
+        </Reveal>
       )}
-    </PageShell>
+    </div>
   );
 }

@@ -29,15 +29,9 @@ editors and authors visit these repeatedly, so they stay quiet and fast.
 
 ## Brand voice
 
-Three words: **illuminated, woven, scholarly.** The physical object is a
-hand-bound journal on warm paper, its cover an ikat cloth, its endpapers
-Samarkand tile. Decoration is craft that frames the scholarship — never a
-costume over it.
-
-Named palette lane: *Timurid manuscript* — warm paper field, lapis and
-turquoise tilework carrying identity, pomegranate and gilded ochre as
-supporting threads. Committed strategy, not restrained-beige and not a
-saturated drench.
+Three words: **quiet, drawn, scholarly.** A cream room where the research is
+the only thing in ink; one hand-drawn contour line is the only ornament. See
+DESIGN.md.
 
 ## Anti-references
 
@@ -59,6 +53,5 @@ saturated drench.
 2. **Trust before delight.** A reader deciding whether to cite must never feel
    marketed to. Motion resolves and settles; nothing loops, nothing bounces.
 3. **The review is bilingual in spirit** — the region is the subject, not a
-   backdrop. Ornament derives from the region's geometric tradition
-   (girih stars, ikat lozenges, the shanyrak roof-wheel) rather than from
-   stock photography of it.
+   backdrop. Ornament is one hand-drawn line of the region's nature and
+   science, never its flags, buildings or costume.

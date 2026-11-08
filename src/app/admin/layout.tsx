@@ -1,28 +1,21 @@
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
-import { PageShell } from "@/app/_components/PageShell";
 import { AdminTabs } from "@/app/admin/_components/AdminTabs";
 
-// Admin shell.
+// The editor's desk (DESIGN.md §9.10). Product register: no entrance motion,
+// no drawings except empty states, no bands — editors live here.
 //
-// requireAdmin() here covers every page under /admin, so the child pages do not
-// each repeat it. That is safe for PAGES because a layout runs on every
-// navigation to a route it wraps — but it does NOT protect server actions, which
-// is why every action in admin/actions.ts calls requireAdmin() itself. Do not
-// remove those on the grounds that "the layout already checks".
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// requireAdmin() here covers every page under /admin. That is safe for PAGES
+// (a layout runs on every navigation to a route it wraps) but does NOT protect
+// server actions, which is why every action in admin/actions.ts calls
+// requireAdmin() itself. Do not remove those on the grounds that "the layout
+// already checks".
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
 
-  // Queue count in the subnav, so an editor sees outstanding work from any admin
-  // page without visiting the queue first.
-  const pending = await prisma.paper.count({
-    where: { status: PAPER_STATUS.SUBMITTED },
-  });
+  // Queue count in the tabs, so outstanding work shows from any admin page.
+  const pending = await prisma.paper.count({ where: { status: PAPER_STATUS.SUBMITTED } });
 
   const tabs = [
     { href: "/admin", label: "Overview" },
@@ -33,14 +26,13 @@ export default async function AdminLayout({
   ];
 
   return (
-    <PageShell wide>
-      <p className="eyebrow">Editor dashboard</p>
-
-      <nav aria-label="Editor sections" className="mt-4 border-b border-rule">
+    <div className="wrap page-top page-end">
+      <p className="t-meta">Editor desk</p>
+      <h1 className="t-h2 mt-3">Editor&rsquo;s desk</h1>
+      <div className="admin-tabs">
         <AdminTabs items={tabs} />
-      </nav>
-
-      <div className="mt-10">{children}</div>
-    </PageShell>
+      </div>
+      <div className="mt-12">{children}</div>
+    </div>
   );
 }

@@ -1,25 +1,23 @@
-import { ViewTransition } from "react";
+import type { ReactNode } from "react";
+import { Carry } from "@/app/_components/motion/Carry";
 
-// The paper's title travels: the row a reader clicks becomes the title leaf
-// they land on (same name on both ends = shared-element morph via the View
-// Transitions API; see node_modules/next/dist/docs view-transitions guide).
-// Everything else cuts — continuity belongs to the one object the reader is
-// following, not the page. Wrap BLOCK elements (h1/h2/h3), never inline
-// links: fragmented inline boxes snapshot badly.
-//
-// `default="none"` keeps these elements out of every transition except their
-// own morph; `share="paper-title"` is the class the timing CSS in globals.css
-// targets. Browsers without the API render children unchanged.
+// The paper's title travels: the row a reader clicks becomes the title they
+// land on. Rows carry on click (only the clicked one moves); the paper page's
+// h1 carries always (it receives). Wrap BLOCK elements (h1/h2/h3), never
+// inline links: fragmented inline boxes snapshot badly. `share="paper-title"`
+// is the class the timing CSS in globals.css targets.
 export function TitleCarry({
   slug,
+  mode = "click",
   children,
 }: {
   slug: string;
-  children: React.ReactNode;
+  mode?: "always" | "click";
+  children: ReactNode;
 }) {
   return (
-    <ViewTransition name={`paper-${slug}`} share="paper-title" default="none">
+    <Carry name={`paper-${slug}`} share="paper-title" mode={mode}>
       {children}
-    </ViewTransition>
+    </Carry>
   );
 }

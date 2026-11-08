@@ -1,36 +1,18 @@
-import Link from "next/link";
 import { BellIcon } from "@phosphor-icons/react/dist/ssr";
+import { IconButton } from "@/app/_components/ui/IconButton";
 
-// Unread indicator in the header. A plain link to /notifications rather than a
-// dropdown: the list is server-rendered there, so this needs no client JS and no
-// second rendering of the same rows.
-//
-// Phosphor's /dist/ssr entry exports server-safe icon components, which keeps this
-// a server component. Importing from the package root would pull in the client
-// runtime and force "use client" all the way up.
-export function NotificationBell({ count }: { count: number }) {
-  // Counts above 9 would widen the badge past its circle, and the exact number
-  // stops being useful well before then.
-  const badge = count > 9 ? "9+" : String(count);
-
+// Unread indicator: a plain link to /notifications (the list is server-
+// rendered there), with the accent-mark dot when anything is unread. The
+// exact count lives in the accessible name.
+export function NotificationBell({ count, className }: { count: number; className?: string }) {
   return (
-    <Link
+    <IconButton
       href="/notifications"
-      aria-label={count > 0 ? `Notifications, ${count} unread` : "Notifications"}
-      className="relative flex size-9 items-center justify-center rounded text-muted-fg transition-colors hover:bg-accent-soft hover:text-accent"
+      label={count > 0 ? `Notifications, ${count} unread` : "Notifications"}
+      dot={count > 0}
+      className={className}
     >
-      <BellIcon size={19} weight="regular" aria-hidden="true" />
-
-      {count > 0 && (
-        // aria-hidden: the link's aria-label already carries the exact count;
-        // announcing "9+" on top of it would double-speak.
-        <span
-          aria-hidden="true"
-          className="absolute right-0.5 top-0.5 flex min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-medium leading-4 text-surface"
-        >
-          {badge}
-        </span>
-      )}
-    </Link>
+      <BellIcon aria-hidden="true" />
+    </IconButton>
   );
 }

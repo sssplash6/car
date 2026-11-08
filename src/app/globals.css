@@ -1,1237 +1,3457 @@
 @import "tailwindcss";
 
-/* Central Asian Review — "Timurid manuscript".
-   Its own editorial identity, distinct from the freshman.academy navy/orange used
-   by web/ and Weak/ (ONBOARDING.md §4). The review fronts its own brand and
-   credits the academy in the footer.
+/* Central Asian Review — "The Contour" (DESIGN.md).
+   A quiet cream room in which the research is the only thing printed in ink.
+   Every colour is a light-dark() pair resolved by color-scheme; [data-theme]
+   (set pre-paint in layout.tsx) pins it. Components use these semantic tokens
+   only: no raw hex outside this file and src/lib/plates.ts. */
 
-   The palette is a warm manuscript paper with lapis as the ONE action colour and
-   three rationed decorative threads (turquoise tile, pomegranate ember, gilded
-   ochre) that appear only in ornament — see DESIGN.md for the rationing rules.
-   Every pair below is contrast-checked (4.5:1 text, 3:1 ornament) in both modes;
-   re-validate before changing a value and keep the dark steps in step.
+@theme static {
+  --color-*: initial;
 
-   Components read the semantic tokens (bg-canvas, text-ink, border-rule), never
-   raw hex, so dark mode overrides tokens rather than components.
+  /* §3.1 semantic colours */
+  --color-page: light-dark(#faf9f5, #141413);
+  --color-surface-1: light-dark(#f5f4ed, #1f1e1d);
+  --color-surface-2: light-dark(#f0eee6, #262624);
+  --color-surface-3: light-dark(#e8e6dc, #30302e);
+  --color-overlay: light-dark(#ffffff, #262624);
+  --color-field: light-dark(#ffffff, #1f1e1d);
+  --color-ink: light-dark(#141413, #faf9f5);
+  --color-ink-2: light-dark(#30302e, #e8e6dc);
+  --color-ink-3: light-dark(#5e5d59, #b0aea5);
+  --color-ink-4: #87867f;
+  --color-rule: light-dark(#e8e6dc, #2e2e2c);
+  --color-rule-2: light-dark(#dedcd1, #3d3d3a);
+  --color-border: light-dark(#d1cfc5, #4d4c48);
+  --color-border-input: light-dark(#87867f, #73726c);
+  --color-primary: light-dark(#141413, #faf9f5);
+  --color-on-primary: light-dark(#faf9f5, #141413);
+  --color-accent: light-dark(#a8441f, #e08b66);
+  --color-accent-mark: #d97757;
+  --color-accent-soft: light-dark(#f6e4da, #3a251c);
+  --color-door: light-dark(#141413, #262624);
+  --color-door-ring: light-dark(transparent, #3d3d3a);
+  --color-door-ink: #faf9f5;
+  --color-door-ink-2: #e8e6dc;
+  --color-door-ink-3: #b0aea5;
+  --color-door-rule: #3d3d3a;
+  --color-footer: light-dark(#141413, #0f0f0e);
+  --color-footer-edge: light-dark(#141413, #2e2e2c);
+  --color-focus: light-dark(#141413, #faf9f5);
+  --color-good: light-dark(#2f6b4b, #7fc29a);
+  --color-warn: light-dark(#8a5a12, #d9a94c);
+  --color-bad: light-dark(#b2433a, #e58a7c);
+  --color-mute: light-dark(#5e5d59, #b0aea5);
+  --color-line: light-dark(#141413, #e8e6dc);
+  --color-line-dot: light-dark(#c4b6a0, #6a6862);
+  --color-line-on-door: rgb(250 249 245 / 0.7);
+  --color-scrim: light-dark(rgb(20 20 19 / 0.4), rgb(0 0 0 / 0.55));
 
-   Every token is a light-dark() pair, resolved by the element's color-scheme:
-   the OS preference by default, or the reader's explicit choice via
-   [data-theme] (set pre-paint in layout.tsx, toggled by ThemeToggle). Keeping
-   both steps side by side in one declaration IS the keep-in-step rule. */
-@theme {
-  /* Field / dark: warm paper vs lacquered yurt interior at night. */
-  --color-canvas: light-dark(#f9f4e8, #171310);
-  --color-surface: light-dark(#fefcf4, #211a14); /* raised areas, inputs */
-  --color-rule: light-dark(#e8dcc2, #3a3024); /* hairlines, the everyday work */
-  --color-rule-strong: light-dark(#cbbb96, #564936); /* deliberate dividers */
-  /* Input borders. Darker than rule-strong because a control's boundary is
-     information, not decoration: ≥3:1 against surface in both modes
-     (WCAG 1.4.11 — 3.20:1 / 3.28:1, see scripts note in DESIGN.md). */
-  --color-field: light-dark(#9c8c6c, #7a6a52);
+  /* §2.1 families (never self-reference the next/font variables) */
+  --font-serif: var(--font-source-serif), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
 
-  --color-ink: light-dark(#262019, #f1e8d7); /* sepia ink / parchment, never #000 */
-  --color-ink-soft: light-dark(#4d4536, #d2c6ae); /* body copy at length */
-  --color-muted-fg: light-dark(#6e6450, #a29578); /* metadata, captions */
+  /* §2.2 type scale, fluid 390 → 1440 */
+  --text-display: clamp(2.75rem, 1.9143rem + 3.4286vw, 5rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.022em;
+  --text-h1: clamp(2.5rem, 1.9429rem + 2.2857vw, 4rem);
+  --text-h1--line-height: 1.05;
+  --text-h1--letter-spacing: -0.018em;
+  --text-title: clamp(2.25rem, 1.7857rem + 1.9048vw, 3.5rem);
+  --text-title--line-height: 1.08;
+  --text-title--letter-spacing: -0.015em;
+  --text-h2: clamp(2rem, 1.6286rem + 1.5238vw, 3rem);
+  --text-h2--line-height: 1.1;
+  --text-h2--letter-spacing: -0.012em;
+  --text-statement: clamp(1.625rem, 1.3929rem + 0.9524vw, 2.25rem);
+  --text-statement--line-height: 1.3;
+  --text-statement--letter-spacing: -0.008em;
+  --text-h3: clamp(1.375rem, 1.2357rem + 0.5714vw, 1.75rem);
+  --text-h3--line-height: 1.2;
+  --text-h3--letter-spacing: -0.005em;
+  --text-h4: clamp(1.125rem, 1.0786rem + 0.1905vw, 1.25rem);
+  --text-h4--line-height: 1.3;
+  --text-lede: clamp(1.1875rem, 1.0946rem + 0.381vw, 1.4375rem);
+  --text-lede--line-height: 1.4;
+  --text-read: clamp(1.125rem, 1.1018rem + 0.0952vw, 1.1875rem);
+  --text-read--line-height: 1.65;
+  --text-body: 1rem;
+  --text-body--line-height: 1.6;
+  --text-ui: 0.9375rem;
+  --text-ui--line-height: 1.4;
+  --text-ui--letter-spacing: -0.005em;
+  --text-ui-sm: 0.875rem;
+  --text-ui-sm--line-height: 1.4;
+  --text-button-lg: 1.0625rem;
+  --text-button-lg--line-height: 1;
+  --text-button-lg--letter-spacing: -0.01em;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.5;
+  --text-meta--letter-spacing: 0.06em;
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.5;
+  --text-micro--letter-spacing: 0.02em;
+  --text-numeral: clamp(3.5rem, 2.5714rem + 3.8095vw, 6rem);
+  --text-numeral--line-height: 0.9;
+  --text-numeral--letter-spacing: -0.03em;
 
-  /* THE action colour: Samarkand lapis, lifted for legibility in the dark —
-     and nothing decorative, so interactivity stays unambiguous. 7.2:1 / 8.6:1
-     on canvas. Hover darkens in light mode and lightens in dark. */
-  --color-accent: light-dark(#1d4f9c, #8fb3ea);
-  --color-accent-dark: light-dark(#163d7a, #aec9f5); /* hover */
-  --color-accent-soft: light-dark(#e3ebf6, #1d2b42); /* tint field */
+  /* §4.1 one soft radius family + pill */
+  --radius-xs: 6px;
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
 
-  /* Decorative threads. Ornament and small marks ONLY — if one of these starts
-     colouring buttons or links, the accent has lost its meaning. tile-ink and
-     ember also pass 4.5:1 as text for rare label moments. */
-  --color-tile: light-dark(#0f7f76, #59c2b6); /* tilework turquoise */
-  --color-tile-ink: light-dark(#0c665f, #59c2b6);
-  --color-tile-soft: light-dark(#daefe9, #143430);
-  --color-ember: light-dark(#a33a28, #e18f74); /* pomegranate / terracotta */
-  --color-ember-soft: light-dark(#f4e0d6, #40241c);
-  --color-gild: light-dark(#a87a1e, #d7a54e); /* gilded ochre, ≥3:1 as ornament */
-
-  /* Woven cloth threads (.ikat-cloth). The same three decorative hues, but
-     carrying their own alpha: a warp that reads as a whisper on warm paper is a
-     set of stripes on a near-black ground, and alpha is not something
-     light-dark() can express through a percentage — so it is baked into the
-     colour here rather than left to color-mix at the use site. */
-  --color-cloth-warp-a: light-dark(rgb(15 127 118 / 0.13), rgb(89 194 182 / 0.05));
-  --color-cloth-warp-b: light-dark(rgb(168 122 30 / 0.16), rgb(215 165 78 / 0.055));
-  --color-cloth-warp-c: light-dark(rgb(163 58 40 / 0.11), rgb(225 143 116 / 0.045));
-  --color-cloth-weft: light-dark(rgb(38 32 25 / 0.05), rgb(241 232 215 / 0.03));
-
-  /* Review-status marks, kept separate from the accent: the accent means
-     "action", these mean state. All clear 4.5:1 on canvas. */
-  --color-state-good: light-dark(#256b48, #66b98d);
-  --color-state-warn: light-dark(#855a0e, #d6a44c);
-  --color-state-bad: light-dark(#9c3222, #e2836f);
-  --color-state-mute: light-dark(#6e6450, #a29578);
-
-  --font-sans: var(--font-geist-sans);
-  /* EB Garamond: an actual academic-press serif. Serif is justified here because
-     the brief IS a publication (the one case the house design rules allow it). */
-  --font-serif: var(--font-display);
-
-  /* Motion. One shared ease so every transition on the site feels related; the
-     in-out curve is reserved for things that MOVE while staying on screen. */
-  --ease-out-strong: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
-  --default-transition-duration: 180ms;
-  --default-transition-timing-function: var(--ease-out-strong);
+  /* §6.1 easing */
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-out-power2: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-draw: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --ease-apple: cubic-bezier(0.4, 0, 0.25, 1);
+  --ease-material: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Scheme selection. `light dark` follows the OS; an explicit [data-theme]
-   (persisted choice, applied pre-paint by the inline script in layout.tsx)
-   pins it. All the colour work happens in the light-dark() tokens above —
-   nothing else needs to know which mode is active. */
 :root {
   color-scheme: light dark;
+  interpolate-size: allow-keywords;
+
+  --dur-1: 100ms;
+  --dur-2: 200ms;
+  --dur-3: 300ms;
+  --dur-4: 500ms;
+  --dur-5: 800ms;
+  --dur-draw: 1100ms;
+  --stagger-word: 34ms;
+  --stagger-path: 80ms;
+  --stagger-row: 52ms;
+  --stagger-plate: 120ms;
+
+  --container: 75rem;
+  --list: 56rem;
+  --narrow: 42rem;
+  --form: 35rem;
+  --gutter: clamp(1rem, -0.1143rem + 4.5714vw, 4rem);
+  --section: clamp(4rem, 2.5143rem + 6.0952vw, 8rem);
+  --page-top: clamp(3rem, 1.8857rem + 4.5714vw, 6rem);
+  --header-h: 64px;
+
+  /* §4.4 — floating panels only; dark mode swaps to a ring + deep shadow */
+  /* The hand-drawn line as a repeatable mask tile (drawn underlines, the
+     submission track): one uneven period that meets itself seamlessly. */
+  --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 6' preserveAspectRatio='none'%3E%3Cpath d='M0 3C6 1.7 13 1.5 20 3.1S34 4.2 40 3' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round'/%3E%3C/svg%3E");
+  --shadow-float: 0 4px 24px rgb(20 20 19 / 0.08), 0 1px 2px rgb(20 20 19 / 0.04);
+  --shadow-card: 0 4px 24px #00000004, 0 4px 32px #00000004, 0 2px 64px #00000003,
+    0 16px 32px #00000003;
 }
 :root[data-theme="light"] {
   color-scheme: light;
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
+  --shadow-float: 0 0 0 1px #3d3d3a, 0 12px 40px rgb(0 0 0 / 0.5);
+  --shadow-card: 0 0 0 1px #3d3d3a, 0 12px 40px rgb(0 0 0 / 0.5);
 }
-
-/* "Night tile" — the Registan-at-dusk surface used by the footer (and nothing
-   else). It re-declares the semantic tokens locally, so ordinary components
-   dropped inside it recolour themselves: parchment text, gild-as-action links.
-   Identical in light and dark mode on purpose — night is night. */
-.surface-night {
-  color-scheme: dark;
-  /* The night surface is cloth, not paper — the same grain reads as weave.
-     Declared before the token block's `background` so the shorthand at the
-     bottom must not be reintroduced (it would wipe this layer). */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-
-  --color-canvas: #132a52;
-  --color-surface: #1a3460;
-  --color-rule: #2c4270;
-  --color-rule-strong: #3d5687;
-
-  --color-ink: #f1e8d7;
-  --color-ink-soft: #dcd5c3;
-  --color-muted-fg: #b9c3d9;
-
-  --color-accent: #d7a54e; /* inside the night surface, gold is the action */
-  --color-accent-dark: #e7c078;
-  --color-accent-soft: #1e3a6b;
-
-  --color-tile: #6fc9bd;
-  --color-gild: #d7a54e;
-
-  background: var(--color-canvas);
-  color: var(--color-ink);
-}
-
-body {
-  background-color: var(--color-canvas);
-  /* Paper tooth: a tiling of mid-gray turbulence flecks at 5% alpha. Gray
-     works in BOTH schemes without a second asset — darker than warm paper,
-     lighter than the lacquered night. It rides background-image on the same
-     element as the ground color, so raised bg-surface plates stay optically
-     smooth: mounted plates SIT ON the paper, which is the correct print
-     physics. Inline data URI per the "decoration costs near-zero" rule; it
-     does not print. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
-  color: var(--color-ink);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
-
-/* One focus treatment for the whole site, in the action colour. Buttons and
-   inputs that style their own borders still get this ring, which keeps keyboard
-   navigation visible on decorated surfaces. */
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-/* Selection is gilt marking, not action: a lapis slab over a long abstract
-   shouted; a 28% gold wash reads as a highlighter on paper. Resolves per
-   scheme and inside .surface-night through the scoped tokens (ink stays
-   ≥8:1 on the wash in every case — re-run the contrast script if changed). */
-::selection {
-  background: color-mix(in oklab, var(--color-gild) 28%, var(--color-canvas));
-  color: var(--color-ink);
-}
-
-/* The unseen folio: details nobody names but everyone feels. You write with
-   lapis ink; the scroll rail is a hairline of the system; native controls
-   come up in the action colour. */
-input,
-textarea {
-  caret-color: var(--color-accent);
-}
-html {
-  scrollbar-color: var(--color-rule-strong) transparent;
-}
-:root {
-  accent-color: var(--color-accent);
-}
-
-/* Author-entered plain text (abstracts, content blocks) is not markup.
-   Preserving newlines keeps paragraph breaks without granting an HTML surface. */
-.prose-plain {
-  white-space: pre-line;
-}
-
-/* Small-caps section label. Rationed to at most one per three sections, so the
-   page does not acquire the templated eyebrow-above-every-heading rhythm. */
-.eyebrow {
-  font-size: 0.6875rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-muted-fg);
-}
-
-/* Optical correction for large Garamond display type, which carries noticeable
-   left side-bearing at scale and otherwise looks indented against a rule. */
-.display-flush {
-  margin-left: -0.06em;
-}
-
-/* Illuminated initial. At most ONE per page (the lead abstract) — an initial on
-   every block stops being illumination. Sized to sit three lines deep. */
-.dropcap::first-letter {
-  float: left;
-  font-family: var(--font-display), Georgia, serif;
-  font-size: 3.5em;
-  line-height: 0.82;
-  padding-right: 0.12em;
-  padding-top: 0.04em;
-  color: var(--color-accent);
-}
-
-/* Garamond's oldstyle figures, for display numbers (issue №, list indices). */
-.oldstyle-nums {
-  font-variant-numeric: oldstyle-nums;
-}
-
-/* Animated underline for nav links: the thread is pulled THROUGH the cloth —
-   hover-in draws left to right, and because transform-origin flips (it is not
-   a transitioned property), hover-out continues out to the right instead of
-   rewinding. Stays put on the active page (data-active). Transform only, so
-   nothing repaints. */
-.link-underline {
-  position: relative;
-}
-.link-underline::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -0.2em;
-  height: 1px;
-  background: currentColor;
-  transform: scaleX(0);
-  transform-origin: right center;
-  transition: transform 200ms var(--ease-out-strong);
-}
-.link-underline:hover::after {
-  transform-origin: left center;
-}
-.link-underline:hover::after,
-.link-underline[data-active="true"]::after {
-  transform: scaleX(1);
-}
-
-/* ---- The craft layer ----
-   The brand's object is a hand-bound journal; these utilities are the
-   physical facts of that object CSS can honestly render. All colours ride
-   the token system, so both schemes and the night surface come free. */
-
-/* Warm lift: sepia-tinted, heavily diffused — never a grey shadow-md. The
-   inset parchment hairline carries the top edge in dark mode, where shadow
-   dies against near-black. For mounted plates and framed panels only. */
-.shadow-plate {
-  box-shadow:
-    0 1px 2px light-dark(rgb(76 60 34 / 0.1), rgb(0 0 0 / 0.35)),
-    0 14px 32px -14px light-dark(rgb(76 60 34 / 0.16), rgb(0 0 0 / 0.5)),
-    inset 0 1px 0 light-dark(transparent, rgb(241 232 215 / 0.05));
-}
-
-/* Gilded fillet: the inner gold bevel a framer sets between mount and image.
-   Rationed to major plates (wider than ~20rem) so it stays a mark of
-   importance. Parent needs position:relative + overflow-hidden. */
-.fillet::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--color-gild) 45%, transparent);
-}
-
-/* Foil: gold on a bound cover is stamped foil, and a directional sheen is
-   the one thing CSS can honestly say about it. One sweep on hover, settles,
-   nothing loops. Explicit gild steps because this is night-surface material
-   (used on the cover clasp); text on it must be the night surface blue. */
-.foil {
-  background-image: linear-gradient(
-    115deg,
-    #d7a54e 0%,
-    #e7c078 38%,
-    #d7a54e 62%
-  );
-  background-size: 180% 100%;
-  background-position: 85% 0;
-  transition: background-position 200ms var(--ease-out-strong);
-}
-.foil:hover {
-  background-position: 15% 0;
-}
-
-/* Blind emboss: ink-free relief, computed from the surface token so it reads
-   as pressed paper in both schemes. For the one framed moment's watermark. */
-.emboss {
-  color: var(--color-surface);
-  filter: drop-shadow(0 1px 0 light-dark(rgb(255 255 255 / 0.65), rgb(255 255 255 / 0.05)))
-    drop-shadow(0 -1px 0 light-dark(rgb(76 60 34 / 0.22), rgb(0 0 0 / 0.5)));
-}
-
-/* Letterpress press: type pressed into paper, release eases home. The old
-   active:translate-y-px snapped with no transition, so releasing felt dead. */
-.press-ink {
-  transition:
-    transform 160ms var(--ease-out-strong),
-    color 180ms var(--ease-out-strong),
-    background-color 180ms var(--ease-out-strong),
-    border-color 180ms var(--ease-out-strong),
-    background-position 200ms var(--ease-out-strong);
-}
-.press-ink:active {
-  transform: translateY(1px) scale(0.99);
-}
-
-/* Copy confirmation materializes on remount (CopyButton keys the span). The
-   outgoing state exits instantly — the system responds fast, the
-   confirmation settles gently. */
-.copy-swap {
-  animation: copy-in 180ms var(--ease-out-strong);
-}
-@keyframes copy-in {
-  from {
-    opacity: 0;
-    transform: translateY(2px);
-    filter: blur(2px);
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --shadow-float: 0 0 0 1px #3d3d3a, 0 12px 40px rgb(0 0 0 / 0.5);
+    --shadow-card: 0 0 0 1px #3d3d3a, 0 12px 40px rgb(0 0 0 / 0.5);
   }
 }
-
-/* Rubricated title links: an underline that materializes in place says
-   "doorway" without moving anything, and unlike the nav's scaleX trick it
-   survives multi-line Garamond titles. Rides currentColor, so it inherits
-   the ink→accent hover for free. */
-.title-link {
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.16em;
-  text-decoration-color: transparent;
-  transition:
-    color 180ms var(--ease-out-strong),
-    text-decoration-color 180ms var(--ease-out-strong);
-}
-.title-link:hover {
-  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
-}
-
-/* Small-caps apparatus label: scholarly furniture ("Abstract", "Cite this
-   paper") steps back so the serif voice belongs exclusively to the work.
-   A register up from .eyebrow, which keeps the eyebrow ration honest. */
-.folio-label {
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-muted-fg);
-}
-
-/* Contents-leaf leader: the dotted line from title to locator on a table of
-   contents. Flex row: title, .leader, right-aligned date. */
-.leader {
-  flex: 1 1 2rem;
-  min-width: 2rem;
-  align-self: baseline;
-  transform: translateY(-0.2em);
-  margin-inline: 0.6em;
-  border-bottom: 1px dotted var(--color-rule-strong);
-}
-
-/* Plates settle, type materializes: transitioning 6px of blur on a 1100px
-   photograph is the site's most expensive animated surface, and blurring an
-   image that is itself blur-up loading turns to mud. Plates get a scale
-   settle instead — laid onto the mount — slightly slower because they are
-   the largest thing moving. Add alongside reveal-scroll via className. */
-.reveal-plate {
-  transition:
-    opacity 0.7s var(--ease-out-strong),
-    transform 0.7s var(--ease-out-strong);
-}
-.reveal-plate[data-reveal="pending"] {
-  opacity: 0;
-  transform: translateY(14px) scale(0.985);
-  filter: none;
-}
-
-/* The reader's shuttle: a gild thread along the bottom edge growing with
-   scroll progress on the reading page. Scroll-driven animations ignore
-   animation-duration, so the reduced-motion guard here is mandatory — the
-   global 0.01ms fallback cannot neutralize them. Hidden wherever
-   unsupported. */
-.reading-thread {
-  display: none;
-}
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .reading-thread {
-      display: block;
-      position: fixed;
-      inset-inline: 0;
-      bottom: 0;
-      height: 2px;
-      background: var(--color-gild);
-      transform-origin: left;
-      transform: scaleX(0);
-      animation: thread-grow linear both;
-      animation-timeline: scroll(root);
-      z-index: 40;
-    }
-    @keyframes thread-grow {
-      to {
-        transform: scaleX(1);
-      }
-    }
-  }
-}
-
-/* The cover lifts: as the reader scrolls off the homepage hero, headline and
-   arch lag the page and slide beneath the gilded frieze (the section's
-   overflow-hidden clips them) — the cover physically closes. Same mandatory
-   reduced-motion guard as above. Transform-only, zero JS. */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .cover-lift-near {
-      animation: cover-lift linear both;
-      animation-timeline: view();
-      animation-range: exit 0% exit 100%;
-    }
-    .cover-lift-far {
-      animation: cover-lift-far linear both;
-      animation-timeline: view();
-      animation-range: exit 0% exit 100%;
-    }
-    /* The portal is the nearest thing on the cover, so it leaves FIRST and
-       fastest: three rates across the same exit (lattice, page, portal) is
-       what turns a flat band into a scene with depth. Lives on the arch's
-       wrapper, never on the ClipReveal itself — two animations writing
-       transform on one element is a fight the later one always wins. */
-    .cover-lift-portal {
-      animation: cover-lift-portal linear both;
-      animation-timeline: view();
-      animation-range: exit 0% exit 100%;
-    }
-    @keyframes cover-lift-portal {
-      to {
-        transform: translateY(-30px) scale(1.015);
-      }
-    }
-    @keyframes cover-lift {
-      to {
-        transform: translateY(28px);
-      }
-    }
-    @keyframes cover-lift-far {
-      to {
-        transform: translateY(44px);
-      }
-    }
-  }
-}
-
-/* The ceremony's final gesture: the gilded keyline draws itself around the
-   arch — base to apex to base — as the clip crest passes, finishing at
-   0.4s + 0.5s = 0.9s, exactly the hero budget. Scoped to the ceremony. */
-.clip-reveal .arch-keyline {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: keyline-draw 0.5s var(--ease-out-strong) 0.4s both;
-}
-@keyframes keyline-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-/* View transitions carry exactly two meanings here, kept apart by type.
-   Route swaps stay CUTS — the one thing that persists is the paper's title
-   (TitleCarry names it on both ends), morphing from index row to title leaf
-   with a breath of blur masking the Garamond rescale mid-flight.
-   The THEME flip (typed "theme" by ThemeToggle) is the one full cross-fade:
-   the paper dims while the woven chrome, identical in both modes, holds. */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-}
-::view-transition-group(.paper-title) {
-  animation-duration: 260ms;
-  animation-timing-function: var(--ease-in-out-strong);
-}
-::view-transition-image-pair(.paper-title) {
-  animation-name: vt-carry-blur;
-  animation-duration: 260ms;
-  animation-timing-function: var(--ease-in-out-strong);
-}
-@keyframes vt-carry-blur {
-  30% {
-    filter: blur(2px);
-  }
-}
-
-:root:active-view-transition-type(theme)::view-transition-old(root) {
-  animation: vt-cross 200ms var(--ease-out-strong) both reverse;
-}
-:root:active-view-transition-type(theme)::view-transition-new(root) {
-  animation: vt-cross 340ms var(--ease-out-strong) both;
-}
-@keyframes vt-cross {
-  from {
-    opacity: 0;
-  }
-}
-/* The * fallback below does not reach view-transition pseudo-elements. */
-@media (prefers-reduced-motion: reduce) {
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation-duration: 0.01ms !important;
-  }
-}
-
-/* ---- The reader's hand ----
-   What separates a scanned journal from a handled one: the page answers where
-   the reader is pointing. All of it is transform/opacity on a hairline, so a
-   list of forty rows costs nothing to hover.
-
-   The marginal mark: a gild rule drawn down the margin beside the row under
-   the pointer — the pencil line a reader leaves next to the paragraph they
-   mean to come back to. Drawn top-down, released bottom-up, so it retracts
-   the way it was made. focus-within so keyboard reading gets the same mark. */
-.mark-margin {
-  position: relative;
-}
-.mark-margin::before {
-  content: "";
-  position: absolute;
-  left: -1.1rem;
-  top: 0.55rem;
-  bottom: 0.55rem;
-  width: 2px;
-  background: var(--color-gild);
-  transform: scaleY(0);
-  transform-origin: top center;
-  transition: transform 280ms var(--ease-out-strong);
-}
-.mark-margin:hover::before,
-.mark-margin:focus-within::before {
-  transform: scaleY(1);
-  transform-origin: top center;
-}
-
-/* The gilded thread: a short arc of gold that travels the border of the one
-   framed panel on a page — illumination as a line actually being drawn, rather
-   than a static keyline. Borrowed in spirit from the "border trail" pattern
-   (motion-primitives) and rebuilt with a conic gradient behind a mask, so it
-   is one composited element and no JavaScript.
-
-   This is the site's only looping motion, and it is deliberate: it runs ONLY
-   while the reader is over or inside the panel, which makes it a response, not
-   an ambient animation. Off the moment the pointer leaves. */
-.gild-thread {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  padding: 1px;
-  opacity: 0;
-  background: conic-gradient(
-    from var(--thread-angle, 0deg),
-    transparent 0deg,
-    transparent 320deg,
-    color-mix(in srgb, var(--color-gild) 85%, transparent) 348deg,
-    #f3dda6 358deg,
-    transparent 360deg
-  );
-  /* Mask to the 1px frame: fill minus content-box leaves only the border. */
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  mask-composite: exclude;
-  transition: opacity 300ms var(--ease-out-strong);
-}
-@property --thread-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .gild-thread-host:hover .gild-thread,
-  .gild-thread-host:focus-within .gild-thread {
-    opacity: 1;
-    animation: thread-travel 4.5s linear infinite;
-  }
-}
-@keyframes thread-travel {
-  to {
-    --thread-angle: 360deg;
-  }
-}
-
-/* Plate parallax: inside a mounted frame the photograph drifts a little
-   further than the frame does, which is what makes the frame read as being in
-   front of it rather than painted on. Paired with the existing scale on
-   group-hover. */
-.plate-drift {
-  transition: transform 420ms var(--ease-out-strong);
-}
-.group:hover .plate-drift {
-  transform: scale(1.045);
-}
-
-/* ---- Running head ----
-   Journal furniture: once the masthead has scrolled off, a printed journal
-   still tells you what you are reading in the top margin of every page. The
-   site header does the same by sticking at a NEGATIVE offset — the masthead
-   rides up out of view and the nav strip pins itself — so the behaviour is
-   plain CSS and works in every browser rather than only where scroll-driven
-   animations do.
-
-   --head-h is the pinned strip's height; page-level running heads (the paper
-   page's title bar) stack under it. */
-:root {
-  --masthead-h: 5.5rem;
-  --head-h: 3rem;
-}
-@media (min-width: 640px) {
+@media (min-width: 1024px) {
   :root {
-    --masthead-h: 6rem;
+    --header-h: 72px;
   }
 }
-html {
-  /* Anchor jumps (/issues#no-2, skip links) must clear the pinned strip. */
-  scroll-padding-top: calc(var(--head-h) + var(--head-extra, 0px) + 1rem);
+@media (max-width: 767px) {
+  :root {
+    --radius-md: 16px;
+    --radius-lg: 24px;
+  }
 }
 
-/* The printer's shadow: once the strip is pinned, the page runs UNDER it, and
-   a hairline alone does not say that. A 14px wash below the strip deepens as
-   the masthead leaves. Scroll-driven, so it costs no JavaScript and simply
-   never appears where the feature is missing (the strip keeps its rule). */
-.head-strip::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  top: 100%;
-  height: 14px;
-  pointer-events: none;
-  opacity: 0;
-  background: linear-gradient(
-    to bottom,
-    light-dark(rgb(76 60 34 / 0.14), rgb(0 0 0 / 0.42)),
-    transparent
-  );
-}
-/* The compact device in the strip, revealed as the masthead above it leaves —
-   the two are never both legible, so the mark is never redundant. */
-.head-mark {
-  opacity: 0;
-  transform: translateY(-4px);
-}
-.head-mark:focus-visible {
-  opacity: 1;
-  transform: none;
-}
-@supports (animation-timeline: scroll()) {
-  .head-strip::after {
-    animation: head-shade linear both;
-    animation-timeline: scroll(root);
-    animation-range: 0 var(--masthead-h);
+/* ======================================================================
+   Base
+   ====================================================================== */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--header-h) + 32px);
+    scrollbar-color: var(--color-border) transparent;
+    accent-color: var(--color-ink);
   }
-  .head-mark {
-    animation: head-mark-in linear both;
-    animation-timeline: scroll(root);
-    /* Starts only in the last third of the masthead's exit, so the mark
-       arrives as the big wordmark clears rather than crossfading with it. */
-    animation-range: calc(var(--masthead-h) * 0.55) var(--masthead-h);
-  }
-  /* The shanyrak is a roof-WHEEL, and the reader is travelling: the mark turns
-     a half-revolution over the length of the page. With eight-fold symmetry
-     that is four clean clicks, so it never looks tilted — only turned. The
-     site's one piece of motion tied to the whole journey rather than to a
-     single element's arrival. */
-  .head-mark svg {
-    animation: wheel-turn linear both;
-    animation-timeline: scroll(root);
-  }
-  @keyframes wheel-turn {
-    to {
-      transform: rotate(180deg);
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
     }
   }
-  @keyframes head-shade {
-    to {
-      opacity: 1;
+  body {
+    background: var(--color-page);
+    color: var(--color-ink);
+    font: 400 16px/1.6 var(--font-sans);
+    font-optical-sizing: auto;
+    font-feature-settings: "kern", "liga", "lnum", "pnum";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  input,
+  textarea {
+    caret-color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+  table {
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
+
+/* ======================================================================
+   Components
+   ====================================================================== */
+@layer components {
+  /* ---------- layout (§7) ---------- */
+  .wrap {
+    width: 100%;
+    max-width: calc(var(--container) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  .wrap-list {
+    width: 100%;
+    max-width: calc(var(--list) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  .wrap-narrow {
+    width: 100%;
+    max-width: calc(var(--narrow) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  .wrap-form {
+    width: 100%;
+    max-width: calc(var(--form) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+  .page-top {
+    padding-top: var(--page-top);
+  }
+  .page-end {
+    padding-bottom: var(--section);
+  }
+  .prose-plain {
+    /* Author-entered plain text is not markup: keep its paragraph breaks
+       without granting an HTML surface. */
+    white-space: pre-line;
+  }
+
+  /* ---------- type (§2.2) — face, weight and colour with the size ---------- */
+  .t-display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--text-display);
+    line-height: var(--text-display--line-height);
+    letter-spacing: var(--text-display--letter-spacing);
+  }
+  .t-h1 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--text-h1);
+    line-height: var(--text-h1--line-height);
+    letter-spacing: var(--text-h1--letter-spacing);
+  }
+  .t-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--text-title);
+    line-height: var(--text-title--line-height);
+    letter-spacing: var(--text-title--letter-spacing);
+  }
+  .t-h2 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--text-h2);
+    line-height: var(--text-h2--line-height);
+    letter-spacing: var(--text-h2--letter-spacing);
+  }
+  .t-statement {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--text-statement);
+    line-height: var(--text-statement--line-height);
+    letter-spacing: var(--text-statement--letter-spacing);
+  }
+  .t-h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+    letter-spacing: var(--text-h3--letter-spacing);
+  }
+  .t-h4 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: var(--text-h4);
+    line-height: var(--text-h4--line-height);
+  }
+  .t-lede {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--text-lede);
+    line-height: var(--text-lede--line-height);
+    color: var(--color-ink-2);
+  }
+  .t-read {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: var(--text-read);
+    line-height: var(--text-read--line-height);
+    color: var(--color-ink);
+  }
+  .t-body {
+    font: 400 1rem/1.6 var(--font-sans);
+    color: var(--color-ink-2);
+  }
+  .t-ui {
+    font: 400 0.9375rem/1.4 var(--font-sans);
+    letter-spacing: -0.005em;
+  }
+  .t-ui-sm {
+    font: 400 0.875rem/1.4 var(--font-sans);
+  }
+  .t-meta {
+    font: 500 0.75rem/1.5 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .numero {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: 1.25em;
+    line-height: 0;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .t-micro {
+    font: 400 0.6875rem/1.5 var(--font-mono);
+    letter-spacing: 0.02em;
+    color: var(--color-ink-3);
+  }
+  .t-numeral {
+    font-family: var(--font-serif);
+    font-weight: 300;
+    font-size: var(--text-numeral);
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    font-variant-numeric: lining-nums;
+  }
+
+  /* ---------- buttons, links, chips (§4.5) ---------- */
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      box-shadow var(--dur-2) var(--ease-in-out),
+      background-color var(--dur-2) var(--ease-in-out),
+      color var(--dur-1),
+      transform 160ms var(--ease-out-quart);
+  }
+  .btn svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+  .btn-lg {
+    height: 46px;
+    padding: 0 22px;
+    font-size: 1.0625rem;
+    letter-spacing: -0.01em;
+  }
+  .btn-md {
+    height: 40px;
+    padding: 0 18px;
+    font-size: 0.9375rem;
+  }
+  .btn-sm {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 0.875rem;
+  }
+  .btn-sm svg {
+    width: 16px;
+    height: 16px;
+  }
+  .btn-md::after,
+  .btn-sm::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 44px);
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+  .btn-primary {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  .btn-secondary {
+    background: var(--color-surface-2);
+    color: var(--color-ink);
+    box-shadow: 0 0 0 1px var(--color-border);
+  }
+  .btn-ghost {
+    color: var(--color-ink-2);
+    padding-inline: 12px;
+  }
+  .btn-on-door {
+    background: #faf9f5;
+    color: #141413;
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn[aria-busy="true"] {
+    cursor: progress;
+  }
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: 500 0.9375rem/1.4 var(--font-sans);
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+  /* Drawn underlines: on hover (or keyboard focus) a hand-drawn wave draws
+     itself under the words, left to right, in the link's own colour. Prose
+     links keep a quiet straight underline at rest, so they read as links. */
+  .link > span,
+  .prose-link,
+  .meta-line a,
+  .paper-authors a,
+  .foot-col a {
+    position: relative;
+  }
+  .link > span::after,
+  .prose-link::after,
+  .meta-line a::after,
+  .paper-authors a::after,
+  .foot-col a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.32em;
+    height: 0.36em;
+    background: currentColor;
+    -webkit-mask: var(--wave) 0 50% / 1.3em 100% repeat-x;
+    mask: var(--wave) 0 50% / 1.3em 100% repeat-x;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 460ms var(--ease-draw);
+    pointer-events: none;
+  }
+  .link:focus-visible > span::after,
+  .prose-link:focus-visible::after,
+  .meta-line a:focus-visible::after,
+  .paper-authors a:focus-visible::after,
+  .foot-col a:focus-visible::after {
+    clip-path: inset(0);
+  }
+  .link svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--color-ink-3);
+    transition: transform var(--dur-2) var(--ease-out-quart);
+  }
+  .link-door {
+    color: var(--color-door-ink-2);
+  }
+  .link-door svg {
+    color: var(--color-door-ink-3);
+  }
+  .prose-link {
+    text-decoration: underline 1px;
+    text-decoration-color: var(--color-border-input);
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-2), color var(--dur-2);
+  }
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-xs);
+    background: var(--color-surface-3);
+    color: var(--color-ink-3);
+    font: 400 0.6875rem/1 var(--font-mono);
+    letter-spacing: 0.02em;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: var(--color-surface-2);
+    color: var(--color-ink-2);
+    font: 500 0.75rem/1 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .chip-current {
+    color: var(--color-ink);
+  }
+  .dot-accent {
+    display: inline-block;
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent-mark);
+  }
+  .icon-btn {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: var(--color-ink-2);
+    cursor: pointer;
+    transition: background-color var(--dur-2), color var(--dur-2);
+  }
+  .icon-btn-36 {
+    width: 36px;
+    height: 36px;
+  }
+  .icon-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  .icon-btn::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
+  .icon-dot {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-accent-mark);
+    box-shadow: 0 0 0 2px var(--color-page);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover {
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 18%, transparent);
+    }
+    .btn-secondary:hover {
+      box-shadow: 0 0 0 1px var(--color-ink-3);
+    }
+    .btn-ghost:hover {
+      background: var(--color-surface-1);
+      color: var(--color-ink);
+    }
+    .btn-on-door:hover {
+      box-shadow: 0 0 0 2px rgb(250 249 245 / 0.3);
+    }
+    .link:hover > span::after,
+    .prose-link:hover::after,
+    .meta-line a:hover::after,
+    .paper-authors a:hover::after,
+    .foot-col a:hover::after {
+      clip-path: inset(0);
+    }
+    .link:hover svg {
+      transform: translateX(2px);
+    }
+    .link-back:hover svg {
+      transform: translateX(-2px);
+    }
+    .link-door:hover {
+      color: var(--color-door-ink);
+    }
+    .prose-link:hover {
+      text-decoration-color: transparent;
+      color: var(--color-ink);
+    }
+    .icon-btn:hover {
+      background: var(--color-surface-1);
+      color: var(--color-ink);
     }
   }
-  @keyframes head-mark-in {
-    to {
+
+  /* ---------- header (§8.1) ---------- */
+  .skip-link {
+    position: absolute;
+    left: 16px;
+    top: -60px;
+    z-index: 100;
+  }
+  .skip-link:focus {
+    top: 12px;
+  }
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    /* its own transition layer: page changes never move or cover it */
+    view-transition-name: site-header;
+    height: var(--header-h);
+    background: var(--color-page);
+    border-bottom: 1px solid var(--color-rule-2);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+  }
+  .head-inner {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-ink);
+    border-radius: 8px;
+    min-width: 0;
+  }
+  .brand .ill {
+    width: 24px;
+    height: 24px;
+    flex: none;
+  }
+  .wordmark {
+    font: 500 20px/1 var(--font-serif);
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .nav {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 4px;
+  }
+  .pill-nav {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font: 500 0.875rem/1 var(--font-sans);
+    color: var(--color-ink-2);
+    transition: background-color 150ms var(--ease-out-quart), color 150ms;
+  }
+  .pill-nav[aria-current="page"] {
+    color: var(--color-ink);
+  }
+  /* The active pill is its own element with a fixed transition name, so a page
+     change slides it from the old section to the new one (see the view
+     transitions block at the end of this file). */
+  .pill-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--color-surface-2);
+    view-transition-name: nav-pill;
+  }
+  .pill-label {
+    view-transition-class: nav-label;
+  }
+  /* The loading line along the header's bottom edge (NavProgress). */
+  .nav-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -3px;
+    height: 6px;
+    color: var(--color-ink);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms var(--ease-out-quart);
+  }
+  .nav-progress svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .nav-progress path {
+    stroke-width: 1.5;
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1.001;
+  }
+  .nav-progress[data-active] {
+    opacity: 0.55;
+    transition: opacity 200ms var(--ease-out-quart) 150ms;
+  }
+  .nav-progress[data-active] path {
+    animation: nav-draw 2.4s var(--ease-out-cubic) 150ms both;
+  }
+  .head-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+  }
+  .search-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 6px 0 12px;
+    border-radius: 999px;
+    background: var(--color-surface-1);
+    color: var(--color-ink-3);
+    font: 400 0.875rem/1 var(--font-sans);
+    cursor: pointer;
+    transition: background-color var(--dur-2);
+  }
+  .search-pill svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+  }
+  .avatar {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-surface-2);
+    color: var(--color-ink);
+    font: 500 0.875rem/1 var(--font-sans);
+    cursor: pointer;
+    transition: box-shadow var(--dur-2);
+  }
+  .theme-toggle svg {
+    position: absolute;
+    opacity: 0;
+    transform: rotate(-90deg);
+    transition:
+      opacity var(--dur-3) var(--ease-out-cubic),
+      transform var(--dur-3) var(--ease-out-cubic);
+  }
+  /* The header toggle shows the scheme you are looking at: sun on light,
+     moon on dark. Pure CSS (the pinned attribute, else the device), so it is
+     right before hydration. */
+  .theme-toggle .ic-sun {
+    opacity: 1;
+    transform: none;
+  }
+  :root[data-theme="dark"] .theme-toggle .ic-sun {
+    opacity: 0;
+    transform: rotate(90deg);
+  }
+  :root[data-theme="dark"] .theme-toggle .ic-moon {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .ic-sun {
+      opacity: 0;
+      transform: rotate(90deg);
+    }
+    :root:not([data-theme="light"]) .theme-toggle .ic-moon {
       opacity: 1;
       transform: none;
     }
   }
-}
+  /* System · Light · Dark (footer, mobile menu) */
+  .theme-select {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--color-surface-2);
+  }
+  .theme-select button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font: 500 0.875rem/1 var(--font-sans);
+    color: var(--color-ink-3);
+    cursor: pointer;
+    transition: background-color var(--dur-2), color var(--dur-2);
+  }
+  .theme-select button svg {
+    width: 15px;
+    height: 15px;
+  }
+  .theme-select button[aria-checked="true"] {
+    background: var(--color-overlay);
+    color: var(--color-ink);
+    box-shadow: 0 1px 2px rgb(20 20 19 / 0.08);
+  }
+  .theme-select-door {
+    background: rgb(250 249 245 / 0.06);
+  }
+  .theme-select-door button {
+    color: var(--color-door-ink-3);
+  }
+  .theme-select-door button[aria-checked="true"] {
+    background: rgb(250 249 245 / 0.12);
+    color: var(--color-door-ink);
+    box-shadow: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .theme-select button[aria-checked="false"]:hover {
+      color: var(--color-ink);
+    }
+    .theme-select-door button[aria-checked="false"]:hover {
+      color: var(--color-door-ink);
+    }
+  }
+  .brand .summit {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform var(--dur-2) var(--ease-out-quart);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .pill-nav:hover {
+      background: var(--color-surface-1);
+      color: var(--color-ink);
+    }
+    .pill-nav[aria-current="page"]:hover {
+      background: transparent;
+    }
+    .search-pill:hover {
+      background: var(--color-surface-2);
+    }
+    .avatar:hover {
+      box-shadow: 0 0 0 1px var(--color-border);
+    }
+    .brand:hover .summit {
+      transform: scale(1.35);
+    }
+  }
+  @media (max-width: 1279px) {
+    .search-pill {
+      width: 32px;
+      padding: 0;
+      justify-content: center;
+    }
+    .search-pill > span,
+    .search-pill .kbd {
+      display: none;
+    }
+  }
+  @media (max-width: 1023px) {
+    .nav {
+      display: none;
+    }
+    .wordmark {
+      font-size: 18px;
+    }
+    .head-actions {
+      gap: 4px;
+    }
+    .head-actions .icon-btn,
+    .head-actions .search-pill {
+      width: 40px;
+      height: 40px;
+    }
+    .search-pill {
+      background: transparent;
+      color: var(--color-ink-2);
+    }
+  }
+  @media (max-width: 359px) {
+    .wordmark {
+      display: none;
+    }
+  }
 
-/* ---- The card catalogue drawer ----
-   Pulled out, not popped up. The panel comes forward and settles while the
-   paper behind it dims; @starting-style plus allow-discrete is what lets a
-   native <dialog> animate BOTH ways with no JavaScript timing at all. */
-.catalogue {
-  margin: 9vh auto auto;
-  opacity: 0;
-  transform: translateY(-10px) scale(0.985);
-  transition:
-    opacity 0.2s var(--ease-out-strong),
-    transform 0.32s var(--ease-out-strong),
-    display 0.32s allow-discrete,
-    overlay 0.32s allow-discrete;
-}
-.catalogue[open] {
-  opacity: 1;
-  transform: none;
-}
-.catalogue::backdrop {
-  opacity: 0;
-  transition:
-    opacity 0.26s var(--ease-out-strong),
-    display 0.26s allow-discrete,
-    overlay 0.26s allow-discrete;
-}
-.catalogue[open]::backdrop {
-  opacity: 1;
-}
-@starting-style {
-  .catalogue[open] {
+  /* profile menu */
+  .menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    z-index: 50;
+    width: 240px;
+    padding: 6px;
+    border-radius: var(--radius-md);
+    background: var(--color-overlay);
+    box-shadow: var(--shadow-float);
+    border: 0.5px solid var(--color-rule-2);
+  }
+  .menu-head {
+    padding: 10px 12px 12px;
+    border-bottom: 1px solid var(--color-rule);
+    margin-bottom: 6px;
+  }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm);
+    font: 400 0.9375rem/1 var(--font-sans);
+    color: var(--color-ink);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--dur-1);
+  }
+  .menu-sep {
+    height: 1px;
+    margin: 6px 0;
+    background: var(--color-rule);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .menu-item:hover {
+      background: var(--color-surface-1);
+    }
+  }
+
+  /* mobile sheet */
+  .sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 0 var(--gutter) 32px;
+    background: var(--color-page);
+    visibility: hidden;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 400ms var(--ease-in-out), visibility 0s 400ms;
+  }
+  .sheet[data-instant],
+  .sheet[data-instant] .sheet-item {
+    transition: none;
+  }
+  .sheet[data-open] {
+    visibility: visible;
+    clip-path: inset(0);
+    will-change: clip-path;
+    transition: clip-path 600ms var(--ease-in-out), visibility 0s;
+  }
+  .sheet-top {
+    flex: none;
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sheet-links {
+    margin-top: 24px;
+  }
+  .sheet-links a {
+    display: flex;
+    align-items: center;
+    height: 56px;
+    font: 400 2rem/1 var(--font-serif);
+    letter-spacing: -0.012em;
+    color: var(--color-ink);
+  }
+  .sheet-links a[aria-current="page"] {
+    text-decoration: underline 1px;
+    text-underline-offset: 0.18em;
+    text-decoration-color: var(--color-border-input);
+  }
+  .sheet-item {
     opacity: 0;
-    transform: translateY(-10px) scale(0.985);
+    transform: translateY(20px);
+    transition:
+      opacity 400ms var(--ease-out-power2),
+      transform 400ms var(--ease-out-power2);
   }
-  .catalogue[open]::backdrop {
+  .sheet[data-open] .sheet-item {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(200ms + var(--i, 0) * 60ms);
+  }
+  .sheet-foot {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-rule-2);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .sheet-account a,
+  .sheet-account button {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    font: 400 1rem/1 var(--font-sans);
+    color: var(--color-ink-2);
+  }
+
+  /* ---------- drawings (§5.5) ---------- */
+  .ill {
+    overflow: visible;
+  }
+  .ill[data-tone="ink"] {
+    color: var(--color-line);
+    --dot: var(--color-line-dot);
+  }
+  .ill[data-tone="plate"] {
+    color: var(--plate-ink);
+    --dot: var(--plate-dot);
+  }
+  .ill[data-tone="door"] {
+    color: var(--color-line-on-door);
+    --dot: rgb(250 249 245 / 0.35);
+  }
+  .ill[data-tone="muted"] {
+    color: var(--color-ink-4);
+    --dot: var(--color-line-dot);
+  }
+  .ill [data-s] {
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 0;
+    stroke-width: var(--sw);
+  }
+  .ill [data-d] {
+    stroke: none;
+    fill: var(--dot);
+    r: calc(var(--r) * var(--ds) * 1px);
+    transition: fill var(--dur-2);
+  }
+  .ill .summit {
+    fill: var(--color-accent-mark);
+  }
+  @media (max-width: 767px) {
+    .ill [data-s] {
+      stroke-width: var(--sw-sm, var(--sw));
+    }
+    .ill [data-d] {
+      r: calc(var(--r) * var(--ds-sm, var(--ds)) * 1px);
+    }
+  }
+  [data-draw="pending"] [data-s] {
+    stroke-dashoffset: 1.001;
+  }
+  [data-draw="pending"] [data-d] {
     opacity: 0;
   }
-}
-
-/* ---- Foil-stamped type ----
-   Gold on a bound cover is stamped foil, and the one honest thing to say about
-   foil is that it answers the light. A warm highlight sits inside the letters
-   themselves (two background layers clipped to the glyphs: the moving light
-   over a solid ink floor) and tracks the reader's pointer across the cover.
-
-   The registered custom properties are what make the light INTERPOLATE — an
-   unregistered var jumps between values instead of sweeping. One pass plays on
-   load with fill-mode:none, so the animation releases the variables back to
-   the pointer the moment the ceremony is over. */
-@property --mx {
-  syntax: "<percentage>";
-  inherits: true;
-  initial-value: 32%;
-}
-@property --my {
-  syntax: "<percentage>";
-  inherits: true;
-  initial-value: 38%;
-}
-@supports (background-clip: text) or (-webkit-background-clip: text) {
-  /* Both selectors carry the WHOLE gradient rather than sharing it through a
-     custom property: a custom property substitutes its own var() references at
-     the element that declares it, so a shared --foil would freeze every word to
-     the headline's light instead of its own.
-
-     The second selector is the load-bearing one. A word that is mid-entrance
-     has a composited transform animation, and text on its own compositor layer
-     is not part of an ancestor's background-clip:text mask — put the foil only
-     on the <h1> and every set word vanishes. Each word therefore clips its own
-     glyphs, and because the highlight's radius is absolute while its CENTRE is
-     placed per word by CoverLight, the light still reads as one continuous
-     source travelling across the whole line. */
-  .foil-type,
-  .foil-type .ink-set > span > span {
-    background-image:
-      radial-gradient(
-        34rem 26rem at var(--mx) var(--my),
-        #fffdf6 0%,
-        #f7e6bd 26%,
-        rgb(247 230 189 / 0.45) 42%,
-        transparent 66%
-      ),
-      linear-gradient(var(--color-ink) 0 100%);
-    background-repeat: no-repeat;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+  [data-draw="in"] [data-s] {
+    transition: stroke-dashoffset var(--dur-draw) var(--ease-draw)
+      calc(var(--draw-delay, 0ms) + var(--i) * var(--stagger-path));
   }
-  @media (prefers-reduced-motion: no-preference) {
-    /* One pass on load. fill-mode stays at its initial `none`, so the variable
-       is released back to the pointer the moment the ceremony is over — a
-       forwards fill would outrank the inline values CoverLight writes. */
-    .foil-type {
-      animation: foil-pass 1.9s var(--ease-in-out-strong) 0.35s;
+  [data-draw="in"] [data-d] {
+    transition:
+      opacity 300ms var(--ease-out-quart)
+        calc(var(--draw-delay, 0ms) + var(--draw-total, 1400ms) - 300ms),
+      fill var(--dur-2);
+  }
+  [data-needle] {
+    transform-box: view-box;
+  }
+
+  /* the 80px drawn rule: two halves from the centre outward */
+  .rule-draw {
+    display: block;
+    width: 80px;
+    height: 6px;
+    margin: 24px auto 0;
+    color: var(--color-ink-3);
+    overflow: visible;
+  }
+  .rule-draw path {
+    stroke-width: 1.5;
+    stroke-dasharray: 1 2;
+  }
+
+  /* ---------- the five gestures (§6.2) ---------- */
+  [data-reveal="pending"][data-gesture="rise"] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  [data-reveal="in"][data-gesture="rise"] {
+    transition:
+      opacity 500ms var(--ease-out-power2),
+      transform 800ms var(--ease-out-power2);
+  }
+  [data-reveal="pending"][data-gesture="settle"] {
+    opacity: 0;
+    transform: translateY(30px) scale(0.985);
+  }
+  [data-reveal="in"][data-gesture="settle"] {
+    transition:
+      opacity 700ms var(--ease-out-cubic),
+      transform 700ms var(--ease-out-cubic);
+  }
+  [data-reveal="pending"][data-gesture="rows"] > * {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+  [data-reveal="in"][data-gesture="rows"] > * {
+    transition:
+      opacity 450ms var(--ease-out-power2),
+      transform 600ms var(--ease-out-power2);
+    transition-delay: calc(min(var(--i, 0), 8) * var(--stagger-row));
+  }
+  .word-rise > span {
+    display: inline-block;
+  }
+  [data-reveal="pending"] .word-rise > span {
+    opacity: 0;
+    transform: translateY(0.42em);
+  }
+  [data-reveal="in"] .word-rise > span {
+    transition:
+      opacity 500ms cubic-bezier(0.2, 0.7, 0.1, 1),
+      transform 800ms var(--ease-rise);
+    transition-delay: calc(var(--w) * 20ms);
+  }
+
+  /* ---------- plates (§3.3, §8.10) ---------- */
+  .plate-heather {
+    --plate: light-dark(#cbcadb, #4a4870);
+  }
+  .plate-sky {
+    --plate: light-dark(#c9dcf0, #2f4a66);
+  }
+  .plate-cactus {
+    --plate: light-dark(#bcd1ca, #3f5e55);
+  }
+  .plate-sage {
+    --plate: light-dark(#c7d4be, #4a5a40);
+  }
+  .plate-peach {
+    --plate: light-dark(#ebc9b7, #7a4a36);
+  }
+  .plate-apricot {
+    --plate: light-dark(#f0c8a8, #7e4f31);
+  }
+  .plate-wheat {
+    --plate: light-dark(#e9d3a8, #6b5a2a);
+  }
+  .plate-coral {
+    --plate: light-dark(#ebcece, #6e3e3e);
+  }
+  .plate-heather,
+  .plate-sky,
+  .plate-cactus,
+  .plate-sage,
+  .plate-peach,
+  .plate-apricot,
+  .plate-wheat,
+  .plate-coral {
+    --plate-ink: light-dark(#141413, #faf9f5);
+    --plate-dot: color-mix(in srgb, var(--plate-ink) 60%, transparent);
+  }
+  .plate {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    background: var(--plate);
+    color: var(--plate-ink);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .plate-top {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font: 500 0.75rem/1.5 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .plate-top span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .plate-num {
+    position: absolute;
+    z-index: 1;
+    left: 24px;
+    bottom: 22px;
+  }
+  .plate .ill {
+    position: absolute;
+    left: 13%;
+    top: 50%;
+    width: 74%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+    transform: translateY(-50%);
+  }
+  .plate-hero {
+    max-width: 400px;
+  }
+  .plate-spread {
+    max-width: 440px;
+  }
+  .plate-chip {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 20px;
+    height: 26px;
+    border-radius: var(--radius-xs);
+    background: var(--plate);
+    color: var(--plate-ink);
+    font: 600 0.6875rem/1 var(--font-sans);
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  @media (max-width: 767px) {
+    .plate {
+      aspect-ratio: 3 / 2;
+      max-height: 240px;
+      padding: 20px;
+    }
+    .plate-hero,
+    .plate-spread {
+      max-width: none;
+    }
+    .plate .ill {
+      left: auto;
+      right: 2%;
+      top: 4%;
+      width: auto;
+      height: 92%;
+      transform: none;
+    }
+    .plate-top {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+    }
+    .plate-num {
+      left: 20px;
+      bottom: 18px;
+    }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    @media (prefers-reduced-motion: no-preference) {
+      a.plate {
+        transition: transform var(--dur-3) var(--ease-apple);
+      }
+      a.plate:hover {
+        transform: scale(1.016);
+      }
+      a.plate:is(:hover, :focus-visible) [data-s] {
+        animation: reink 600ms var(--ease-out-quart) both;
+        animation-delay: calc(var(--i) * 40ms);
+      }
+    }
+    a.plate:is(:hover, :focus-visible) [data-d] {
+      fill: var(--color-accent-mark);
+    }
+  }
+
+  /* ---------- paper rows (§8.9) ---------- */
+  .rows > li + li {
+    border-top: 1px solid var(--color-rule-2);
+  }
+  .row {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 32px;
+    padding: 24px 0;
+  }
+  .row::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 6px -16px;
+    border-radius: var(--radius-sm);
+    background: var(--row-hover, var(--color-surface-1));
+    opacity: 0;
+    transition: opacity var(--dur-2) var(--ease-apple);
+  }
+  .row-title {
+    color: var(--color-ink);
+  }
+  .row-title a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .row-title a:focus-visible {
+    outline: none;
+  }
+  .row:has(.row-title a:focus-visible)::before {
+    opacity: 1;
+  }
+  .row:has(.row-title a:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  .row-authors {
+    margin-top: 4px;
+    font: 400 0.9375rem/1.4 var(--font-sans);
+    letter-spacing: -0.005em;
+    color: var(--color-ink-3);
+  }
+  .row-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    align-self: start;
+    padding-top: 9px;
+  }
+  .row-h4 .row-meta {
+    padding-top: 5px;
+  }
+  .row-meta-stack {
+    display: grid;
+    justify-items: end;
+    gap: 8px;
+  }
+  .row-arrow {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--color-ink-2);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity var(--dur-2) var(--ease-apple),
+      transform var(--dur-2) var(--ease-apple);
+  }
+  .band .row {
+    --row-hover: var(--color-surface-2);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .row:hover::before {
+      opacity: 1;
+    }
+    .row:is(:hover, :focus-within) .row-arrow {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (max-width: 639px) {
+    .row {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 20px 0;
+    }
+    .row-meta {
+      padding-top: 8px;
+    }
+    .row-meta-stack {
+      display: flex;
+      justify-items: start;
+    }
+    .row-arrow {
+      display: none;
+    }
+  }
+
+  /* ---------- bands, cards (§4.3, §7.2) ---------- */
+  .band {
+    margin-inline: clamp(0.75rem, 1.6vw, 1.5rem);
+    padding-block: var(--section);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-1);
+  }
+  @media (max-width: 767px) {
+    .band > .wrap {
+      padding-inline: 20px;
+    }
+  }
+  .card-filled {
+    position: relative;
+    padding: 24px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-1);
+    transition: background-color var(--dur-2);
+  }
+  .card-bordered {
+    position: relative;
+    padding: 24px;
+    border-radius: var(--radius-md);
+    background: var(--color-page);
+    border: 1px solid var(--color-rule-2);
+    transition: border-color var(--dur-2);
+  }
+  .card-overlay {
+    background: var(--color-overlay);
+  }
+  @media (min-width: 768px) {
+    .card-filled,
+    .card-bordered {
+      padding: 32px;
+    }
+  }
+  .card-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .card-filled:has(.card-link):hover {
+      background: var(--color-surface-2);
+    }
+    .card-bordered:has(.card-link):hover {
+      border-color: var(--color-border);
+    }
+  }
+
+  /* ---------- footer (§8.2) ---------- */
+  .site-footer {
+    background: var(--color-footer);
+    color: var(--color-door-ink-2);
+    border-top: 1px solid var(--color-footer-edge);
+    padding: 96px 0 48px;
+  }
+  .site-footer :focus-visible {
+    outline-color: #faf9f5;
+  }
+  .footer-call {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 32px;
+    align-items: center;
+    padding-bottom: 64px;
+    border-bottom: 1px solid var(--color-door-rule);
+  }
+  .footer-call h2 {
+    color: var(--color-door-ink);
+  }
+  .footer-call p {
+    margin-top: 16px;
+    max-width: 56ch;
+    font: 400 1.0625rem/1.6 var(--font-sans);
+    color: var(--color-door-ink-2);
+  }
+  .footer-call .ill {
+    width: 160px;
+    height: 200px;
+    margin-right: 24px;
+  }
+  .foot-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+    gap: 32px;
+    padding-block: 64px;
+  }
+  /* no call row (working pages): the grid opens the footer itself */
+  .foot-grid:first-child {
+    padding-top: 0;
+  }
+  .foot-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 30ch;
+  }
+  .foot-brand .brand {
+    color: var(--color-door-ink);
+  }
+  .foot-brand .ill {
+    width: 32px;
+    height: 32px;
+  }
+  .foot-brand p {
+    font: 400 0.9375rem/1.6 var(--font-sans);
+    color: var(--color-door-ink-3);
+  }
+  .foot-col h3 {
+    margin-bottom: 12px;
+    font: 500 0.75rem/1.5 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-door-ink-3);
+  }
+  .foot-col a {
+    display: block;
+    width: fit-content;
+    font: 400 0.9375rem/32px var(--font-sans);
+    color: var(--color-door-ink-2);
+    text-decoration: underline 1px transparent;
+    text-underline-offset: 0.25em;
+    transition: color var(--dur-2), text-decoration-color var(--dur-2);
+  }
+  .foot-base {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--color-door-rule);
+  }
+  .foot-base .t-micro {
+    color: var(--color-door-ink-3);
+  }
+  .foot-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+  }
+  .natives {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 0;
+    font: 400 0.9375rem/1.5 var(--font-serif);
+    color: var(--color-door-ink-3);
+  }
+  .natives span + span::before {
+    content: "·";
+    margin-inline: 10px;
+    color: #73726c;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .foot-col a:hover {
+      color: var(--color-door-ink);
+    }
+  }
+  @media (max-width: 767px) {
+    .site-footer {
+      padding-top: 64px;
+    }
+    .footer-call {
+      grid-template-columns: 1fr;
+      padding-bottom: 48px;
+    }
+    .footer-call .ill {
+      display: none;
+    }
+    .foot-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 40px 24px;
+      padding-block: 48px;
+    }
+    .foot-brand {
+      grid-column: 1 / -1;
+    }
+    .foot-base {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .natives {
+      gap: 4px 16px;
+    }
+    .natives span + span::before {
+      content: none;
+    }
+  }
+
+  /* ---------- headline stack (§8.18) ---------- */
+  .stack-center {
+    max-width: 46rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+  .stack-start {
+    max-width: 42rem;
+  }
+  .stack-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px;
+    transition: color var(--dur-2);
+  }
+  .stack-title {
+    margin-top: 12px;
+  }
+  .stack-lede {
+    margin-top: 16px;
+    max-width: 42ch;
+  }
+  .stack-center .stack-lede {
+    max-width: 36ch;
+    margin-inline: auto;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .stack-actions {
+    margin-top: 24px;
+  }
+  .stack-center .stack-actions {
+    justify-content: center;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    a.stack-eyebrow:hover {
+      color: var(--color-ink);
+    }
+  }
+
+  /* ---------- home (§9.1) ---------- */
+  .hero {
+    padding-top: var(--page-top);
+  }
+  .hero .stack-title {
+    max-width: 22ch;
+    margin-inline: auto;
+  }
+  .ridge-wrap {
+    height: 280px;
+    margin: 48px 0 64px;
+    overflow: hidden;
+  }
+  .ridge-wrap .ill {
+    width: 100%;
+    height: 100%;
+  }
+  .band-grid {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .band-head h2 {
+    margin-top: 12px;
+  }
+  .band .rows {
+    margin-top: 48px;
+  }
+  .band-links {
+    margin-top: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+  }
+  .statement {
+    padding-block: var(--section);
+    text-align: center;
+  }
+  .statement .mark-big {
+    width: 96px;
+    height: 96px;
+    margin: 0 auto 40px;
+  }
+  .statement .t-statement {
+    max-width: 30ch;
+    margin-inline: auto;
+    color: var(--color-ink);
+  }
+  .attrib {
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+  }
+  @media (max-width: 1023px) {
+    .ridge-wrap {
+      height: 220px;
+    }
+    .band-grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+    .plate-hero,
+    .plate-spread {
+      max-width: 400px;
+    }
+  }
+  @media (max-width: 767px) {
+    .ridge-wrap {
+      height: 150px;
+      margin-bottom: 48px;
+    }
+    .hero .stack-actions .btn {
+      height: 40px;
+      padding: 0 18px;
+      font-size: 0.9375rem;
+    }
+    .band-grid {
+      gap: 24px;
+    }
+    .band .rows {
+      margin-top: 24px;
+    }
+    .plate-hero,
+    .plate-spread {
+      max-width: none;
+    }
+    .band-links {
+      margin-top: 24px;
+    }
+  }
+
+  /* ---------- papers (§9.2) ---------- */
+  .papers-controls {
+    margin-top: 32px;
+    display: grid;
+    gap: 16px;
+    justify-items: start;
+  }
+  .search-field {
+    position: relative;
+    width: 100%;
+    max-width: 35rem;
+  }
+  .search-field > svg {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    color: var(--color-ink-3);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .search-field input {
+    width: 100%;
+    height: 48px;
+    padding: 0 64px 0 46px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-input);
+    background: var(--color-field);
+    color: var(--color-ink);
+    font: 400 1rem/1 var(--font-sans);
+    transition: border-color var(--dur-2);
+  }
+  .search-field input::placeholder {
+    color: var(--color-ink-3);
+  }
+  .search-field input:focus-visible {
+    border-color: var(--color-ink);
+  }
+  .search-field input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .search-field .kbd {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .year-group + .year-group {
+    margin-top: 64px;
+  }
+  .year-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-rule-2);
+  }
+  .year-head h2 {
+    font-weight: 300;
+  }
+  .year-group .rows > li:first-child {
+    border-top: 0;
+  }
+  /* papers: list + preview pane (≥ 1280px) */
+  .papers-results {
+    transition: opacity 150ms var(--ease-out-quart);
+  }
+  .papers-results[data-pending] {
+    opacity: 0.55;
+  }
+  .papers-preview {
+    display: none;
+  }
+  @media (min-width: 1280px) {
+    .papers-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 20rem;
+      gap: 64px;
+      align-items: start;
+    }
+    .papers-preview {
+      display: block;
+      position: sticky;
+      top: calc(var(--header-h) + 32px);
+    }
+  }
+  .papers-preview-in {
+    animation: fade-in 200ms var(--ease-out-quart);
+  }
+  .papers-preview .pv-title {
+    font-size: 1.375rem;
+  }
+  .pv-plate {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 168px;
+    border-radius: var(--radius-md);
+    background: var(--plate);
+    color: var(--plate-ink);
+    overflow: hidden;
+  }
+  .pv-plate .ill {
+    width: auto;
+    height: 136px;
+    aspect-ratio: 4 / 5;
+  }
+  .pv-num {
+    position: absolute;
+    left: 18px;
+    bottom: 12px;
+    font: 300 2.5rem/1 var(--font-serif);
+    letter-spacing: -0.03em;
+  }
+  .result-line {
+    font: 400 0.875rem/1.5 var(--font-sans);
+    color: var(--color-ink-3);
+  }
+
+  /* ---------- segmented control (§8.6) ---------- */
+  .seg {
+    position: relative;
+    display: inline-flex;
+    max-width: 100%;
+    height: 40px;
+    padding: 4px;
+    gap: 2px;
+    border-radius: 999px;
+    background: var(--color-surface-2);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .seg::-webkit-scrollbar {
+    display: none;
+  }
+  .seg-item {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex: none;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font: 500 0.875rem/1 var(--font-sans);
+    color: var(--color-ink-3);
+    white-space: nowrap;
+    scroll-snap-align: start;
+    transition: color var(--dur-2);
+  }
+  .seg-item[aria-current] {
+    color: var(--color-ink);
+    background: var(--color-overlay);
+    box-shadow: 0 1px 2px rgb(20 20 19 / 0.08);
+  }
+  .seg[data-ready] .seg-item[aria-current] {
+    background: transparent;
+    box-shadow: none;
+  }
+  .seg-count {
+    font: 400 0.75rem/1 var(--font-sans);
+    color: var(--color-ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .seg-thumb {
+    position: absolute;
+    top: 4px;
+    left: 0;
+    height: 32px;
+    width: var(--w, 0);
+    border-radius: 999px;
+    background: var(--color-overlay);
+    box-shadow: 0 1px 2px rgb(20 20 19 / 0.08);
+    transform: translateX(var(--x, 0));
+    opacity: 0;
+  }
+  .seg[data-ready] .seg-thumb {
+    opacity: 1;
+    transition:
+      transform var(--dur-3) var(--ease-material),
+      width var(--dur-3) var(--ease-material);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .seg-item:not([aria-current]):hover {
+      color: var(--color-ink);
+    }
+  }
+
+  /* ---------- issues (§9.3) ---------- */
+  .spreads {
+    margin-top: 96px;
+  }
+  .spread {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: 64px;
+    align-items: start;
+  }
+  .spread + .spread {
+    margin-top: var(--section);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 600px;
+  }
+  .spread .plate-col {
+    position: sticky;
+    top: calc(var(--header-h) + 32px);
+  }
+  .spread-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .spread h2 {
+    margin-top: 12px;
+  }
+  .spread .rows {
+    margin-top: 48px;
+  }
+  @media (max-width: 1023px) {
+    .spread {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .spread .plate-col {
+      position: static;
+    }
+  }
+  @media (max-width: 767px) {
+    .spreads {
+      margin-top: 48px;
+    }
+    .spread {
+      gap: 24px;
+    }
+    .spread + .spread {
+      margin-top: 64px;
+    }
+    .spread .rows {
+      margin-top: 24px;
+    }
+  }
+
+  /* ---------- paper (§9.4) ---------- */
+  .paper-head {
+    padding-top: var(--page-top);
+    text-align: center;
+  }
+  .paper-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 4px;
+    transition: color var(--dur-2);
+  }
+  .paper-title {
+    max-inline-size: 24ch;
+    margin: 16px auto 0;
+  }
+  .paper-authors {
+    margin-top: 16px;
+    font: 500 1.0625rem/1.45 var(--font-sans);
+    color: var(--color-ink-2);
+  }
+  .paper-authors a {
+    text-decoration: underline 1px transparent;
+    text-underline-offset: 0.2em;
+    transition: text-decoration-color var(--dur-2), color var(--dur-2);
+  }
+  .meta-line {
+    margin-top: 24px;
+    font: 400 0.875rem/1.5 var(--font-sans);
+    color: var(--color-ink-3);
+    font-variant-numeric: lining-nums;
+    text-wrap: balance;
+  }
+  .meta-line > span,
+  .meta-line > a {
+    white-space: nowrap;
+  }
+  .meta-line a {
+    color: var(--color-ink-2);
+    text-decoration: underline 1px;
+    text-decoration-color: var(--color-border-input);
+    text-underline-offset: 0.2em;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .paper-authors a:hover {
+      color: var(--color-ink);
+    }
+    .meta-line a:hover {
+      color: var(--color-ink);
+      text-decoration-color: transparent;
+    }
+    a.paper-eyebrow:hover {
+      color: var(--color-ink);
+    }
+  }
+  .abstract {
+    margin-top: 64px;
+  }
+  .abstract .t-meta {
+    display: block;
+    margin-bottom: 16px;
+  }
+  .door {
+    position: relative;
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 32px;
+    align-items: center;
+    padding: 40px;
+    border-radius: var(--radius-md);
+    background: var(--color-door);
+    box-shadow: 0 0 0 1px var(--color-door-ring);
+    color: var(--color-door-ink-2);
+    /* html pads anchors by header + 32px; this clears the 48px running head */
+    scroll-margin-top: 32px;
+  }
+  .door :focus-visible {
+    outline-color: #faf9f5;
+  }
+  .door h2 {
+    color: var(--color-door-ink);
+  }
+  .door p {
+    margin-top: 8px;
+    max-width: 38ch;
+    font: 400 1rem/1.6 var(--font-sans);
+    color: var(--color-door-ink-2);
+  }
+  .door .actions {
+    margin-top: 24px;
+    gap: 12px 20px;
+  }
+  .door .ill {
+    width: 160px;
+    height: 200px;
+    margin: -24px 0;
+  }
+  .cite {
+    margin-top: 48px;
+  }
+  .cite-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+  }
+  .cite-tabs {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 999px;
+    background: var(--color-surface-2);
+  }
+  .cite-tabs button {
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font: 500 0.875rem/1 var(--font-sans);
+    color: var(--color-ink-3);
+    cursor: pointer;
+    transition: background-color var(--dur-2), color var(--dur-2);
+  }
+  .cite-tabs button.is-active {
+    background: var(--color-overlay);
+    color: var(--color-ink);
+    box-shadow: 0 1px 2px rgb(20 20 19 / 0.08);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .cite-tabs button:not(.is-active):hover {
+      color: var(--color-ink);
+    }
+  }
+  .cite [role="tabpanel"] {
+    border-radius: var(--radius-sm);
+  }
+  .cite-pre {
+    margin: 16px 0 0;
+    padding: 16px;
+    overflow-x: auto;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-2);
+    color: var(--color-ink-2);
+    font: 400 0.8125rem/1.6 var(--font-mono);
+  }
+  .cite blockquote {
+    margin: 16px 0 0;
+    font: 400 1.0625rem/1.55 var(--font-serif);
+    color: var(--color-ink-2);
+    overflow-wrap: anywhere;
+  }
+  .cite .actions {
+    margin-top: 20px;
+    gap: 8px;
+  }
+  .copy-label {
+    display: inline-block;
+  }
+  .copy-btn[data-copied] .copy-label {
+    animation: copy-swap 180ms var(--ease-out-quart);
+  }
+  .also {
+    margin-top: 64px;
+  }
+  .also-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-rule-2);
+  }
+  .also .rows > li + li {
+    border-top-color: var(--color-rule);
+  }
+  .pn {
+    margin-top: 64px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--color-rule-2);
+  }
+  .pn a {
+    position: relative;
+    display: block;
+    padding: 8px 0;
+    border-radius: var(--radius-sm);
+  }
+  .pn a.fwd {
+    text-align: right;
+  }
+  .pn .t-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pn .t-meta svg {
+    width: 14px;
+    height: 14px;
+    transition: transform var(--dur-2) var(--ease-out-quart);
+  }
+  .pn .t-h4 {
+    display: block;
+    margin-top: 8px;
+    color: var(--color-ink);
+  }
+  .pn .who {
+    display: block;
+    margin-top: 4px;
+    font: 400 0.875rem/1.4 var(--font-sans);
+    color: var(--color-ink-3);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .pn a:hover .t-h4 {
+      text-decoration: underline 1px;
+      text-underline-offset: 0.2em;
+      text-decoration-color: var(--color-border-input);
+    }
+    .pn a.fwd:hover svg {
+      transform: translateX(2px);
+    }
+    .pn a:not(.fwd):hover svg {
+      transform: translateX(-2px);
+    }
+  }
+  @media (max-width: 767px) {
+    .door {
+      grid-template-columns: 1fr;
+      padding: 28px 24px;
+    }
+    .door .ill {
+      display: none;
+    }
+    .pn {
+      grid-template-columns: 1fr;
+    }
+    .pn a.fwd {
+      text-align: left;
+    }
+  }
+
+  /* running head (§8.17) */
+  .running-head {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 30;
+    height: 48px;
+    margin-bottom: -48px;
+    background: color-mix(in srgb, var(--color-page) 88%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+    border-bottom: 1px solid var(--color-rule);
+    opacity: 0;
+    transform: translateY(-100%);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 230ms var(--ease-out-cubic),
+      transform 230ms var(--ease-out-cubic),
+      visibility 0s 230ms;
+  }
+  .running-head[data-shown] {
+    opacity: 1;
+    transform: none;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity 230ms var(--ease-out-cubic),
+      transform 230ms var(--ease-out-cubic),
+      visibility 0s;
+  }
+  .rh-inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .rh-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: 500 0.9375rem/1 var(--font-serif);
+    color: var(--color-ink);
+  }
+  /* On phones the bar sits at the bottom, within thumb's reach. */
+  @media (max-width: 767px) {
+    .running-head {
+      position: fixed;
+      top: auto;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(60px + env(safe-area-inset-bottom));
+      margin-bottom: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      border-bottom: 0;
+      border-top: 1px solid var(--color-rule);
+      transform: translateY(100%);
+    }
+    .running-head .progress-contour {
+      top: -4px;
+      bottom: auto;
+    }
+    .running-head .btn {
+      height: 40px;
+      padding: 0 18px;
+      font-size: 0.9375rem;
+    }
+    main:has(.running-head) + .site-footer {
+      padding-bottom: 112px;
+    }
+  }
+  .progress-contour {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    width: 100%;
+    height: 6px;
+    color: var(--color-ink);
+    opacity: 0.4;
+    overflow: visible;
+  }
+  .progress-contour path {
+    stroke-width: 1.5;
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 1.001;
+  }
+
+  /* ---------- About (§9.5) ---------- */
+  .about-body {
+    margin-top: 64px;
+  }
+  .sticky-seq {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: 64px;
+  }
+  .sticky-seq-art {
+    position: sticky;
+    top: calc(var(--header-h) + 10vh);
+    align-self: start;
+    display: grid;
+    place-items: center;
+  }
+  .seq-tulip {
+    width: 360px;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+  }
+  .seq-step {
+    min-height: 70vh;
+    display: grid;
+    align-content: center;
+  }
+  /* Without scroll timelines (or with reduced motion) the steps are not
+     driving the drawing, so the 70vh runway would be empty: tighten it. */
+  @supports not (animation-timeline: view()) {
+    .seq-step {
+      min-height: 0;
+      padding-block: 56px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .seq-step {
+      min-height: 0;
+      padding-block: 56px;
+    }
+  }
+  .coverage .ill {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 1;
+    margin-top: 32px;
+  }
+  .coverage-names {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 24px;
+  }
+  .coverage-names [lang] {
+    display: block;
+    margin-top: 4px;
+    font: 400 1.0625rem/1.4 var(--font-serif);
+    color: var(--color-ink-3);
+  }
+  .doors-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .doors-pair > * {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .doors-pair .actions {
+    margin-top: auto;
+    padding-top: 24px;
+  }
+  @media (max-width: 1023px) {
+    .sticky-seq {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .sticky-seq-art {
+      position: static;
+      place-items: start;
+    }
+    .seq-tulip {
+      width: 160px;
+      /* drawn at md weight here (§5.3): the inline xl width would be hairline */
+      --sw: 4.4 !important;
+      --sw-sm: 4.4 !important;
+    }
+    .seq-step {
+      min-height: 0;
+      margin-top: 48px;
+    }
+    .coverage-names {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 767px) {
+    .doors-pair {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---------- forms (§4.5, §8.5) ---------- */
+  .field + .field,
+  .counter + .field {
+    margin-top: 24px;
+  }
+  .field-label {
+    display: block;
+    margin-bottom: 8px;
+    font: 500 0.875rem/1.4 var(--font-sans);
+    color: var(--color-ink-2);
+  }
+  .field-hint {
+    display: block;
+    margin-top: 6px;
+    font: 400 0.875rem/1.5 var(--font-sans);
+    color: var(--color-ink-3);
+  }
+  .field-error {
+    display: block;
+    margin-top: 6px;
+    font: 400 0.875rem/1.5 var(--font-sans);
+    color: var(--color-bad);
+  }
+  .input {
+    display: block;
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 1px solid var(--color-border-input);
+    border-radius: var(--radius-sm);
+    background: var(--color-field);
+    color: var(--color-ink);
+    font: 400 1rem/1.4 var(--font-sans);
+    transition: border-color var(--dur-2);
+  }
+  .input::placeholder {
+    color: var(--color-ink-3);
+  }
+  .input:focus-visible {
+    border-color: var(--color-ink);
+  }
+  .input[aria-invalid="true"] {
+    border-color: var(--color-bad);
+  }
+  textarea.input {
+    height: auto;
+    min-height: 176px;
+    padding: 12px 16px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+  .counter {
+    display: block;
+    margin-top: 6px;
+    text-align: right;
+    font: 400 0.75rem/1.5 var(--font-mono);
+    color: var(--color-ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .dropzone {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 8px;
+    min-height: 160px;
+    padding: 24px;
+    border: 1.5px dashed var(--color-border-input);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-1);
+    text-align: center;
+    transition:
+      border-color 150ms,
+      background-color 150ms;
+  }
+  .dropzone .ill {
+    width: 64px;
+    height: 80px;
+  }
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .dropzone:focus-within {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  .dropzone[data-over] {
+    border-style: solid;
+    border-color: var(--color-ink);
+    background: var(--color-surface-2);
+  }
+  .dropzone[aria-invalid="true"] {
+    border-color: var(--color-bad);
+  }
+
+  /* ---------- status, notices, empty states (§8.7, §8.13, §8.14) ---------- */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font: 500 0.875rem/1.2 var(--font-sans);
+    white-space: nowrap;
+    color: var(--tone);
+  }
+  .status::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .tone-good {
+    --tone: var(--color-good);
+  }
+  .tone-warn {
+    --tone: var(--color-warn);
+  }
+  .tone-bad {
+    --tone: var(--color-bad);
+  }
+  .tone-mute {
+    --tone: var(--color-mute);
+  }
+  .tone-info {
+    --tone: var(--color-ink-3);
+  }
+  .notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 12px;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-1);
+    font: 400 0.9375rem/1.5 var(--font-sans);
+    color: var(--color-ink-2);
+  }
+  .notice-dot {
+    flex: none;
+    align-self: center;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tone);
+  }
+  .notice-body {
+    flex: 1;
+    min-width: 14rem;
+  }
+  .empty {
+    max-width: 26rem;
+    margin-inline: auto;
+    padding-block: 48px;
+    text-align: center;
+  }
+  .empty .ill {
+    width: 96px;
+    height: 120px;
+    margin: 0 auto 24px;
+  }
+  .empty p {
+    margin-top: 8px;
+  }
+  .empty .actions {
+    margin-top: 24px;
+    justify-content: center;
+  }
+
+  /* ---------- working pages (§9.6–9.10) ---------- */
+  .login-card {
+    width: 100%;
+    max-width: 30rem;
+    margin-inline: auto;
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    background: var(--color-overlay);
+    border: 0.5px solid var(--color-rule-2);
+    box-shadow: var(--shadow-card);
+  }
+  .login-card > .ill {
+    width: 32px;
+    height: 32px;
+  }
+  .or-rule {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .or-rule::before,
+  .or-rule::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-rule);
+  }
+  @media (max-width: 767px) {
+    .login-card {
+      padding: 28px;
+    }
+  }
+  .submit-grid {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: minmax(0, 42rem) minmax(0, 14rem);
+    gap: 64px;
+    align-items: start;
+  }
+  .next-steps li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 4px;
+    padding-block: 10px;
+    font: 400 0.875rem/1.45 var(--font-sans);
+    color: var(--color-ink-2);
+  }
+  .next-steps li + li {
+    border-top: 1px solid var(--color-rule);
+  }
+  @media (max-width: 1023px) {
+    .submit-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .list-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 24px;
+  }
+  .ledger {
+    margin-top: 32px;
+    border-top: 1px solid var(--color-rule-2);
+  }
+  .ledger > li {
+    padding-block: 24px;
+    border-bottom: 1px solid var(--color-rule-2);
+  }
+  .ledger-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 32px;
+    align-items: start;
+  }
+  .ledger-side {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding-top: 2px;
+  }
+  @media (max-width: 639px) {
+    .ledger-row {
+      grid-template-columns: 1fr;
+    }
+    .ledger-side {
+      padding-top: 0;
+    }
+  }
+  .track {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 26rem;
+    margin-top: 16px;
+  }
+  .track li {
+    position: relative;
+    display: grid;
+    justify-items: start;
+    gap: 8px;
+  }
+  .track-dot {
+    position: relative;
+    z-index: 1;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--color-ink-4);
+    background: var(--color-page);
+  }
+  .track li[data-state="done"] .track-dot {
+    background: var(--color-ink);
+    box-shadow: none;
+  }
+  .track li[data-state="current"] .track-dot {
+    background: var(--tone);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 22%, transparent);
+  }
+  /* the hand-drawn line from each dot to the next */
+  .track li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 1px;
+    left: 14px;
+    right: 4px;
+    height: 7px;
+    background: var(--color-ink-4);
+    opacity: 0.6;
+    -webkit-mask: var(--wave) 0 50% / 26px 100% repeat-x;
+    mask: var(--wave) 0 50% / 26px 100% repeat-x;
+  }
+  .track li[data-state="done"]::after {
+    background: var(--color-ink);
+    opacity: 1;
+  }
+  .track-label {
+    font: 500 0.75rem/1.3 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+  }
+  .track li[data-state="current"] .track-label {
+    color: var(--tone);
+  }
+  .note-card {
+    margin-top: 16px;
+    max-width: 42rem;
+    padding: 16px 20px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-1);
+  }
+  .note-card .note-text {
+    margin-top: 8px;
+    font: 400 1.0625rem/1.6 var(--font-serif);
+    color: var(--color-ink);
+  }
+  .note-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    align-items: start;
+    padding: 20px 0;
+  }
+  .note-row::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 4px -16px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-1);
+    opacity: 0;
+    transition: opacity var(--dur-2) var(--ease-apple);
+  }
+  .note-row .unread {
+    width: 8px;
+    height: 8px;
+    margin-top: 8px;
+    border-radius: 50%;
+    background: var(--color-accent-mark);
+  }
+  .note-open {
+    text-align: left;
+    cursor: pointer;
+  }
+  .note-open::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+  }
+  .note-open:focus-visible {
+    outline: none;
+  }
+  .note-row:has(.note-open:focus-visible) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .note-row:has(.note-open):hover::before {
+      opacity: 1;
+    }
+  }
+
+  /* admin (§9.10) — product register: no entrance motion, no drawings */
+  .admin-tabs {
+    margin-top: 24px;
+  }
+  .counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+  }
+  .counts a {
+    text-decoration: underline 1px transparent;
+    text-underline-offset: 0.25em;
+    transition: text-decoration-color var(--dur-2), color var(--dur-2);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .counts a:hover {
+      color: var(--color-ink);
+      text-decoration-color: currentColor;
+    }
+  }
+  .dtable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font: 400 0.875rem/1.45 var(--font-sans);
+  }
+  .dtable th {
+    padding: 0 16px 10px 0;
+    border-bottom: 1px solid var(--color-rule-2);
+    font: 500 0.75rem/1.5 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-3);
+    white-space: nowrap;
+  }
+  .dtable td {
+    padding: 14px 16px 14px 0;
+    border-bottom: 1px solid var(--color-rule);
+    vertical-align: top;
+    color: var(--color-ink-2);
+  }
+  .dtable td:first-child,
+  .dtable th:first-child {
+    padding-left: 12px;
+  }
+  .dtable tbody tr {
+    transition: background-color var(--dur-1);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .dtable tbody tr:hover {
+      background: var(--color-surface-1);
+    }
+  }
+  .dtable .primary-cell {
+    color: var(--color-ink);
+  }
+  @media (max-width: 767px) {
+    .dtable thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+    .dtable,
+    .dtable tbody,
+    .dtable tr,
+    .dtable td {
+      display: block;
+    }
+    .dtable tr {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .dtable td {
+      display: grid;
+      grid-template-columns: 7rem minmax(0, 1fr);
+      gap: 12px;
+      padding: 4px 0;
+      border: 0;
+    }
+    .dtable td:first-child {
+      padding-left: 0;
+    }
+    .dtable td::before {
+      content: attr(data-label);
+      font: 500 0.75rem/1.8 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-ink-3);
+    }
+    .dtable td.primary-cell {
+      display: block;
+      padding-bottom: 8px;
+    }
+    .dtable td.primary-cell::before {
+      content: none;
+    }
+    .dtable td:empty {
+      display: none;
+    }
+  }
+
+  /* ---------- 404 / error frame (§9.12, §9.13) ---------- */
+  .frame {
+    min-height: calc(100svh - var(--header-h) - 96px);
+    padding: 96px var(--gutter) var(--section);
+    display: grid;
+    justify-items: center;
+    align-content: start;
+    text-align: center;
+  }
+  .frame > .ill {
+    width: 240px;
+    height: auto;
+    aspect-ratio: 1;
+    margin-bottom: 32px;
+  }
+  .frame > .ill[data-ill="sextant"] {
+    aspect-ratio: 4 / 5;
+    width: 200px;
+  }
+  .frame .actions {
+    margin-top: 32px;
+    justify-content: center;
+  }
+
+  /* ---------- skeletons (§8.20) ---------- */
+  .skeleton {
+    opacity: 0;
+    animation: appear 1ms 300ms forwards;
+  }
+  .skel {
+    display: block;
+    border-radius: var(--radius-xs);
+    background: var(--color-surface-3);
+  }
+
+  /* ---------- ⌘K catalogue (§8.15) ---------- */
+  .cmdk {
+    width: min(640px, calc(100vw - 32px));
+    max-width: none;
+    max-height: none;
+    margin: 12vh auto auto;
+    padding: 0;
+    overflow: hidden;
+    border: 0.5px solid var(--color-rule-2);
+    border-radius: var(--radius-lg);
+    background: var(--color-overlay);
+    color: var(--color-ink);
+    box-shadow: var(--shadow-float);
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+    transition:
+      opacity 180ms var(--ease-out-cubic),
+      transform 180ms var(--ease-out-cubic),
+      overlay 180ms allow-discrete,
+      display 180ms allow-discrete;
+  }
+  .cmdk[open] {
+    opacity: 1;
+    transform: none;
+    transition-duration: 250ms;
+  }
+  @starting-style {
+    .cmdk[open] {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+  .cmdk::backdrop {
+    background: rgb(20 20 19 / 0);
+    transition:
+      background-color 250ms,
+      overlay 250ms allow-discrete,
+      display 250ms allow-discrete;
+  }
+  .cmdk[open]::backdrop {
+    background: var(--color-scrim);
+  }
+  @starting-style {
+    .cmdk[open]::backdrop {
+      background: rgb(20 20 19 / 0);
+    }
+  }
+  .cmdk-input {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 56px;
+    padding: 0 16px 0 20px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .cmdk-input > svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+    color: var(--color-ink-3);
+  }
+  .cmdk-input input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--color-ink);
+    font: 400 1.25rem/1 var(--font-serif);
+  }
+  .cmdk-input input::placeholder {
+    color: var(--color-ink-3);
+  }
+  .cmdk-list {
+    max-height: min(420px, 56vh);
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .cmdk-group {
+    padding: 12px 12px 6px;
+  }
+  .cmdk-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 48px;
+    padding: 0 12px;
+    border-radius: var(--radius-sm);
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: background-color 100ms;
+  }
+  .cmdk-row .lead {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    flex: none;
+    color: var(--color-ink-3);
+  }
+  .cmdk-row .lead svg {
+    width: 16px;
+    height: 16px;
+  }
+  .cmdk-row .ttl {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: 500 0.9375rem/1.2 var(--font-sans);
+  }
+  .cmdk-row .mt {
+    max-width: 40%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: 400 0.875rem/1 var(--font-sans);
+    color: var(--color-ink-3);
+  }
+  .cmdk-row .ar {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--color-ink-2);
+    opacity: 0;
+  }
+  .cmdk-row[aria-selected="true"] {
+    background: var(--color-surface-1);
+  }
+  .cmdk-row[aria-selected="true"] .ar {
+    opacity: 1;
+  }
+  .cmdk-empty {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    padding: 32px 0;
+    font: 400 0.875rem/1.4 var(--font-sans);
+    color: var(--color-ink-3);
+  }
+  .cmdk-empty .ill {
+    width: 64px;
+    height: 80px;
+  }
+  .cmdk-foot {
+    display: flex;
+    align-items: center;
+    height: 36px;
+    padding: 0 20px;
+    border-top: 1px solid var(--color-rule);
+  }
+  .cmdk-body {
+    display: grid;
+  }
+  /* the preview pane: wide screens only */
+  .cmdk-preview {
+    display: none;
+    max-height: min(420px, 56vh);
+    overflow-y: auto;
+    padding: 20px 24px;
+    border-left: 1px solid var(--color-rule);
+  }
+  .pv-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pv-title {
+    margin-top: 12px;
+    font: 500 1.25rem/1.3 var(--font-serif);
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
+  .pv-authors {
+    margin-top: 8px;
+    font: 400 0.875rem/1.45 var(--font-sans);
+    color: var(--color-ink-3);
+  }
+  .pv-snippet {
+    margin-top: 16px;
+    font: 400 0.9375rem/1.6 var(--font-serif);
+    color: var(--color-ink-2);
+  }
+  .pv-list {
+    margin-top: 14px;
+  }
+  .pv-list li {
+    padding: 8px 0;
+    border-top: 1px solid var(--color-rule);
+    font: 500 0.9375rem/1.35 var(--font-serif);
+    color: var(--color-ink-2);
+  }
+  .pv-open {
+    margin-top: 20px;
+  }
+  mark.hl {
+    padding: 0 1px;
+    border-radius: 3px;
+    background: var(--color-accent-soft);
+    color: inherit;
+  }
+  @media (min-width: 1024px) {
+    .cmdk {
+      width: min(920px, calc(100vw - 48px));
+    }
+    .cmdk-body {
+      grid-template-columns: minmax(0, 1fr) 320px;
+    }
+    .cmdk-preview {
+      display: block;
+    }
+  }
+  @media (max-width: 639px) {
+    .cmdk {
+      margin-top: 8vh;
+    }
+    .cmdk-row .mt {
+      display: none;
     }
   }
 }
-@keyframes foil-pass {
+
+/* ======================================================================
+   Keyframes
+   ====================================================================== */
+@keyframes draw {
   from {
-    --mx: -30%;
+    stroke-dashoffset: 1.001;
+  }
+}
+@keyframes reink {
+  from {
+    stroke-dashoffset: 0.15;
   }
   to {
-    --mx: 32%;
+    stroke-dashoffset: 0;
   }
 }
-/* High-contrast users get the ink, not the trick. */
-@media (forced-colors: active) {
-  .foil-type {
-    background: none;
-    color: CanvasText;
-  }
-}
-
-/* ---- The cover is a bound object ----
-   A double gilded keyline set in from the edges is the single mark that turns
-   a dark band into a book cover. Drawn with two rings on one pseudo-element so
-   it costs nothing, and drawn OPEN (scaled from the centre) as the cover
-   arrives. */
-.cover-keyline {
-  position: absolute;
-  inset: clamp(0.75rem, 1.6vw, 1.5rem);
-  pointer-events: none;
-  border: 1px solid color-mix(in srgb, var(--color-gild) 42%, transparent);
-  box-shadow:
-    inset 0 0 0 1px transparent,
-    inset 0 0 0 4px transparent,
-    inset 0 0 0 5px color-mix(in srgb, var(--color-gild) 22%, transparent);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .cover-keyline {
-    animation: keyline-open 1.1s var(--ease-out-strong) 0.25s both;
-  }
-}
-@keyframes keyline-open {
+@keyframes fade-in {
   from {
     opacity: 0;
-    transform: scale(0.985);
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes appear {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.985);
+  }
+}
+@keyframes word {
+  from {
+    opacity: 0;
+    transform: translateY(0.42em);
+  }
+}
+@keyframes word-blur {
+  from {
+    opacity: 0;
+    transform: translateY(0.42em);
+    filter: blur(4px);
+  }
+}
+@keyframes needle {
+  from {
+    transform: rotate(-24deg);
+  }
+}
+@keyframes copy-swap {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+@keyframes ridge-drift {
+  to {
+    transform: translateY(-40px);
+  }
+}
+@keyframes head-glass {
+  to {
+    background-color: color-mix(in srgb, var(--color-page) 86%, transparent);
+    border-bottom-color: var(--color-rule-2);
+  }
+}
+@keyframes progress {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes word-fill {
+  to {
+    color: var(--color-ink);
+  }
+}
+/* the loading line draws most of the way and slows, waiting for the page */
+@keyframes nav-draw {
+  from {
+    stroke-dashoffset: 1.001;
+  }
+  to {
+    stroke-dashoffset: 0.12;
+  }
+}
+@keyframes page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
 }
 
-/* The lamp behind the portal: a warm bloom seated under the arch so the
-   photograph reads as an opening in the cover rather than a sticker on it. */
-.arch-lamp {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  width: 116%;
-  aspect-ratio: 1;
-  translate: -50% -50%;
-  pointer-events: none;
-  border-radius: 50%;
-  background: radial-gradient(
-    closest-side,
-    rgb(226 182 104 / 0.42),
-    rgb(215 165 78 / 0.16) 44%,
-    transparent 70%
-  );
-  filter: blur(10px);
+/* ======================================================================
+   First-paint motion (CSS only, so it never waits for hydration)
+   ====================================================================== */
+@media (prefers-reduced-motion: no-preference) {
+  [data-draw-mode="load"] [data-s],
+  html[data-first-visit] .mark-draw [data-s] {
+    animation: draw var(--dur-draw) var(--ease-draw) both;
+    animation-delay: calc(var(--draw-delay, 0ms) + var(--i) * var(--stagger-path));
+  }
+  [data-draw-mode="load"] [data-d],
+  html[data-first-visit] .mark-draw [data-d] {
+    animation: fade-in 300ms var(--ease-out-quart) both;
+    animation-delay: calc(var(--draw-delay, 0ms) + var(--draw-total, 1400ms) - 200ms);
+  }
+  html[data-first-visit] .mark-draw {
+    --dur-draw: 900ms;
+    --stagger-path: 120ms;
+  }
+  [data-draw-mode="load"] [data-needle] {
+    animation: needle 900ms var(--ease-out-quart) both;
+    animation-delay: calc(var(--draw-delay, 0ms) + var(--draw-total, 1400ms));
+  }
+  .rule-draw path {
+    animation: draw 850ms var(--ease-in-out) 300ms both;
+  }
+  .rise-load {
+    animation: rise 800ms var(--ease-out-power2) both;
+    animation-delay: var(--d, 0ms);
+  }
+  .settle-load {
+    animation: settle 700ms var(--ease-out-cubic) both;
+    animation-delay: var(--d, 0ms);
+  }
+  .fade-load {
+    animation: fade-in 300ms var(--ease-out-quart) both;
+  }
+  .word-rise.load > span {
+    animation: word 800ms var(--ease-rise) both;
+    animation-delay: calc(var(--w) * var(--step, 34ms));
+  }
+  .word-rise.load.rise-blur > span {
+    animation-name: word-blur;
+  }
 }
 
-/* ---- Woven cloth ----
-   Resist-dyed warp: bands of colour whose edges feather instead of ruling,
-   crossed by a faint weft. Pure gradients — the cloth is the site's largest
-   decorative surface and must not cost an image request. The colour-mix keeps
-   it on the token system, so it reweaves itself in dark mode and inside the
-   night surface. */
-.ikat-cloth {
-  background-image:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 20px,
-      color-mix(in srgb, var(--color-cloth-warp-a) 30%, transparent) 22px,
-      var(--color-cloth-warp-a) 26px 32px,
-      color-mix(in srgb, var(--color-cloth-warp-a) 30%, transparent) 36px,
-      transparent 38px 66px,
-      color-mix(in srgb, var(--color-cloth-warp-b) 25%, transparent) 68px,
-      var(--color-cloth-warp-b) 71px 75px,
-      color-mix(in srgb, var(--color-cloth-warp-b) 25%, transparent) 78px,
-      transparent 80px 116px,
-      color-mix(in srgb, var(--color-cloth-warp-c) 25%, transparent) 118px,
-      var(--color-cloth-warp-c) 121px 124px,
-      color-mix(in srgb, var(--color-cloth-warp-c) 25%, transparent) 127px,
-      transparent 129px 176px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      var(--color-cloth-weft) 0 1px,
-      transparent 1px 4px
-    );
-}
-
-/* ---- The shelf ----
-   Issues are bound volumes, so they stand on a shelf: each cover is tipped
-   back a few degrees in real perspective, and the one under the pointer comes
-   forward and squares up — the gesture of pulling a book half out to read its
-   spine. transform only, and the whole shelf shares one perspective origin so
-   the volumes belong to one scene instead of each having its own vanishing
-   point. */
-.shelf {
-  perspective: 1400px;
-  perspective-origin: 50% 40%;
-}
-.volume {
-  transform-style: preserve-3d;
-  transform: rotateY(var(--tilt, 16deg));
-  transform-origin: left center;
-  transition: transform 480ms var(--ease-out-strong);
-}
-.shelf .volume:hover,
-.shelf .volume:focus-within {
-  transform: rotateY(0deg) translateZ(44px);
-}
-/* The dimming lives on the FACE, never on .volume: filter (like opacity, mask
-   and clip-path) forces an element's transform-style back to flat, which would
-   collapse the spine into the cover and lose the whole scene. */
-.volume-face {
-  filter: brightness(0.97);
-  transition: filter 480ms var(--ease-out-strong);
-}
-.shelf:hover .volume-face {
-  filter: brightness(0.9);
-}
-.volume:hover .volume-face,
-.volume:focus-within .volume-face {
-  filter: brightness(1.03);
-}
-
-/* The board the volumes stand on: a hairline with the run's shadow pooled
-   under it, so the shelf is a surface and not a row of floating rectangles. */
-.shelf-board {
-  height: 1px;
-  background: var(--color-rule-strong);
-  box-shadow: 0 -10px 22px -12px light-dark(rgb(76 60 34 / 0.5), rgb(0 0 0 / 0.7));
-}
-
-/* The spine: the sliver of board you see because the volume is turned. It
-   hinges on the cover's left edge and swings back into the page, so it sits
-   behind the near edge exactly the way a real board does. */
-.volume-spine {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  /* Wide enough to survive its own foreshortening: at a 22deg turn the board
-     shows only sin(22deg) of its width, so a realistic 6mm spine would be two
-     pixels of nothing. */
-  width: 30px;
-  transform-origin: left center;
-  transform: rotateY(90deg);
-  background: linear-gradient(90deg, #0a1830, #17356a 45%, #0b1e3c);
-  box-shadow: inset -1px 0 0 rgb(215 165 78 / 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-/* Printing on the board. Foreshortened to a few pixels at the shelf's turn, it
-   is never meant to be READ — a spine with nothing stamped on it is a blank
-   block of card, and the eye knows the difference even when it cannot resolve
-   the letters. */
-.volume-spine-text {
-  writing-mode: vertical-rl;
-  font-size: 0.5rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: #d7a54e;
-  opacity: 0.85;
-}
-
-/* The volume's own shadow, pooled on the board behind it. A separate element so
-   it can lie back on the shelf plane while the cover turns above it. */
-.volume-shadow {
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: -10px;
-  height: 16px;
-  border-radius: 50%;
-  background: radial-gradient(
-    closest-side,
-    light-dark(rgb(76 60 34 / 0.4), rgb(0 0 0 / 0.65)),
-    transparent
-  );
-  transform: translateZ(-14px);
-  transition: opacity 480ms var(--ease-out-strong);
-}
-.volume:hover .volume-shadow,
-.volume:focus-within .volume-shadow {
-  opacity: 0.5;
-}
-
-/* ---- Deckle ----
-   The torn edge of hand-made paper, at the boundary where a section on the
-   paper field meets one that is not. A repeating mask, so the tear is the
-   element's own silhouette rather than a graphic laid over it. */
-.deckle-top {
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='12' preserveAspectRatio='none'%3E%3Cpath d='M0 12V4.2c8-1.4 12 1.6 20 .8s10-3.4 18-3 11 2.9 19 2.7 12-2.5 20-2.1 12 3 20 3 12-2.6 20-2.4 12 2.4 20 2.2 12-2.6 23-1.2V12z' fill='%23000'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='12' preserveAspectRatio='none'%3E%3Cpath d='M0 12V4.2c8-1.4 12 1.6 20 .8s10-3.4 18-3 11 2.9 19 2.7 12-2.5 20-2.1 12 3 20 3 12-2.6 20-2.4 12 2.4 20 2.2 12-2.6 23-1.2V12z' fill='%23000'/%3E%3C/svg%3E");
-  -webkit-mask-size: 160px 12px;
-  mask-size: 160px 12px;
-  -webkit-mask-repeat: repeat-x;
-  mask-repeat: repeat-x;
-  -webkit-mask-position: top left;
-  mask-position: top left;
-}
-
-/* ---- Reading apparatus ----
-   The paper page's running head: once the title leaf has scrolled by, the
-   reader still needs to know what they are in, and how much of it is left.
-   Sticky under the site's pinned strip. */
-.running-head {
-  position: sticky;
-  top: var(--head-h);
-  z-index: 30;
-}
-/* The gild fill under the running head, growing with the article's progress.
-   Scroll-driven animations ignore animation-duration, so the reduced-motion
-   guard here is mandatory — the global 0.01ms fallback cannot neutralize it. */
-.progress-rule {
-  transform: scaleX(0);
-  transform-origin: left center;
-}
+/* ======================================================================
+   Scroll-linked (guarded: §6.5)
+   ====================================================================== */
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
-    .progress-rule {
-      animation: thread-grow linear both;
+    .ridge-wrap .ill {
+      animation: ridge-drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100vh;
+    }
+    .site-header {
+      border-bottom-color: transparent;
+      animation: head-glass linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 48px;
+    }
+    .progress-contour {
+      display: block;
+    }
+    .running-head {
+      border-bottom-color: transparent;
+    }
+    .progress-contour path {
+      animation: progress linear both;
       animation-timeline: scroll(root);
     }
   }
 }
-
-/* ---- Entrance motion ----
-   The grammar, not one gesture. A page where every block performs the same
-   fade is a page with no hierarchy — and the 6px blur this section used to put
-   on 1100px-wide sections was the site's most expensive paint for its least
-   specific idea. Four entrances now, each saying what the thing IS:
-
-     .reveal-scroll  a block ARRIVES     — opacity + a 10px rise, nothing else
-     .ink-set        type is SET         — word by word, out of the line
-     .rule-draw      a rule is RULED     — drawn outward from its centre
-     .folio-row      contents UNROLL     — a run of rows, stagger by index
-
-   The server always renders content VISIBLE. Public pages are the site's whole
-   search presence, so the markup must never ship hidden: a crawler, a no-JS
-   reader, or anyone on a slow connection sees the page immediately. Motion is
-   layered on top only after hydration, and only for elements still below the
-   fold (Reveal.tsx sets data-reveal="pending") — which also means a deep-linked
-   anchor never lands on invisible text. Load mode and the hero clip are
-   keyframes, which play with the first paint and need no JavaScript at all. */
-
-.reveal-scroll {
-  transition:
-    opacity 0.5s var(--ease-out-strong),
-    transform 0.7s var(--ease-out-strong);
-  /* Stagger for siblings that enter together; 0 when an element arrives alone. */
-  transition-delay: var(--reveal-delay, 0s);
-}
-.reveal-scroll[data-reveal="pending"] {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.reveal-load {
-  /* `both` keeps the element hidden through its stagger delay, then holds the
-     end state — the same materialize curve as scroll mode. */
-  animation: reveal-rise 0.6s var(--ease-out-strong) both;
-  animation-delay: var(--reveal-delay, 0s);
-}
-@keyframes reveal-rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-fill {
+      view-timeline: --fill block;
+    }
+    .scroll-fill .sf-w {
+      color: color-mix(in srgb, var(--color-ink) 18%, transparent);
+      animation: word-fill linear both;
+      animation-timeline: --fill;
+      animation-range: cover calc(18% + var(--w) * 36% / var(--n)) cover calc(26% + var(--w) * 36% / var(--n));
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+    .sticky-seq {
+      timeline-scope: --step-1, --step-2, --step-3;
+    }
+    .seq-step[data-step="1"] {
+      view-timeline: --step-1 block;
+    }
+    .seq-step[data-step="2"] {
+      view-timeline: --step-2 block;
+    }
+    .seq-step[data-step="3"] {
+      view-timeline: --step-3 block;
+    }
+    .sticky-seq [data-draw-mode="scroll"] [data-stage] {
+      animation: draw linear both;
+      animation-range: entry 0% cover 40%;
+    }
+    .sticky-seq [data-draw-mode="scroll"] [data-stage="1"] {
+      animation-timeline: --step-1;
+    }
+    .sticky-seq [data-draw-mode="scroll"] [data-stage="2"] {
+      animation-timeline: --step-2;
+    }
+    .sticky-seq [data-draw-mode="scroll"] [data-stage="3"] {
+      animation-timeline: --step-3;
+    }
+    .sticky-seq [data-draw-mode="scroll"] [data-d][data-stage="3"] {
+      animation-name: fade-in;
+      animation-range: cover 30% cover 42%;
+    }
   }
 }
 
-/* Flat: the wrapper only carries the TRIGGER, the child owns the motion. Used
-   wherever .ink-set or .rule-draw is the whole content, so the block does not
-   rise while its own words are already rising. */
-.reveal-scroll.reveal-flat[data-reveal="pending"] {
-  opacity: 1;
-  transform: none;
-}
-.reveal-load.reveal-flat {
+/* ======================================================================
+   View transitions (§6.4)
+   ====================================================================== */
+/* The footer lives in the root snapshot and holds still. The header is its
+   own layer, pinned above the page content (which would otherwise paint over
+   it while fading out), with the nav pill and labels above it. */
+::view-transition-old(root),
+::view-transition-new(root) {
   animation: none;
 }
-
-/* ---- Type is set, not faded ----
-   Each word rises out of its own line, ~34ms behind the last: the compositor's
-   stick laying words into the line. Adapted from the "vertical cut reveal"
-   family of text entrances (21st.dev, motion-primitives) but rebuilt as
-   server-rendered spans plus CSS transitions — this site's display type is its
-   search presence and must never depend on JavaScript to become visible.
-
-   Rationed to three moments: the cover's headline, a paper's title leaf, and
-   the editors' statement. A page where every heading sets itself is a page
-   where nothing is being said. */
-.ink-set > span {
-  display: inline-block;
-  /* Clip at the word's own foot; the top and sides are let out so Garamond's
-     ascenders, its tall f and any diacritic are never shaved. clip-path rather
-     than overflow:hidden, which would change the inline-block's baseline and
-     drop every word off its line. */
-  clip-path: inset(-0.5em -0.14em 0 -0.08em);
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
 }
-.ink-set > span > span {
-  display: inline-block;
-  transition:
-    transform 0.72s var(--ease-out-strong),
-    opacity 0.38s linear;
-  transition-delay: calc(var(--reveal-delay, 0s) + var(--i) * var(--ink-step, 34ms));
+::view-transition-old(site-header) {
+  display: none;
 }
-[data-reveal="pending"] .ink-set > span > span {
-  transform: translateY(108%);
-  opacity: 0;
+::view-transition-new(site-header) {
+  animation: none;
 }
-.reveal-load .ink-set > span > span {
-  animation: ink-set-rise 0.72s var(--ease-out-strong) both;
-  animation-delay: calc(var(--reveal-delay, 0s) + var(--i) * var(--ink-step, 34ms));
+/* Page content (app/template.tsx): the old page leaves fast, the new one
+   arrives gently, a beat later. */
+::view-transition-old(.page-exit) {
+  animation: 140ms var(--ease-out-quart) both fade-out;
 }
-@keyframes ink-set-rise {
-  from {
-    transform: translateY(108%);
-    opacity: 0;
-  }
+::view-transition-new(.page-enter) {
+  animation: 260ms var(--ease-out-cubic) 70ms both page-rise;
 }
-
-/* ---- A rule is ruled ----
-   Hairlines, ikat thresholds and tile bands draw outward from their centre
-   rather than fading up as a grey ghost. In-out, because the rule MOVES while
-   staying on screen — the curve the token system reserves for exactly that. */
-.rule-draw {
-  transform-origin: center;
-  transition:
-    transform 0.85s var(--ease-in-out-strong),
-    opacity 0.25s linear;
-  transition-delay: var(--reveal-delay, 0s);
+/* The one element that travels: the clicked title, or the clicked plate. */
+::view-transition-group(.paper-title) {
+  animation-duration: 360ms;
+  animation-timing-function: var(--ease-in-out);
 }
-[data-reveal="pending"] .rule-draw,
-.rule-draw[data-reveal="pending"] {
-  transform: scaleX(0.02);
-  opacity: 0;
+::view-transition-group(.plate) {
+  animation-duration: 440ms;
+  animation-timing-function: var(--ease-in-out);
 }
-
-/* ---- Contents unroll ----
-   A list of papers is ONE object — a leaf of contents — so its rows arrive as
-   a run with a short stagger, instead of each row fading in alone as the eye
-   reaches it. Index comes from --i on the row. */
-.folio-row {
-  transition:
-    opacity 0.45s var(--ease-out-strong),
-    transform 0.6s var(--ease-out-strong);
-  /* Capped: the stagger is a run, not a queue. Uncapped, the fortieth row of a
-     long archive would wait two seconds to appear, which reads as a stall. */
-  transition-delay: calc(min(var(--i, 0), 8) * 52ms);
+/* The nav pill slides between sections; each label is its own layer, named
+   after the pill, so the words stay on top while it moves. */
+::view-transition-group(nav-pill) {
+  z-index: 101;
+  animation-duration: 320ms;
+  animation-timing-function: var(--ease-material);
 }
-[data-reveal="pending"] .folio-row {
-  opacity: 0;
-  transform: translateY(9px);
+::view-transition-group(*.nav-label) {
+  z-index: 102;
+}
+::view-transition-old(nav-pill) {
+  display: none;
+}
+::view-transition-new(nav-pill) {
+  animation: none;
+  height: 100%;
+}
+/* Theme switch: ThemeToggle draws a circle outward from the button over the
+   new snapshot; nothing else animates, and the pill stays part of the page. */
+:root:active-view-transition-type(theme)::view-transition-old(root),
+:root:active-view-transition-type(theme)::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root:active-view-transition-type(theme) .site-header,
+:root:active-view-transition-type(theme) .pill-bg,
+:root:active-view-transition-type(theme) .pill-label {
+  view-transition-name: none !important;
 }
 
-/* Plates settle, type materializes: a 1100px photograph is the site's largest
-   animated surface, and it is laid onto its mount rather than floated in —
-   slightly slower, because it is the heaviest thing moving. Add alongside
-   reveal-scroll via className. */
-.reveal-plate {
-  transition:
-    opacity 0.7s var(--ease-out-strong),
-    transform 0.7s var(--ease-out-strong);
-}
-.reveal-plate[data-reveal="pending"] {
-  opacity: 0;
-  transform: translateY(14px) scale(0.985);
-}
-
-/* Hero image ceremony: unveiled from the ground up while a slight scale
-   settles. 0.78s + the homepage's 0.12s delay lands exactly on the hero's
-   0.9s orchestration budget (DESIGN.md). In-out on the clip — masonry has
-   weight (slow start, fast middle, settle) — while the inner scale keeps
-   the out curve, so the two desynchronize subtly instead of moving as one
-   rigid object. */
-.clip-reveal {
-  animation: clip-rise 0.78s var(--ease-in-out-strong) both;
-  animation-delay: var(--reveal-delay, 0s);
-}
-.clip-reveal-inner {
-  animation: clip-settle 0.78s var(--ease-out-strong) both;
-  animation-delay: var(--reveal-delay, 0s);
-}
-@keyframes clip-rise {
-  from {
-    clip-path: inset(100% 0 0 0);
-  }
-}
-@keyframes clip-settle {
-  from {
-    transform: scale(1.06);
-  }
-}
-
-/* ---- Print ----
-   An abstract page is a thing scholars actually print, and a printed page of
-   this review should look like a page from the review — not like a website
-   photographed. The chrome, the decorative plate, the download panel and the
-   copy buttons already remove themselves (print:hidden at the call sites);
-   what is left here is making the PAPER white and the ink black.
-
-   The color-scheme reset is the load-bearing line. Every colour on the site is
-   a light-dark() pair, so a reader who has pinned dark mode would otherwise
-   send a near-black page to the printer — and [data-theme="dark"] outranks a
-   bare :root, which is why it is named here too. */
-@media print {
-  :root,
-  :root[data-theme="dark"] {
-    color-scheme: light;
-  }
-  body {
-    background: #fff;
-    background-image: none;
-  }
-  @page {
-    margin: 18mm 16mm;
-  }
-  /* Paper carries its own texture; ours is a description of paper. */
-  .bg-surface,
-  .bg-canvas {
-    background: #fff !important;
-  }
-  .shadow-plate {
-    box-shadow: none;
-  }
-  /* Underlined blue on paper is noise: the citation block already carries the
-     canonical URL in full, which is the only address a printed page needs. */
-  a {
-    color: inherit;
-    text-decoration: none;
-  }
-}
-
-/* Reduced motion: Reveal also checks the media query before hiding anything;
-   this is the belt-and-braces CSS fallback that flattens every declarative
-   animation and transition above. */
+/* ======================================================================
+   Reduced motion (§6.5): nothing moves, nothing is hidden
+   ====================================================================== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1240,5 +3460,82 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  [data-draw] [data-s],
+  [data-draw-mode] [data-s],
+  .mark-draw [data-s],
+  .rule-draw path {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
+  [data-draw] [data-d],
+  [data-draw-mode] [data-d] {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+  [data-reveal],
+  [data-reveal] > *,
+  .word-rise > span {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  /* scroll timelines: zeroing durations does not neutralise them */
+  .ridge-wrap .ill,
+  .site-header,
+  .sticky-seq [data-s],
+  .sticky-seq [data-d],
+  .scroll-fill .sf-w {
+    animation: none !important;
+  }
+  .progress-contour {
+    display: none !important;
+  }
+  [data-needle] {
+    transform: none !important;
+    animation: none !important;
+  }
+  .skeleton {
+    animation: appear 0s 300ms forwards !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ======================================================================
+   Print: a page from the review, white paper and black ink
+   ====================================================================== */
+@media print {
+  :root,
+  :root[data-theme="dark"] {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+  }
+  @page {
+    margin: 18mm 16mm;
+  }
+  .site-header,
+  .site-footer,
+  .running-head,
+  .door,
+  .cite .actions,
+  .cite-tabs,
+  .also,
+  .pn,
+  .skip-link {
+    display: none !important;
+  }
+  .cite {
+    background: #fff !important;
+    padding: 0 !important;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
   }
 }

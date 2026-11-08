@@ -1,6 +1,10 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { formatDate } from "@/lib/site";
+import { formatShortDate } from "@/lib/format";
+import { Chip } from "@/app/_components/ui/Chip";
+import { Notice } from "@/app/_components/ui/Feedback";
+import { SearchField } from "@/app/_components/ui/SearchField";
 
 export const metadata: Metadata = {
   title: "Readers",
@@ -9,10 +13,10 @@ export const metadata: Metadata = {
 
 // Registered accounts, read-only.
 //
-// Roles are intentionally NOT editable here. ADMIN_EMAILS is the single source of
-// truth and is reconciled on every sign-in, so a role changed in the database
-// would be silently overwritten the next time that person logged in — a control
-// that looks like it works but does not. Change the env var instead.
+// Roles are intentionally NOT editable here. ADMIN_EMAILS is the single source
+// of truth and is reconciled on every sign-in, so a role changed in the
+// database would be silently overwritten at that person's next login — a
+// control that looks like it works but does not. Change the env var instead.
 type PageProps = { searchParams: Promise<{ q?: string }> };
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
@@ -21,13 +25,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
-      where: query
-        ? {
-            OR: [{ name: { contains: query } }, { email: { contains: query } }],
-          }
-        : undefined,
+      where: query ? { OR: [{ name: { contains: query } }, { email: { contains: query } }] } : undefined,
       orderBy: { createdAt: "desc" },
-      take: 200, // enough for a young publication; the cap is stated below when it bites
+      take: 200, // the cap is stated below when it bites
       select: {
         id: true,
         name: true,
@@ -42,100 +42,75 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <h1 className="font-serif text-3xl text-ink">Readers</h1>
-      <p className="mt-3 max-w-2xl text-muted-fg">
-        {total} account{total === 1 ? "" : "s"}. Anyone with an account can
-        read full papers and submit their own. Publishing is controlled by
-        review, not by who can register.
+      <h2 className="sr-only">Readers</h2>
+      <p className="t-body max-w-2xl text-ink-3">
+        {total} account{total === 1 ? "" : "s"}. Anyone with an account can read full papers and
+        submit their own. Publishing is controlled by review, not by who can register.
       </p>
 
-      <form action="/admin/users" role="search" className="mt-6 max-w-sm">
-        <label htmlFor="user-search" className="sr-only">
-          Search accounts
-        </label>
-        <input
+      <div className="mt-6">
+        <SearchField
+          action="/admin/users"
           id="user-search"
-          type="search"
-          name="q"
+          label="Search accounts"
           defaultValue={query}
           placeholder="Search by name or email"
-          className="w-full rounded border border-field bg-surface px-3.5 py-2 text-base text-ink outline-none transition-colors placeholder:text-muted-fg focus:border-accent sm:text-sm"
         />
-      </form>
+      </div>
 
       {query && (
-        <p role="status" className="mt-4 text-sm text-muted-fg">
-          {users.length} match{users.length === 1 ? "" : "es"} for “{query}”.{" "}
-          <a
-            href="/admin/users"
-            className="text-accent transition-colors hover:text-accent-dark"
-          >
+        <p role="status" className="result-line mt-4">
+          {users.length} match{users.length === 1 ? "" : "es"} for “{query}” ·{" "}
+          <Link href="/admin/users" className="prose-link">
             Clear
-          </a>
+          </Link>
         </p>
       )}
       {!query && total > users.length && (
-        <p className="mt-4 text-sm text-muted-fg">
-          Showing the newest {users.length}; search to find the rest.
-        </p>
+        <p className="result-line mt-4">Showing the newest {users.length}; search to find the rest.</p>
       )}
-      <p className="mt-4 max-w-2xl rounded border border-rule bg-surface px-4 py-3 text-sm text-ink-soft">
-        Roles are set by the <code className="text-accent">ADMIN_EMAILS</code>{" "}
-        environment variable and re-applied at every sign-in, so they are shown
-        here but not editable. Editing the database directly would be undone on the
-        user&rsquo;s next login.
-      </p>
+
+      <Notice tone="info" role="none" className="mt-6 max-w-2xl">
+        Roles are set by the <code className="font-mono text-[0.875em]">ADMIN_EMAILS</code>{" "}
+        environment variable and re-applied at every sign-in, so they are shown here but not
+        editable. Editing the database directly would be undone at the next login.
+      </Notice>
 
       {users.length === 0 ? (
-        <p className="mt-10 border-t border-rule pt-10 text-muted-fg">
-          {query
-            ? "No account matches that. Try part of an email address."
-            : "Nobody has signed in yet."}
+        <p className="t-body mt-8 text-ink-3">
+          {query ? "No account matches that. Try part of an email address." : "Nobody has signed in yet."}
         </p>
       ) : (
-        <div className="mt-8 overflow-x-auto">
-          <table className="w-full min-w-lg text-left text-sm">
-            <thead>
-              <tr className="border-y border-rule text-xs uppercase tracking-wider text-muted-fg">
-                <th scope="col" className="py-3 pr-4 font-medium">Account</th>
-                <th scope="col" className="py-3 pr-4 font-medium">Role</th>
-                <th scope="col" className="py-3 pr-4 font-medium">Submissions</th>
-                <th scope="col" className="py-3 font-medium">Joined</th>
+        <table className="dtable mt-8">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Role</th>
+              <th scope="col">Papers</th>
+              <th scope="col">Joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id}>
+                <td className="primary-cell">{user.name ?? "Not given"}</td>
+                <td data-label="Email" className="break-all">
+                  {user.email ?? "no email"}
+                </td>
+                <td data-label="Role">
+                  <Chip tone={user.role === "ADMIN" ? "current" : "neutral"}>
+                    {user.role === "ADMIN" ? "Editor" : "Reader"}
+                  </Chip>
+                </td>
+                <td data-label="Papers">{user._count.papers}</td>
+                <td data-label="Joined" className="whitespace-nowrap">
+                  {formatShortDate(user.createdAt)}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map((user) => (
-                <tr key={user.id} className="border-b border-rule">
-                  <td className="py-3 pr-4">
-                    <span className="block text-ink">
-                      {user.name ?? "Not given"}
-                    </span>
-                    <span className="block text-xs text-muted-fg">
-                      {user.email ?? "no email"}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span
-                      className={
-                        user.role === "ADMIN"
-                          ? "font-medium text-accent"
-                          : "text-muted-fg"
-                      }
-                    >
-                      {user.role === "ADMIN" ? "Editor" : "Reader"}
-                    </span>
-                  </td>
-                  <td className="py-3 pr-4 text-ink-soft">
-                    {user._count.papers}
-                  </td>
-                  <td className="py-3 text-muted-fg">
-                    {formatDate(user.createdAt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );

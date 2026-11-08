@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
 import { groupIntoIssues } from "@/lib/issues";
+import { excerpt } from "@/lib/snippet";
 
 // The card catalogue's index: every published paper and every bound issue, as
 // one small JSON document.
@@ -20,6 +21,7 @@ export async function GET() {
       slug: true,
       title: true,
       authorLine: true,
+      abstract: true,
       publishedAt: true,
     },
   });
@@ -29,7 +31,7 @@ export async function GET() {
   );
   const issues = groupIntoIssues(dated);
 
-  // Issue number per slug, so a result can name the volume it sits in without
+  // Issue number per slug, so a result can name the issue it sits in without
   // the client repeating the quarter arithmetic.
   const issueOf = new Map<string, { number: number; label: string }>();
   for (const issue of issues) {
@@ -44,6 +46,9 @@ export async function GET() {
       title: p.title,
       authors: p.authorLine,
       year: p.publishedAt?.getUTCFullYear() ?? null,
+      date: p.publishedAt?.toISOString() ?? null,
+      // The preview pane shows the opening of the abstract (public anyway).
+      snippet: excerpt(p.abstract, 240),
       issue: issueOf.get(p.slug) ?? null,
     })),
     issues: issues.map((i) => ({

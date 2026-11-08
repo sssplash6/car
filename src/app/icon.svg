@@ -1,8 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <!-- The review's device at favicon scale: parchment khatam star on lapis.
-       Filled shapes only — stroked geometry vanishes at 16px. -->
-  <rect width="64" height="64" rx="14" fill="#1d4f9c"/>
-  <rect x="17" y="17" width="30" height="30" fill="#f1e8d7"/>
-  <rect x="17" y="17" width="30" height="30" transform="rotate(45 32 32)" fill="#f1e8d7"/>
-  <circle cx="32" cy="32" r="5" fill="#d7a54e"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <!-- The Mark: three contour rings of a summit seen from above, with the
+       terracotta summit dot. Heavier strokes than the header Mark so the rings
+       survive at 16px; ink on light tabs, cream on dark. -->
+  <style>
+    path { stroke: #141413; }
+    @media (prefers-color-scheme: dark) { path { stroke: #faf9f5; } }
+  </style>
+  <g fill="none" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 30C6 16 18 7 30 8C40 9 44 18 42 28C40 38 30 43 20 42C11 41 6 37 6 30Z"/>
+    <path d="M14 28C14 19 22 13 30 14C37 15 39 22 37 28C35 34 28 37 22 36C17 35 14 32 14 28Z"/>
+  </g>
+  <circle cx="28.5" cy="23.5" r="3.6" fill="#d97757"/>
 </svg>

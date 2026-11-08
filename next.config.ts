@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The floating "N" badge read as part of the site's UI when reviewing the
+  // design locally. Build errors still surface in the dev overlay.
+  devIndicators: false,
+
   // No images.remotePatterns on purpose: every image ships from
   // public/regional/ (CC0, provenance in CREDITS.md there), so production has
   // no third-party image dependency. Adding a remote pattern back means

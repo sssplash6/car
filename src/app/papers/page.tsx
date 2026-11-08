@@ -1,17 +1,20 @@
-import Image from "next/image";
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import type { StaticImageData } from "next/image";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
-import { tashkentQuarter } from "@/lib/issues";
-import { formatDate } from "@/lib/site";
-import { paperImage } from "@/lib/regionalImages";
-import { PaperRow } from "@/app/_components/PaperRow";
-import { TitleCarry } from "@/app/_components/TitleCarry";
-import { Diamond, IkatDivider, Rosette } from "@/app/_components/Ornament";
-import { Reveal } from "@/app/_components/Reveal";
+import { issueFor, tashkentQuarter } from "@/lib/issues";
+import { plateFromLabel } from "@/lib/plates";
+import { excerpt } from "@/lib/snippet";
+import { COPY } from "@/lib/content";
+import { Drawing } from "@/app/_components/illustrations/Drawing";
+import { Reveal } from "@/app/_components/motion/Reveal";
+import { WordRise } from "@/app/_components/motion/WordRise";
+import { EmptyState } from "@/app/_components/ui/Feedback";
+import { PaperRow } from "@/app/_components/ui/PaperRow";
+import { Segmented } from "@/app/_components/ui/Segmented";
+import { PapersSearch } from "@/app/papers/_components/PapersSearch";
+import { PapersPreview, type PreviewItem } from "@/app/papers/_components/PapersPreview";
 
 export const metadata: Metadata = {
   title: "Papers",
@@ -22,302 +25,197 @@ export const metadata: Metadata = {
 
 type PageProps = { searchParams: Promise<{ q?: string; year?: string }> };
 
-// The full public index. Public and crawlable, like the homepage — no auth
-// check, and both search and the year filter are plain GET links, so every
-// view of the archive is a shareable URL and the page needs no client
-// JavaScript at all.
-//
-// The filter rail is set as a woven register rather than a row of pills: this
-// is a card catalogue's drawer labels, not a SaaS filter bar.
+// The full public index (DESIGN.md §9.2). Public and crawlable; search and the
+// year filter are plain GET URLs, so every view of the archive is shareable.
+// Search runs as you type (PapersSearch). Rows carry their issue's colour
+// chip; on wide screens a preview pane beside the list follows the row you
+// point at.
 export default async function PapersPage({ searchParams }: PageProps) {
   const { q, year: yearParam } = await searchParams;
   const query = q?.trim() ?? "";
   const year = Number(yearParam) || null;
 
-  const papers = await prisma.paper.findMany({
-    where: {
-      status: PAPER_STATUS.PUBLISHED,
-      // SQLite's LIKE is case-insensitive for ASCII, which covers the site's
-      // English-language corpus; `contains` maps straight onto it.
-      ...(query && {
-        OR: [
-          { title: { contains: query } },
-          { authorLine: { contains: query } },
-          { abstract: { contains: query } },
-        ],
-      }),
-    },
-    orderBy: { publishedAt: "desc" },
-    select: {
-      id: true,
-      slug: true,
-      title: true,
-      abstract: true,
-      authorLine: true,
-      publishedAt: true,
-    },
-  });
+  const [papers, allDates] = await Promise.all([
+    prisma.paper.findMany({
+      where: {
+        status: PAPER_STATUS.PUBLISHED,
+        // SQLite's LIKE is case-insensitive for ASCII, which covers the site's
+        // English-language corpus; `contains` maps straight onto it.
+        ...(query && {
+          OR: [
+            { title: { contains: query } },
+            { authorLine: { contains: query } },
+            { abstract: { contains: query } },
+          ],
+        }),
+      },
+      orderBy: { publishedAt: "desc" },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        abstract: true,
+        authorLine: true,
+        publishedAt: true,
+      },
+    }),
+    // Issue numbers are derived against the whole archive, not the results.
+    prisma.paper.findMany({
+      where: { status: PAPER_STATUS.PUBLISHED },
+      select: { publishedAt: true },
+    }),
+  ]);
 
+  const dates = allDates.flatMap((p) => (p.publishedAt ? [p.publishedAt] : []));
   const yearOf = (d: Date | null) => (d ? tashkentQuarter(d).year : 0);
 
-  // Every year the archive holds, newest first — the drawer labels. Computed
-  // from the search results so the rail can never offer an empty drawer.
+  // Every year the results hold, newest first — computed from the results so
+  // the control can never offer an empty year.
   const years = [...new Set(papers.map((p) => yearOf(p.publishedAt)))]
     .filter(Boolean)
     .sort((a, b) => b - a);
 
-  const filtered = year ? papers.filter((p) => yearOf(p.publishedAt) === year) : papers;
+  const rows = (year ? papers.filter((p) => yearOf(p.publishedAt) === year) : papers).map(
+    (paper) => ({
+      ...paper,
+      issue: paper.publishedAt ? issueFor(dates, paper.publishedAt) : null,
+    }),
+  );
 
-  // The index advances a row's pool image when it collides with the row above:
-  // two identical plates in one screenful read as a bug. Only the index does
-  // this — the paper page and share card keep the canonical hash.
-  const rows: { paper: (typeof papers)[number]; image: StaticImageData }[] = [];
-  for (const paper of filtered) {
-    let image = paperImage(paper.slug);
-    if (image === rows.at(-1)?.image) image = paperImage(paper.slug, 1);
-    rows.push({ paper, image });
-  }
-
-  // Grouped by publication year (site timezone) when browsing the whole
-  // archive; a search or a single-year view reads as one flat result list.
+  // A search or a single year reads as one flat list; the whole archive is
+  // grouped by year.
   const flat = Boolean(query) || Boolean(year);
   const byYear = new Map<number, typeof rows>();
   if (!flat) {
     for (const row of rows) {
-      const y = yearOf(row.paper.publishedAt);
+      const y = yearOf(row.publishedAt);
       byYear.set(y, [...(byYear.get(y) ?? []), row]);
     }
   }
 
-  /** A filter link that preserves whatever else is set. */
-  const href = (next: { year?: number | null }) => {
+  /** A filter link that keeps the search. */
+  const href = (nextYear: number | null) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
-    const y = next.year === undefined ? year : next.year;
-    if (y) params.set("year", String(y));
+    if (nextYear) params.set("year", String(nextYear));
     const s = params.toString();
     return s ? `/papers?${s}` : "/papers";
   };
 
-  return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-12">
-      <header className="flex flex-wrap items-end justify-between gap-x-10 gap-y-7">
-        <div className="max-w-2xl">
-          <h1 className="display-flush font-serif text-[clamp(2.75rem,1.6rem+4.2vw,4.75rem)] leading-[1.02] tracking-tight text-ink">
-            Papers
-          </h1>
-          <p className="mt-3 text-muted-fg">
-            {papers.length === 0 && !query
-              ? "Nothing has been published yet. The first papers appear as soon as they clear review."
-              : "Abstracts are free to read; the full PDF needs an account."}
-          </p>
-        </div>
+  const count = (n: number) => `${n} ${n === 1 ? "paper" : "papers"}`;
 
-        <form action="/papers" role="search" className="w-full sm:max-w-sm">
-          <label htmlFor="paper-search" className="sr-only">
-            Search the papers
-          </label>
-          <div className="flex">
-            <input
-              id="paper-search"
-              type="search"
-              name="q"
-              defaultValue={query}
-              placeholder="Search titles, authors, abstracts"
-              className="w-full rounded-l border border-field bg-surface px-3.5 py-2 text-base text-ink outline-none transition-colors placeholder:text-muted-fg focus:border-accent"
+  // The preview pane's data: each row's opening lines, and one small plate
+  // (colour + drawing) per issue that appears in the results.
+  const previewItems: PreviewItem[] = rows.map((paper) => ({
+    slug: paper.slug,
+    title: paper.title,
+    authors: paper.authorLine,
+    date: paper.publishedAt?.toISOString() ?? null,
+    snippet: excerpt(paper.abstract, 280),
+    issue: paper.issue ? { number: paper.issue.number, label: paper.issue.label } : null,
+  }));
+  const plates: Record<number, { className: string; art: React.ReactNode }> = {};
+  for (const paper of rows) {
+    if (!paper.issue || plates[paper.issue.number]) continue;
+    const plate = plateFromLabel(paper.issue.number, paper.issue.label);
+    plates[paper.issue.number] = {
+      className: plate.className,
+      art: <Drawing name={plate.subject} size="sm" tone="plate" draw="none" />,
+    };
+  }
+  const resultLine = query
+    ? `${count(rows.length)} ${rows.length === 1 ? "matches" : "match"} “${query}”${year ? ` in ${year}` : ""}`
+    : `${count(rows.length)} from ${year}`;
+
+  return (
+    <div className="wrap page-top page-end">
+      <header>
+        <p className="t-meta rise-load">
+          {COPY.papers.title} · {dates.length} published
+        </p>
+        <WordRise as="h1" text={COPY.papers.title} className="t-h1 stack-title" mode="load" />
+        <div className="papers-controls rise-load" style={{ "--d": "200ms" } as CSSProperties}>
+          <PapersSearch defaultValue={query} year={year} placeholder={COPY.papers.searchPlaceholder} />
+          {years.length > 1 && (
+            <Segmented
+              label="Filter by year"
+              scroll={false}
+              items={[
+                { href: href(null), label: "All", active: !year },
+                ...years.map((y) => ({ href: href(y), label: String(y), active: year === y })),
+              ]}
             />
-            <button
-              type="submit"
-              aria-label="Search"
-              className="press-ink cursor-pointer rounded-r border border-l-0 border-field px-3.5 text-muted-fg hover:border-accent hover:text-accent"
-            >
-              <MagnifyingGlassIcon size={18} aria-hidden="true" />
-            </button>
-          </div>
-          {/* A search from inside a year keeps that year. */}
-          {year && <input type="hidden" name="year" value={year} />}
-        </form>
+          )}
+        </div>
       </header>
 
-      {/* ---- The drawer labels ----
-           Only worth showing once the archive actually spans more than one
-           year; before that it would be a control with a single setting. */}
-      {years.length > 1 && (
-        <nav
-          aria-label="Filter by year"
-          className="mt-9 flex flex-wrap items-center gap-x-1 gap-y-2 border-y border-rule py-3"
-        >
-          <span className="eyebrow mr-3">Years</span>
-          <FilterChip href={href({ year: null })} active={!year}>
-            All
-          </FilterChip>
-          {years.map((y) => (
-            <FilterChip key={y} href={href({ year: y })} active={year === y}>
-              <span className="oldstyle-nums">{y}</span>
-            </FilterChip>
-          ))}
-        </nav>
-      )}
-
-      <IkatDivider className={`text-tile ${years.length > 1 ? "mt-8" : "mt-9"}`} />
-
-      {flat ? (
-        <section className="py-10">
-          {/* role=status: the result count is what a screen-reader user needs
-              announced after submitting the search form. */}
-          <h2 className="text-sm text-muted-fg" role="status">
-            {rows.length === 0
-              ? `Nothing matches${query ? ` “${query}”` : ""}${year ? ` in ${year}` : ""}.`
-              : `${rows.length} paper${rows.length === 1 ? "" : "s"}${query ? ` matching “${query}”` : ""}${year ? ` from ${year}` : ""}.`}{" "}
-            <Link
-              href="/papers"
-              className="text-accent transition-colors hover:text-accent-dark"
-            >
-              Clear
-            </Link>
-          </h2>
-          {rows.length === 0 ? (
-            <p className="mt-8 max-w-md leading-relaxed text-muted-fg">
-              Try a shorter term, or an author&rsquo;s surname. Every abstract
-              is indexed, so anything a paper says, search can find.
+      <div id="papers-results" className="papers-results mt-16">
+        {flat ? (
+          <section aria-label="Results">
+            {/* role=status: what a screen-reader user needs after searching. */}
+            <p role="status" className="result-line">
+              {rows.length > 0 && (
+                <>
+                  {resultLine} ·{" "}
+                  <Link href="/papers" className="prose-link">
+                    Clear
+                  </Link>
+                </>
+              )}
             </p>
-          ) : (
-            <Reveal flat className="mt-4 block">
-              {rows.map(({ paper, image }, i) => (
-                <div
-                  key={paper.id}
-                  className="folio-row"
-                  style={{ "--i": i } as React.CSSProperties}
-                >
-                  <PaperRow paper={paper} image={image} />
-                </div>
-              ))}
-            </Reveal>
-          )}
-        </section>
-      ) : papers.length === 0 ? (
-        <div className="py-16 text-center">
-          <Rosette className="mx-auto size-12 text-rule-strong" />
-          <h2 className="mt-6 font-serif text-2xl text-ink">
-            The first papers are in review
-          </h2>
-          <p className="mx-auto mt-3 max-w-md leading-relaxed text-muted-fg">
-            Papers appear here as they clear editorial review.
-          </p>
-          <Link
-            href="/submit"
-            className="mt-6 inline-block text-sm text-accent transition-colors hover:text-accent-dark"
-          >
-            Submit a paper
-          </Link>
-        </div>
-      ) : (
-        [...byYear.entries()].map(([y, yearRows], i) => {
-          // The year's first paper is its frontispiece — the lead-plate-then-
-          // list grammar the homepage established, repeated at each year
-          // break so the index has rhythm instead of an unbroken register.
-          const [first, ...others] = yearRows;
-          return (
-            <section
-              key={y}
-              className={`grid gap-x-12 gap-y-4 py-12 lg:grid-cols-[10rem_1fr] ${
-                i > 0 ? "border-t border-rule-strong" : ""
-              }`}
-            >
-              {/* Year numeral in ink, not accent: display, not action — the
-                  same rule that governs the issue numerals. It rides sticky
-                  beside its papers, a running folio year. */}
-              <div className="lg:sticky lg:top-[calc(var(--head-h)+2.5rem)] lg:self-start">
-                <h2 className="oldstyle-nums font-serif text-[clamp(2.75rem,2rem+3vw,4rem)] leading-none tracking-tight text-ink">
-                  {y || "Undated"}
-                </h2>
-                <Diamond className="mt-4 size-2 text-gild" />
-                <p className="oldstyle-nums mt-4 text-sm text-muted-fg">
-                  {yearRows.length} paper{yearRows.length === 1 ? "" : "s"}
-                </p>
-              </div>
-              <div>
-                <Reveal className="reveal-plate">
-                  <article className="group mark-margin grid gap-6 border-b border-rule pb-8 sm:grid-cols-[1fr_15rem] sm:items-start">
-                    <div className="max-w-[65ch]">
-                      <TitleCarry slug={first.paper.slug}>
-                        <h3 className="font-serif text-[1.65rem] leading-tight">
-                          <Link
-                            href={`/p/${first.paper.slug}`}
-                            className="title-link text-ink hover:text-accent"
-                          >
-                            {first.paper.title}
-                          </Link>
-                        </h3>
-                      </TitleCarry>
-                      <p className="mt-2 text-sm text-muted-fg">
-                        {first.paper.authorLine}
-                        {first.paper.publishedAt &&
-                          ` · ${formatDate(first.paper.publishedAt)}`}
-                      </p>
-                      <p className="mt-3 line-clamp-3 leading-relaxed text-ink-soft">
-                        {first.paper.abstract}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/p/${first.paper.slug}`}
-                      className="shadow-plate relative block self-start border border-rule-strong bg-surface p-1.5 transition-colors group-hover:border-accent max-sm:hidden"
-                      tabIndex={-1}
-                      aria-hidden="true"
-                    >
-                      <span className="fillet relative block aspect-3/2 overflow-hidden">
-                        <Image
-                          src={first.image}
-                          alt=""
-                          fill
-                          placeholder="blur"
-                          sizes="15rem"
-                          className="plate-drift object-cover"
-                        />
-                      </span>
-                    </Link>
-                  </article>
-                </Reveal>
-                <Reveal flat className="block">
-                  {others.map(({ paper, image }, row) => (
-                    <div
-                      key={paper.id}
-                      className="folio-row"
-                      style={{ "--i": row } as React.CSSProperties}
-                    >
-                      <PaperRow paper={paper} image={image} />
-                    </div>
+            {rows.length === 0 ? (
+              <EmptyState
+                drawing="saiga"
+                title={COPY.papers.noMatchTitle}
+                body={COPY.papers.noMatchBody}
+                action={{ href: "/papers", label: COPY.papers.clear }}
+              />
+            ) : (
+              <PapersPreview items={previewItems} plates={plates}>
+                <Reveal as="ol" gesture="rows" className="rows mt-4">
+                  {rows.map((paper, i) => (
+                    <PaperRow key={paper.id} paper={paper} index={i} titleSize="h4" meta="date-issue" />
                   ))}
                 </Reveal>
-              </div>
+              </PapersPreview>
+            )}
+          </section>
+        ) : papers.length === 0 ? (
+          <EmptyState
+            drawing="tulip"
+            title={COPY.papers.emptyTitle}
+            body={COPY.papers.emptyBody}
+            action={{ href: "/submit", label: COPY.home.hero.secondary }}
+          />
+        ) : (
+          <PapersPreview items={previewItems} plates={plates}>
+          {[...byYear.entries()].map(([y, yearRows], g) => (
+            <section
+              key={y}
+              className="year-group"
+              aria-labelledby={`year-${y}`}
+              style={
+                g > 0
+                  ? ({ contentVisibility: "auto", containIntrinsicSize: "auto 600px" } as CSSProperties)
+                  : undefined
+              }
+            >
+              <Reveal className="year-head">
+                <h2 id={`year-${y}`} className="t-h2">
+                  {y || "Undated"}
+                </h2>
+                <span className="t-meta">{count(yearRows.length)}</span>
+              </Reveal>
+              <Reveal as="ol" gesture="rows" className="rows">
+                {yearRows.map((paper, i) => (
+                  <PaperRow key={paper.id} paper={paper} index={i} titleSize="h4" meta="date-issue" />
+                ))}
+              </Reveal>
             </section>
-          );
-        })
-      )}
+          ))}
+          </PapersPreview>
+        )}
+      </div>
     </div>
-  );
-}
-
-/** A drawer label. Underlined when it is the drawer you are standing in. */
-function FilterChip({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-current={active ? "true" : undefined}
-      data-active={active || undefined}
-      className={`link-underline press-ink px-2.5 py-1 text-[0.9375rem] transition-colors ${
-        active ? "text-ink" : "text-muted-fg hover:text-ink"
-      }`}
-    >
-      {children}
-    </Link>
   );
 }

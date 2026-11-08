@@ -1,45 +1,59 @@
 "use client";
 
-import { useState } from "react";
-import { CheckIcon, CopySimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { useRef, useState } from "react";
+import { CheckIcon, CopyIcon, LinkSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 
-// Quiet copy-to-clipboard button for citation text. The two-second "Copied"
-// swap is state feedback, not decoration, so it stays inside the product-
-// register motion rules (colour/label change only, no animation).
-export function CopyButton({ text, label }: { text: string; label: string }) {
+// Copy-to-clipboard pill for the citation block. "Copied" holds for 1.6s; the
+// label swap is announced to screen readers through the live region.
+export function CopyButton({
+  text,
+  label,
+  icon = "copy",
+}: {
+  text: string;
+  label: string;
+  icon?: "copy" | "link";
+}) {
   const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard can be unavailable (permissions, http). Selecting the text
-      // by hand still works; the button just doesn't confirm.
+      // Clipboard API unavailable (permissions, plain http): the old way.
+      const area = Object.assign(document.createElement("textarea"), { value: text });
+      document.body.append(area);
+      area.select();
+      try {
+        document.execCommand("copy");
+      } catch {
+        // Selecting the citation by hand still works.
+      }
+      area.remove();
     }
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 1600);
   }
 
   return (
     <button
       type="button"
       onClick={copy}
-      className="press-ink inline-flex cursor-pointer items-center rounded border border-rule-strong px-3 py-1.5 text-sm text-ink hover:border-accent hover:text-accent"
+      className="btn btn-secondary btn-sm copy-btn"
+      data-copied={copied || undefined}
     >
-      {/* Keyed remount: the confirmation materializes (180ms of the site's
-          own entrance grammar at button scale) instead of hard-swapping. */}
-      <span
-        key={String(copied)}
-        className="copy-swap inline-flex items-center gap-1.5"
-      >
-        {copied ? (
-          <CheckIcon size={15} aria-hidden="true" className="text-state-good" />
-        ) : (
-          <CopySimpleIcon size={15} aria-hidden="true" />
-        )}
+      {copied ? (
+        <CheckIcon aria-hidden="true" />
+      ) : icon === "link" ? (
+        <LinkSimpleIcon aria-hidden="true" />
+      ) : (
+        <CopyIcon aria-hidden="true" />
+      )}
+      <span key={String(copied)} className="copy-label">
         {copied ? "Copied" : label}
       </span>
-      {/* Announced for screen readers; the visual label swap above is not. */}
       <span aria-live="polite" className="sr-only">
         {copied ? "Copied to clipboard" : ""}
       </span>

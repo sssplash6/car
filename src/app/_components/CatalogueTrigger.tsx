@@ -1,28 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
-import { Diamond, WovenTrim } from "@/app/_components/Ornament";
+import {
+  ArrowRightIcon,
+  BooksIcon,
+  FileTextIcon,
+  InfoIcon,
+  LockSimpleIcon,
+  MagnifyingGlassIcon,
+  UploadSimpleIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import { PlateChip } from "@/app/_components/ui/IssuePlate";
+import { ShortcutKbd } from "@/app/_components/ShortcutKbd";
+import { formatShortDate } from "@/lib/format";
+import { No } from "@/app/_components/ui/Numero";
 
-// The card catalogue.
+// ⌘K: the catalogue (DESIGN.md §8.15). ⌘K / Ctrl-K anywhere, or "/" when not
+// typing, opens one dialog holding every published paper, every issue and the
+// site's own pages, grouped. On wide screens a preview pane shows the
+// highlighted result — a paper's opening lines, an issue's contents — before
+// you open it, and the destination is prefetched so Enter lands at once.
 //
-// An archive that can only be searched by loading a page and typing into a form
-// is an archive nobody searches. This is the drawer: ⌘K (or /) anywhere on the
-// site pulls it out, and it holds every published paper, every bound issue and
-// the site's own destinations in one ranked list.
-//
-// Built on the native <dialog> element rather than a combobox library: the
-// browser already owns the modal semantics, the focus trap, the inert
-// background and Escape. What is left is a listbox, ~120 lines, and no
-// dependency. The index is fetched once from /api/catalogue the first time the
-// drawer opens, so pages nobody searches from pay nothing for it.
+// Built on the native <dialog>: the browser owns the modal semantics, focus
+// trap, inert background and Escape. The index comes from /api/catalogue,
+// fetched the moment the trigger is hovered or focused (so opening rarely
+// waits), or on first open.
 
 type Paper = {
   slug: string;
   title: string;
   authors: string;
   year: number | null;
+  date: string | null;
+  snippet: string;
   issue: { number: number; label: string } | null;
 };
 type Issue = { number: number; label: string; anchor: string; count: number };
@@ -31,73 +42,93 @@ type Index = { papers: Paper[]; issues: Issue[] };
 type Entry = {
   key: string;
   href: string;
-  kind: "paper" | "issue" | "place";
   title: string;
   meta?: string;
-  note?: string;
-  /** Lower sorts first. */
+  lead: ReactNode;
   rank: number;
+  paper?: Paper;
+  issue?: Issue;
+  page?: (typeof PAGES)[number];
 };
 
-const PLACES: { title: string; href: string; note: string }[] = [
-  { title: "Papers", href: "/papers", note: "The whole index" },
-  { title: "Issues", href: "/issues", note: "Bound quarterly volumes" },
-  { title: "About the Review", href: "/about", note: "What this is, and who reads it" },
-  { title: "Submit a paper", href: "/submit", note: "Free, at every stage" },
+const PAGES = [
+  { title: "Papers", href: "/papers", note: "Every paper the review has published, newest first.", Icon: FileTextIcon },
+  { title: "Issues", href: "/issues", note: "The archive gathered into quarterly issues.", Icon: BooksIcon },
+  { title: "About the Review", href: "/about", note: "What it covers, how a paper reaches a reader, and who it is for.", Icon: InfoIcon },
+  { title: "Submit a paper", href: "/submit", note: "Send a finished paper. An editor reads every submission in full; free at every stage.", Icon: UploadSimpleIcon },
+  { title: "Privacy", href: "/privacy", note: "What the site stores about readers and authors, and why.", Icon: LockSimpleIcon },
 ];
 
-/** Rank a haystack against a query: title-start beats title-anywhere beats author. */
-function score(query: string, title: string, authors: string): number | null {
+/** Title-start beats word-start beats anywhere beats the secondary text. */
+function score(query: string, title: string, secondary: string): number | null {
   if (!query) return 0;
   const t = title.toLowerCase();
-  const a = authors.toLowerCase();
   if (t.startsWith(query)) return 0;
-  // Word-start inside the title — "heat" should find "Urban Heat…".
   if (new RegExp(`\\b${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(t)) return 1;
   if (t.includes(query)) return 2;
-  if (a.includes(query)) return 3;
+  if (secondary.toLowerCase().includes(query)) return 3;
   return null;
 }
 
-export function CatalogueTrigger() {
+const byRank = (a: Entry, b: Entry) => a.rank - b.rank;
+
+/** The matched part of a title, marked. */
+function Highlight({ text, query }: { text: string; query: string }) {
+  const q = query.trim().toLowerCase();
+  const at = q ? text.toLowerCase().indexOf(q) : -1;
+  if (at < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      <mark className="hl">{text.slice(at, at + q.length)}</mark>
+      {text.slice(at + q.length)}
+    </>
+  );
+}
+
+export function CatalogueTrigger({ emptyArt }: { emptyArt?: ReactNode }) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const fetching = useRef(false);
   const [index, setIndex] = useState<Index | null>(null);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
 
+  const loadIndex = useCallback(() => {
+    if (fetching.current) return;
+    fetching.current = true;
+    // A failed fetch is not worth an error state: the pages still navigate.
+    fetch("/api/catalogue")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: Index | null) => {
+        if (data) setIndex(data);
+        else fetching.current = false;
+      })
+      .catch(() => {
+        fetching.current = false;
+      });
+  }, []);
+
   const open = useCallback(() => {
     const el = dialogRef.current;
     if (!el || el.open) return;
-    el.showModal();
     setQuery("");
     setActive(0);
-    // Fetch once, on first open. A failed fetch is not an error state worth
-    // building: the drawer still navigates to the site's own pages.
-    setIndex((current) => {
-      if (current) return current;
-      fetch("/api/catalogue")
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data: Index | null) => data && setIndex(data))
-        .catch(() => {});
-      return current;
-    });
-  }, []);
+    el.showModal();
+    loadIndex();
+  }, [loadIndex]);
 
-  // ⌘K / Ctrl-K anywhere, and "/" when the reader is not already typing —
-  // the two shortcuts every archive-shaped site has trained people to expect.
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null;
       const typing =
         target instanceof HTMLElement &&
-        (target.isContentEditable ||
-          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
-
+        (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        open();
+        if (dialogRef.current?.open) dialogRef.current.close();
+        else open();
       } else if (event.key === "/" && !typing && !dialogRef.current?.open) {
         event.preventDefault();
         open();
@@ -107,57 +138,73 @@ export function CatalogueTrigger() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const entries = useMemo<Entry[]>(() => {
+  const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const out: Entry[] = [];
-
+    const papers: Entry[] = [];
     for (const paper of index?.papers ?? []) {
       const rank = score(q, paper.title, paper.authors);
       if (rank === null) continue;
-      out.push({
+      papers.push({
         key: `p-${paper.slug}`,
         href: `/p/${paper.slug}`,
-        kind: "paper",
         title: paper.title,
-        meta: paper.year ? String(paper.year) : undefined,
-        note: paper.authors,
+        meta: paper.authors,
+        lead: paper.issue ? <PlateChip number={paper.issue.number} label={paper.issue.label} /> : null,
         rank,
+        paper,
       });
     }
-
+    const issues: Entry[] = [];
     for (const issue of index?.issues ?? []) {
-      const label = `Issue № ${issue.number} · ${issue.label}`;
-      const rank = score(q, label, issue.label);
+      const title = `Issue № ${issue.number} · ${issue.label}`;
+      const rank = score(q, title, `issue ${issue.number} ${issue.label}`);
       if (rank === null) continue;
-      out.push({
+      issues.push({
         key: `i-${issue.number}`,
         href: `/issues#${issue.anchor}`,
-        kind: "issue",
-        title: label,
+        title,
         meta: `${issue.count} paper${issue.count === 1 ? "" : "s"}`,
-        rank: rank + 4,
+        lead: <PlateChip number={issue.number} label={issue.label} />,
+        rank,
+        issue,
       });
     }
-
-    for (const place of PLACES) {
-      const rank = score(q, place.title, place.note);
+    const pages: Entry[] = [];
+    for (const page of PAGES) {
+      const rank = score(q, page.title, page.note);
       if (rank === null) continue;
-      out.push({
-        key: `d-${place.href}`,
-        href: place.href,
-        kind: "place",
-        title: place.title,
-        note: place.note,
-        rank: rank + 8,
+      pages.push({
+        key: `d-${page.href}`,
+        href: page.href,
+        title: page.title,
+        lead: <page.Icon aria-hidden="true" />,
+        rank,
+        page,
       });
     }
-
-    return out.sort((a, b) => a.rank - b.rank).slice(0, 40);
+    return [
+      { id: "papers", label: `Papers · ${papers.length}`, entries: papers.sort(byRank).slice(0, 24) },
+      { id: "issues", label: `Issues · ${issues.length}`, entries: issues.sort(byRank) },
+      { id: "pages", label: "Pages", entries: pages.sort(byRank) },
+    ].filter((group) => group.entries.length > 0);
   }, [index, query]);
+
+  const flat = useMemo(() => groups.flatMap((group) => group.entries), [groups]);
+  const current = flat[active];
+  const currentHref = current?.href;
+
+  // Prefetch the highlighted destination, so Enter (or a click) lands at once.
+  useEffect(() => {
+    if (!currentHref || !dialogRef.current?.open) return;
+    const timer = window.setTimeout(() => router.prefetch(currentHref.split("#")[0]), 120);
+    return () => window.clearTimeout(timer);
+  }, [currentHref, router]);
 
   function go(entry: Entry | undefined) {
     if (!entry) return;
     dialogRef.current?.close();
+    // Starts the header's loading line (NavProgress).
+    window.dispatchEvent(new Event("car:navigate"));
     router.push(entry.href);
   }
 
@@ -165,152 +212,151 @@ export function CatalogueTrigger() {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault();
       setActive((i) => {
-        const next =
-          event.key === "ArrowDown"
-            ? Math.min(i + 1, entries.length - 1)
-            : Math.max(i - 1, 0);
-        listRef.current
-          ?.querySelectorAll("li")
-          [next]?.scrollIntoView({ block: "nearest" });
+        const next = event.key === "ArrowDown" ? Math.min(i + 1, flat.length - 1) : Math.max(i - 1, 0);
+        listRef.current?.querySelector(`#catalogue-option-${next}`)?.scrollIntoView({ block: "nearest" });
         return next;
       });
     } else if (event.key === "Enter") {
       event.preventDefault();
-      go(entries[active]);
+      go(flat[active]);
     }
   }
+
+  let n = -1;
 
   return (
     <>
       <button
         type="button"
         onClick={open}
-        aria-label="Search the catalogue"
-        className="press-ink group flex h-8 cursor-pointer items-center gap-2 rounded border border-rule px-2.5 text-muted-fg transition-colors hover:border-accent hover:text-accent sm:pr-1.5"
+        onPointerEnter={loadIndex}
+        onFocus={loadIndex}
+        aria-label="Search papers, authors and issues"
+        className="search-pill"
       >
-        <MagnifyingGlassIcon size={15} aria-hidden="true" />
-        <span className="hidden text-[0.8125rem] sm:inline">Search</span>
-        {/* The shortcut, set as a printed key: the affordance is the point. */}
-        <kbd className="hidden rounded border border-rule bg-canvas px-1.5 py-0.5 font-sans text-[0.6875rem] leading-none text-muted-fg transition-colors group-hover:border-accent/40 sm:inline">
-          ⌘K
-        </kbd>
+        <MagnifyingGlassIcon aria-hidden="true" />
+        <span>Search</span>
+        <ShortcutKbd />
       </button>
 
       <dialog
         ref={dialogRef}
-        aria-label="Search the catalogue"
+        aria-label="Search the review"
+        className="cmdk"
         onClick={(event) => {
-          // Native dialogs swallow outside clicks; the backdrop reports the
-          // dialog itself as the target, so a hit outside the panel closes.
+          // A click on the backdrop reports the dialog itself as the target.
           if (event.target === dialogRef.current) dialogRef.current?.close();
         }}
-        className="catalogue shadow-plate w-[min(42rem,calc(100vw-1.5rem))] overflow-hidden border border-rule-strong bg-surface p-0 text-ink backdrop:bg-[light-dark(rgb(38_32_25/0.34),rgb(0_0_0/0.6))] backdrop:backdrop-blur-[2px]"
       >
-        <WovenTrim />
-
-        {/* Focus rides the ROW, not the field: the site-wide focus ring drawn
-            around a full-width input inside a framed drawer reads as a second,
-            competing box. The caret plus a lapis rule under the row says the
-            same thing quietly. */}
-        <div className="flex items-center gap-3 border-b border-rule px-5 transition-colors has-[input:focus]:border-accent">
-          <MagnifyingGlassIcon
-            size={17}
-            aria-hidden="true"
-            className="shrink-0 text-muted-fg"
-          />
+        <div className="cmdk-input">
+          <MagnifyingGlassIcon aria-hidden="true" />
           <input
             autoFocus
             type="text"
             role="combobox"
             aria-expanded="true"
             aria-controls="catalogue-results"
-            placeholder="Search the archive — titles, authors, issues"
+            aria-autocomplete="list"
+            aria-activedescendant={current ? `catalogue-option-${active}` : undefined}
+            aria-label="Search papers, authors, issues"
+            placeholder="Search papers, authors, issues"
+            autoComplete="off"
+            spellCheck={false}
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
               setActive(0);
             }}
             onKeyDown={onKeyDown}
-            // The combobox pattern: focus never leaves the field, so the
-            // ACTIVE option has to be named here or a screen-reader user
-            // arrowing through the drawer hears nothing move.
-            aria-activedescendant={
-              entries[active] ? `catalogue-option-${active}` : undefined
-            }
-            aria-autocomplete="list"
-            className="h-14 w-full bg-transparent text-[1.0625rem] text-ink outline-none focus-visible:outline-none placeholder:text-muted-fg"
           />
+          <kbd className="kbd">esc</kbd>
         </div>
 
-        <ul
-          id="catalogue-results"
-          role="listbox"
-          ref={listRef}
-          className="max-h-[min(26rem,55vh)] overflow-y-auto py-1.5"
-        >
-          {entries.length === 0 && (
-            <li className="px-5 py-8 text-center text-sm text-muted-fg">
-              {index === null
-                ? "Opening the drawer…"
-                : `Nothing in the catalogue matches “${query}”.`}
-            </li>
-          )}
-          {/* The <li> IS the option — no button inside it. Keyboard interaction
-              belongs to the input (aria-activedescendant above); a focusable
-              control per row would fight it and break the pattern. */}
-          {entries.map((entry, i) => (
-            <li
-              key={entry.key}
-              id={`catalogue-option-${i}`}
-              role="option"
-              aria-selected={i === active}
-              onMouseMove={() => setActive(i)}
-              onClick={() => go(entry)}
-            >
-              <span
-                className={`flex w-full cursor-pointer items-baseline gap-1 px-5 py-2.5 text-left transition-colors ${
-                  i === active ? "bg-accent-soft" : ""
-                }`}
-              >
-                <Diamond
-                  className={`mr-2 self-center transition-opacity ${
-                    i === active ? "text-gild opacity-100" : "opacity-0"
-                  }`}
-                />
-                <span className="min-w-0">
-                  <span
-                    className={`block truncate ${
-                      entry.kind === "place"
-                        ? "text-[0.9375rem] text-ink"
-                        : "font-serif text-[1.0625rem] leading-snug text-ink"
-                    }`}
-                  >
-                    {entry.title}
-                  </span>
-                  {entry.note && (
-                    <span className="mt-0.5 block truncate text-xs text-muted-fg">
-                      {entry.note}
-                    </span>
-                  )}
-                </span>
-                {/* Contents-leaf leaders: the drawer is a table of contents. */}
-                <span className="leader" aria-hidden="true" />
-                {entry.meta && (
-                  <span className="oldstyle-nums shrink-0 font-serif text-sm text-muted-fg">
-                    {entry.meta}
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="cmdk-body">
+          <div id="catalogue-results" role="listbox" aria-label="Results" ref={listRef} className="cmdk-list">
+            {flat.length === 0 && (
+              <div className="cmdk-empty">
+                {index === null ? null : emptyArt}
+                <span>{index === null ? "Opening the catalogue…" : "Nothing matches"}</span>
+              </div>
+            )}
+            {groups.map((group) => (
+              <div key={group.id} role="group" aria-labelledby={`catalogue-${group.id}`}>
+                <div id={`catalogue-${group.id}`} className="cmdk-group t-meta" role="presentation">
+                  {group.label}
+                </div>
+                {group.entries.map((entry) => {
+                  n += 1;
+                  const i = n;
+                  return (
+                    <div
+                      key={entry.key}
+                      id={`catalogue-option-${i}`}
+                      role="option"
+                      aria-selected={i === active}
+                      className="cmdk-row"
+                      onMouseMove={() => i !== active && setActive(i)}
+                      onClick={() => go(entry)}
+                    >
+                      <span className="lead">{entry.lead}</span>
+                      <span className="ttl">
+                        <Highlight text={entry.title} query={query} />
+                      </span>
+                      {entry.meta && <span className="mt">{entry.meta}</span>}
+                      <ArrowRightIcon className="ar" aria-hidden="true" />
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
 
-        <p className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-rule bg-canvas px-5 py-2.5 text-[0.6875rem] uppercase tracking-[0.1em] text-muted-fg">
-          <span>↑ ↓ to move</span>
-          <span>↵ to open</span>
-          <span>esc to close</span>
-          <span className="ml-auto hidden sm:inline">/ opens this drawer</span>
-        </p>
+          {/* Visual only: the same facts are in the option's own text. */}
+          <aside className="cmdk-preview" aria-hidden="true">
+            {current?.paper && (
+              <>
+                {current.paper.issue && (
+                  <p className="pv-eyebrow">
+                    <PlateChip number={current.paper.issue.number} label={current.paper.issue.label} />
+                    <span className="t-meta">
+                      <No /> {current.paper.issue.number} · {current.paper.issue.label}
+                    </span>
+                  </p>
+                )}
+                <p className="pv-title">{current.paper.title}</p>
+                <p className="pv-authors">{current.paper.authors}</p>
+                {current.paper.snippet && <p className="pv-snippet">{current.paper.snippet}</p>}
+                {current.paper.date && <p className="t-meta mt-4">{formatShortDate(current.paper.date)}</p>}
+              </>
+            )}
+            {current?.issue && (
+              <>
+                <p className="pv-eyebrow">
+                  <PlateChip number={current.issue.number} label={current.issue.label} />
+                  <span className="t-meta">{current.meta}</span>
+                </p>
+                <p className="pv-title">{current.issue.label}</p>
+                <ul className="pv-list">
+                  {(index?.papers ?? [])
+                    .filter((paper) => paper.issue?.number === current.issue!.number)
+                    .slice(0, 5)
+                    .map((paper) => (
+                      <li key={paper.slug}>{paper.title}</li>
+                    ))}
+                </ul>
+              </>
+            )}
+            {current?.page && (
+              <>
+                <p className="pv-title">{current.page.title}</p>
+                <p className="pv-snippet">{current.page.note}</p>
+              </>
+            )}
+            {current && <p className="pv-open t-micro">↵ to open</p>}
+          </aside>
+        </div>
+
+        <p className="cmdk-foot t-micro">↑↓ move · ↵ open · esc close</p>
       </dialog>
     </>
   );

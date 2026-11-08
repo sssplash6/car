@@ -1,192 +1,92 @@
-import Image from "next/image";
-import Link from "next/link";
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import { COPY } from "@/lib/content";
-import { PUBLISHER_NAME, REGION_COUNTRIES } from "@/lib/site";
-import { aboutSuzani } from "@/lib/regionalImages";
-import { InkSet } from "@/app/_components/InkSet";
-import { Reveal } from "@/app/_components/Reveal";
-import {
-  Diamond,
-  IkatDivider,
-  RosetteGrand,
-} from "@/app/_components/Ornament";
+import { REGION_COUNTRIES } from "@/lib/site";
+import { Drawing } from "@/app/_components/illustrations/Drawing";
+import { Reveal } from "@/app/_components/motion/Reveal";
+import { StickySequence } from "@/app/_components/motion/StickySequence";
+import { Button } from "@/app/_components/ui/Button";
+import { HeadlineStack } from "@/app/_components/ui/HeadlineStack";
+import { Band, Card } from "@/app/_components/ui/Surfaces";
 
 export const metadata: Metadata = {
   title: "About",
   description:
-    "About Central Asian Review: scope, masthead, and guidance for contributors.",
+    "About Central Asian Review: what it covers, how a paper reaches a reader, and guidance for contributors and readers.",
   alternates: { canonical: "/about" },
 };
 
-// Copy lives in src/lib/content.ts. There is deliberately no masthead section:
-// a masthead signed by placeholder names reads as fabricated, which is worse
-// than a young review having none — add it back only with real names.
-//
-// No eyebrows on this page: the homepage already spends the page-level budget, and
-// each section here has a real heading doing the same job. The label-left,
-// body-right split is its own layout family, distinct from anything on the
-// homepage. Ornament budget: one ikat threshold and the gild lozenges on the
-// coverage list — the header stays plain so the words carry it.
+// About (DESIGN.md §9.5): one paragraph on what the review is, the one
+// scroll-bound drawing on the site (a tulip growing through the three steps a
+// paper takes), the region in a drawing and in its own languages, and the two
+// doors: for contributors and for readers. Deliberately no masthead until real
+// editor names exist.
 export default function AboutPage() {
-  const { main, process, submissions } = COPY.about;
+  const { main, processLabel, process, coverage, contributors, readers } = COPY.about;
+  const section = { marginTop: "var(--section)" } as CSSProperties;
 
   return (
     <>
-      {/* The device at dome scale: the shanyrak as you actually see it —
-          overhead, architectural, cropped by the page edge so it reads as
-          structure rather than a sticker. rule-strong keeps it
-          sub-ornamental in both schemes. */}
-      <header className="relative overflow-hidden bg-surface">
-        <RosetteGrand className="pointer-events-none absolute -right-24 -top-32 size-[30rem] text-rule-strong opacity-60 max-lg:hidden" />
-        <div className="relative mx-auto w-full max-w-4xl px-6 pb-16 pt-16">
-          <Reveal load flat>
-            <h1 className="display-flush max-w-2xl font-serif text-[clamp(2.75rem,1.6rem+4.2vw,4.75rem)] leading-[1.02] tracking-tight text-ink">
-              <InkSet text={main.title} />
-            </h1>
-          </Reveal>
-        </div>
+      <header className="wrap page-top">
+        <HeadlineStack align="center" size="h1" rise="load" rule title={main.title} lede={main.lede} />
       </header>
-      {/* The deckle: where the raised surface ends and the paper field begins,
-          the edge is TORN rather than ruled. One masked strip, the site's only
-          use of it — a hand-made edge everywhere would be a texture, not an
-          edge. */}
-      <div
-        aria-hidden="true"
-        className="deckle-top -mt-px h-3 bg-surface"
-      />
 
-      <div className="mx-auto w-full max-w-4xl px-6">
-        <div className="grid gap-10 py-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
-          <p className="prose-plain max-w-[60ch] text-[1.0625rem] leading-[1.75] text-ink-soft">
-            {main.body}
-          </p>
-          {/* Mounted like the plates elsewhere on the site, so the About page
-              speaks the same museum language as the papers. Named slots carry
-              their provenance visibly (public/regional/CREDITS.md). */}
-          <figure className="self-start border border-rule-strong bg-surface p-1.5">
-            <div className="relative aspect-4/5 w-full overflow-hidden">
-              <Image
-                src={aboutSuzani}
-                alt="Silk suzani embroidery from Bukhara"
-                fill
-                placeholder="blur"
-                sizes="(max-width: 1024px) 100vw, 34vw"
-                className="object-cover"
-              />
-            </div>
-            <figcaption className="px-1 pb-0.5 pt-2 text-xs leading-relaxed text-muted-fg">
-              Suzani embroidery, Bukhara · Doris Duke Foundation for Islamic Art
-            </figcaption>
-          </figure>
-        </div>
-
-        <Reveal flat>
-          <IkatDivider className="rule-draw text-tile" />
+      <div className="wrap-narrow about-body">
+        <Reveal>
+          <p className="t-read">{main.body}</p>
         </Reveal>
+      </div>
 
-        {/* ---- How a paper reaches a reader ----
-             The second audience for this page is an author deciding whether the
-             venue is worth their work, and the thing they need is the actual
-             route from PDF to citation. Set as a numbered register in oldstyle
-             figures rather than a row of icon cards: the numbers ARE the
-             sequence, and a card grid is exactly the SaaS grammar the brand
-             lists as an anti-reference. Every claim here is one the code and
-             the editorial process can keep — an editor reads submissions; this
-             is not peer review and must never be dressed as it. */}
-        <Reveal flat className="block py-12">
-          <h2 className="font-serif text-2xl leading-tight text-ink">
-            How a paper reaches a reader
+      <section className="wrap" style={section} aria-labelledby="process-label">
+        <h2 id="process-label" className="t-meta">
+          {processLabel}
+        </h2>
+        <StickySequence steps={process} label={processLabel} />
+      </section>
+
+      <Band className="coverage mt-[var(--section)]" aria-labelledby="coverage-label">
+        <div className="wrap">
+          <h2 id="coverage-label" className="t-meta">
+            {coverage.label}
           </h2>
-          <ol className="mt-8 grid gap-x-10 gap-y-9 sm:grid-cols-3">
-            {process.map((step, i) => (
-              <li
-                key={step.title}
-                className="folio-row border-t border-rule-strong pt-4"
-                style={{ "--i": i } as React.CSSProperties}
-              >
-                <p className="oldstyle-nums font-serif text-3xl leading-none text-muted-fg">
-                  {String(i + 1).padStart(2, "0")}
-                </p>
-                <h3 className="mt-3 font-serif text-xl leading-snug text-ink">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-[0.9375rem] leading-relaxed text-ink-soft">
-                  {step.body}
-                </p>
+          {/* Amu Darya and Syr Darya running to the Aral's 1960 shoreline. */}
+          <Drawing name="rivers" size="hero" draw="view" stagger={120} />
+          <Reveal as="ul" gesture="rows" className="coverage-names">
+            {REGION_COUNTRIES.map((country, i) => (
+              <li key={country.lang} style={{ "--i": i } as CSSProperties}>
+                <span className="t-h4 block">{country.en}</span>
+                <span lang={country.lang}>{country.native}</span>
               </li>
             ))}
-          </ol>
-        </Reveal>
+          </Reveal>
+          <p className="t-body mt-8 text-ink-3">{coverage.note}</p>
+        </div>
+      </Band>
 
-        <div className="border-t border-rule" />
-
-        {/* id + scroll-mt: the homepage's "Guidance for contributors" link
-            lands here, not at the top of the page. */}
-        <Reveal className="py-12">
-          <div
-            id="contributors"
-            className="grid scroll-mt-6 gap-8 sm:grid-cols-[14rem_1fr] sm:gap-12"
-          >
-            <h2 className="font-serif text-2xl leading-tight text-ink">
-              {submissions.title}
+      <div className="wrap page-end" style={section}>
+        <Reveal className="doors-pair">
+          <Card kind="bordered" as="section" id="contributors" aria-labelledby="contributors-title">
+            <h2 id="contributors-title" className="t-h3">
+              {contributors.title}
             </h2>
-            <div>
-              <p className="prose-plain max-w-[52ch] leading-[1.75] text-ink-soft">
-                {submissions.body}
-              </p>
-              <Link
-                href="/submit"
-                className="mt-6 inline-block rounded bg-accent px-5 py-2.5 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
-              >
-                Submit a paper
-              </Link>
+            <p className="t-body mt-3">{contributors.body}</p>
+            <div className="actions">
+              <Button variant="primary" size="md" href="/submit">
+                {contributors.action}
+              </Button>
             </div>
-          </div>
-        </Reveal>
-
-        <Reveal className="border-t border-rule py-12">
-          <div className="grid gap-8 sm:grid-cols-[14rem_1fr] sm:gap-12">
-            <h2 className="font-serif text-2xl leading-tight text-ink">Coverage</h2>
-            <div>
-              {/* Placeholder region list from lib/site.ts. Confirm the framing
-                  with the editors before treating it as final. Each country is
-                  also named in its own language: lang= is markup, not
-                  decoration — it tells assistive technology which voice to read
-                  the name in. */}
-              <ul className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                {REGION_COUNTRIES.map((country) => (
-                  <li key={country.en} className="flex items-baseline gap-2.5">
-                    <Diamond className="self-center text-gild" />
-                    <span className="text-ink-soft">{country.en}</span>
-                    <span
-                      lang={country.lang}
-                      className="font-serif text-[0.9375rem] text-muted-fg"
-                    >
-                      {country.native}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+          </Card>
+          <Card kind="bordered" as="section" id="readers" aria-labelledby="readers-title">
+            <h2 id="readers-title" className="t-h3">
+              {readers.title}
+            </h2>
+            <p className="t-body mt-3">{readers.body}</p>
+            <div className="actions">
+              <Button variant="link" href="/papers">
+                {readers.action}
+              </Button>
             </div>
-          </div>
-        </Reveal>
-
-        {/* A manuscript ends with the scribe's tapering record. The TYPOGRAPHIC
-            colophon — what the thing is set in, how it is dated — now lives in
-            the footer on every page, so this one states the review's terms
-            instead: three lines, narrowing, each a promise the code keeps. */}
-        <Reveal className="border-t border-rule py-16 text-center">
-          <Diamond className="mx-auto size-2 text-gild" />
-          <div className="mx-auto mt-6 space-y-1.5 text-xs uppercase tracking-[0.14em] text-muted-fg">
-            <p className="mx-auto max-w-md">
-              Independent, published quarterly by {PUBLISHER_NAME}
-            </p>
-            <p className="mx-auto max-w-xs">
-              Every submission read in full by an editor
-            </p>
-            <p>Free to read · free to submit</p>
-          </div>
+          </Card>
         </Reveal>
       </div>
     </>

@@ -1,16 +1,17 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { GoogleLogoIcon } from "@phosphor-icons/react/dist/ssr";
-import { Corners } from "@/app/_components/Ornament";
 import { siteUrl } from "@/lib/site";
+import { COPY } from "@/lib/content";
 import { googleEnabled } from "@/auth.config";
 import { devLoginEnabled } from "@/auth";
 import { signInAsDev, signInWithGoogle } from "@/app/_actions/auth";
+import { Notice } from "@/app/_components/ui/Feedback";
+import { Mark } from "@/app/_components/ui/Mark";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  // Nothing here is worth indexing, and a sign-in page ranking for the site name
-  // is actively unhelpful.
+  // Nothing here is worth indexing.
   robots: { index: false, follow: false },
 };
 
@@ -31,45 +32,34 @@ function safePath(raw: string | undefined): string | undefined {
     const url = new URL(raw);
     if (url.origin === siteUrl()) return url.pathname + url.search;
   } catch {
-    // Not a URL at all — fall through to undefined.
+    // Not a URL at all — fall through.
   }
   return undefined;
 }
 
+// Sign in (DESIGN.md §9.6): one card, one primary action. Continuing with
+// Google creates the account; there is no separate registration, and the card
+// says so.
 export default async function LoginPage({ searchParams }: PageProps) {
   const { next: rawNext, callbackUrl, error } = await searchParams;
-  // Without this, the proxy's round trip loses the destination: a reader sent
-  // here from /submit signed in and landed somewhere else entirely.
+  // Without this the proxy's round trip loses the destination.
   const next = safePath(rawNext) ?? safePath(callbackUrl);
+  const copy = COPY.login;
 
   return (
-    <div className="mx-auto w-full max-w-md px-6 py-16">
-      {/* A doorway, so it gets the frame: the same treatment as the gated
-          download panel, because both mark the same threshold. */}
-      {/* The illumination corners alone frame the doorway. No Rosette here:
-          the device belongs to the masthead 150px above, and repeating it
-          demotes it from device to decoration (DESIGN.md placement rule). */}
-      <div className="relative border border-rule-strong bg-surface p-8 sm:p-10">
-        <Corners className="text-gild" />
-        <h1 className="display-flush font-serif text-[2.5rem] leading-tight tracking-tight text-ink">
-          Sign in
-        </h1>
-        <p className="mt-4 leading-relaxed text-ink-soft">
-          Abstracts are free to read without an account. Sign in to download
-          full papers or to submit your own work. New here? Continuing with
-          Google creates your account; there is no separate registration.
-        </p>
+    <div className="wrap page-top page-end">
+      <div className="login-card settle-load">
+        <Mark size={32} draw="load" delay={200} />
+        <h1 className="t-h2 mt-6">{copy.title}</h1>
+        <p className="t-body mt-3">{copy.body}</p>
 
         {error && (
-          <p
-            role="alert"
-            className="mt-7 rounded border border-state-bad/40 bg-surface px-4 py-3 text-sm text-state-bad"
-          >
+          <Notice tone="bad" className="mt-6">
             That sign-in attempt did not complete. Please try again.
-          </p>
+          </Notice>
         )}
 
-        <div className="mt-9 border-t border-rule pt-9">
+        <div className="mt-8">
           {googleEnabled ? (
             <form
               action={async () => {
@@ -77,74 +67,63 @@ export default async function LoginPage({ searchParams }: PageProps) {
                 await signInWithGoogle(next);
               }}
             >
-              <button
-                type="submit"
-                className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded bg-accent px-4 py-3 text-sm font-medium text-surface press-ink hover:bg-accent-dark"
-              >
-                <GoogleLogoIcon size={17} weight="bold" aria-hidden="true" />
-                Continue with Google
+              <button type="submit" className="btn btn-primary btn-lg w-full">
+                <GoogleLogoIcon weight="bold" aria-hidden="true" />
+                {copy.google}
               </button>
             </form>
           ) : (
-            // A configuration problem, not a user error, so say so plainly rather
-            // than rendering a button that dead-ends on Google's error page.
-            <p className="rounded border border-state-warn/40 bg-surface px-4 py-3 text-sm text-state-warn">
-              Google sign-in is not configured on this deployment. Set
-              AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET.
-            </p>
-          )}
-
-          {/* Local testing only. This block cannot render off localhost: see the
-              double guard on devLoginEnabled in src/auth.ts. */}
-          {devLoginEnabled && (
-            <div className="mt-8 rounded border border-dashed border-state-warn/50 p-4">
-              <p className="text-xs font-medium text-state-warn">
-                Dev login, localhost only
-              </p>
-              <p className="mt-1.5 text-xs leading-relaxed text-muted-fg">
-                Bypasses Google entirely. The editor account is promoted through the
-                real ADMIN_EMAILS path, so it only works if that address is listed.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2.5">
-                <form
-                  action={async () => {
-                    "use server";
-                    await signInAsDev("reader");
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink press-ink hover:border-accent hover:text-accent"
-                  >
-                    Continue as reader
-                  </button>
-                </form>
-                <form
-                  action={async () => {
-                    "use server";
-                    await signInAsDev("admin");
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="cursor-pointer rounded border border-rule-strong px-3 py-1.5 text-sm text-ink press-ink hover:border-accent hover:text-accent"
-                  >
-                    Continue as editor
-                  </button>
-                </form>
-              </div>
-            </div>
+            // A configuration problem, not a user error, so say so plainly
+            // rather than render a button that dead-ends on Google's error page.
+            <Notice tone="warn" role="none">
+              Google sign-in is not configured on this deployment. Set AUTH_GOOGLE_ID and
+              AUTH_GOOGLE_SECRET.
+            </Notice>
           )}
         </div>
-      </div>
 
-      <p className="mt-8 text-sm text-muted-fg">
-        Just here to read?{" "}
-        <Link href="/papers" className="text-accent hover:text-accent-dark">
-          Browse the papers
-        </Link>
-        .
-      </p>
+        {/* Local testing only. Cannot render off localhost: see the double
+            guard on devLoginEnabled in src/auth.ts. */}
+        {devLoginEnabled && (
+          <div>
+            <p className="or-rule t-meta">{copy.devLabel}</p>
+            <p className="t-ui-sm mt-3 text-ink-3">
+              Bypasses Google entirely. The editor account is promoted through the real
+              ADMIN_EMAILS path, so it only works if that address is listed.
+            </p>
+            <div className="actions mt-4">
+              <form
+                action={async () => {
+                  "use server";
+                  await signInAsDev("reader");
+                }}
+              >
+                <button type="submit" className="btn btn-secondary btn-md">
+                  Continue as reader
+                </button>
+              </form>
+              <form
+                action={async () => {
+                  "use server";
+                  await signInAsDev("admin");
+                }}
+              >
+                <button type="submit" className="btn btn-secondary btn-md">
+                  Continue as editor
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <p className="t-micro mt-8">
+          By continuing you accept the{" "}
+          <Link href="/privacy" className="prose-link">
+            privacy notice
+          </Link>
+          .
+        </p>
+      </div>
     </div>
   );
 }

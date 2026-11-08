@@ -1,99 +1,141 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useSyncExternalStore, type MouseEvent } from "react";
 import { DesktopIcon, MoonIcon, SunIcon } from "@phosphor-icons/react/dist/ssr";
+import { cx } from "@/app/_components/ui/cx";
 
-// Reader's theme control: follow the device, or pin the paper light or dark.
-// A reading site is used in bed and in libraries, so the choice belongs to the
-// reader, not only to the OS.
-//
-// The choice lives in localStorage and is applied before first paint by the
-// inline script in layout.tsx; this button only has to keep the attribute and
-// the storage in sync after a click. Cycles system → dark → light, one quiet
-// icon button — chrome, not ceremony.
+// The reader's theme. Two controls share one store:
+//   ThemeToggle — the header's sun/moon: flips what you see, light ↔ dark.
+//   ThemeSelect — System · Light · Dark, in the footer and the mobile menu,
+//                 for going back to following the device.
+// The choice lives in localStorage ("theme") and is applied pre-paint by
+// layout.tsx; html[data-theme] is the single source of truth, read here as an
+// external store. The switch itself spreads outward from the click as a
+// circle (a typed "theme" view transition; reduced motion flips instantly).
 
-type Mode = "system" | "light" | "dark";
+export type ThemeMode = "system" | "light" | "dark";
 
-const NEXT: Record<Mode, Mode> = { system: "dark", dark: "light", light: "system" };
-
-const LABEL: Record<Mode, string> = {
-  system: "Theme follows your device",
-  dark: "Dark theme",
-  light: "Light theme",
-};
-
-// The html[data-theme] attribute is the single source of truth (the pre-paint
-// script sets it from localStorage before React exists), so the component
-// reads it as an external store rather than mirroring it into state.
 function subscribe(onChange: () => void) {
   const observer = new MutationObserver(onChange);
   observer.observe(document.documentElement, { attributeFilter: ["data-theme"] });
-  return () => observer.disconnect();
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", onChange);
+  return () => {
+    observer.disconnect();
+    media.removeEventListener("change", onChange);
+  };
 }
 
-function getSnapshot(): Mode {
+function getMode(): ThemeMode {
   const t = document.documentElement.getAttribute("data-theme");
   return t === "light" || t === "dark" ? t : "system";
 }
 
-export function ThemeToggle() {
-  // Server snapshot is "system": the server cannot read localStorage. The icon
-  // corrects itself right after hydration for readers who pinned a theme; the
-  // page colours never flash, because the pre-paint script already ran.
-  const mode = useSyncExternalStore(subscribe, getSnapshot, (): Mode => "system");
+function getScheme(): "light" | "dark" {
+  const mode = getMode();
+  if (mode !== "system") return mode;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
-  function cycle() {
-    const next = NEXT[mode];
-    try {
-      if (next === "system") localStorage.removeItem("theme");
-      else localStorage.setItem("theme", next);
-    } catch {
-      // Storage can be unavailable (private mode); the attribute still works
-      // for this page view.
-    }
+export function useThemeMode() {
+  return useSyncExternalStore(subscribe, getMode, (): ThemeMode => "system");
+}
 
-    const apply = () => {
-      if (next === "system") {
-        document.documentElement.removeAttribute("data-theme");
-      } else {
-        document.documentElement.setAttribute("data-theme", next);
-      }
-    };
+function useScheme() {
+  return useSyncExternalStore(subscribe, getScheme, (): "light" | "dark" => "light");
+}
 
-    // The site's one new ceremony: day/night on a manuscript is a physical
-    // event, so the paper cross-fades (tuned in globals.css) while the woven
-    // chrome — identical in both modes — holds still. Reader-initiated and
-    // rare, which is what earns it motion; everyone else gets the plain flip.
-    //
-    // Typed "theme" so the fade CSS cannot leak onto route transitions
-    // (which are deliberate cuts). The object form is newer than
-    // startViewTransition itself, hence the fallback chain.
-    if (
-      "startViewTransition" in document &&
-      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      try {
-        document.startViewTransition({ update: apply, types: ["theme"] });
-      } catch {
-        document.startViewTransition(apply);
-      }
-    } else {
-      apply();
-    }
+/** Where the circle starts: the pointer, or the control's centre for keys. */
+function originOf(event: MouseEvent<HTMLElement>) {
+  if (event.clientX || event.clientY) return { x: event.clientX, y: event.clientY };
+  const r = event.currentTarget.getBoundingClientRect();
+  return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+}
+
+export function setTheme(next: ThemeMode, origin?: { x: number; y: number }) {
+  try {
+    if (next === "system") localStorage.removeItem("theme");
+    else localStorage.setItem("theme", next);
+  } catch {
+    // Storage unavailable (private mode): the attribute still works.
   }
 
-  const Icon =
-    mode === "dark" ? MoonIcon : mode === "light" ? SunIcon : DesktopIcon;
+  const apply = () => {
+    if (next === "system") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", next);
+  };
+
+  if (
+    !("startViewTransition" in document) ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  ) {
+    apply();
+    return;
+  }
+
+  let transition: ViewTransition;
+  try {
+    // Typed, so the circle CSS never leaks onto route transitions.
+    transition = document.startViewTransition({ update: apply, types: ["theme"] });
+  } catch {
+    transition = document.startViewTransition(apply);
+  }
+  if (!origin) return;
+  transition.ready
+    .then(() => {
+      const { x, y } = origin;
+      const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        { duration: 560, easing: "cubic-bezier(.65,0,.35,1)", pseudoElement: "::view-transition-new(root)" },
+      );
+    })
+    .catch(() => {});
+}
+
+export function ThemeToggle({ className }: { className?: string }) {
+  const scheme = useScheme();
+  const next = scheme === "dark" ? "light" : "dark";
+  const label = `Switch to ${next} theme`;
 
   return (
     <button
       type="button"
-      onClick={cycle}
-      aria-label={`${LABEL[mode]}. Switch to ${LABEL[NEXT[mode]].toLowerCase()}`}
-      title={LABEL[mode]}
-      className="press-ink flex size-9 cursor-pointer items-center justify-center rounded text-muted-fg hover:bg-accent-soft hover:text-accent"
+      onClick={(event) => setTheme(next, originOf(event))}
+      className={cx("icon-btn theme-toggle", className)}
+      aria-label={label}
+      title={label}
     >
-      <Icon size={19} weight="regular" aria-hidden="true" />
+      {/* Which icon shows is CSS keyed to html[data-theme] and the device
+          preference, so it is right before hydration. */}
+      <SunIcon className="ic-sun" aria-hidden="true" />
+      <MoonIcon className="ic-moon" aria-hidden="true" />
     </button>
+  );
+}
+
+const OPTIONS: { mode: ThemeMode; label: string; Icon: typeof SunIcon }[] = [
+  { mode: "system", label: "System", Icon: DesktopIcon },
+  { mode: "light", label: "Light", Icon: SunIcon },
+  { mode: "dark", label: "Dark", Icon: MoonIcon },
+];
+
+export function ThemeSelect({ tone = "page", className }: { tone?: "page" | "door"; className?: string }) {
+  const mode = useThemeMode();
+  return (
+    <div role="radiogroup" aria-label="Theme" className={cx("theme-select", tone === "door" && "theme-select-door", className)}>
+      {OPTIONS.map(({ mode: option, label, Icon }) => (
+        <button
+          key={option}
+          type="button"
+          role="radio"
+          aria-checked={mode === option}
+          onClick={(event) => mode !== option && setTheme(option, originOf(event))}
+        >
+          <Icon aria-hidden="true" />
+          <span>{label}</span>
+        </button>
+      ))}
+    </div>
   );
 }
