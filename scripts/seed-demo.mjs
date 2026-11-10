@@ -21,7 +21,13 @@ import Database from "better-sqlite3";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
-process.loadEnvFile?.();
+// loadEnvFile throws ENOENT when there is no .env, which is the normal case on a
+// server (Render Shell, the VPS demo) where the env is already set.
+try {
+  process.loadEnvFile();
+} catch {
+  // No .env: use the environment as it is.
+}
 
 // Mirrors src/lib/storage.ts — keep the default in sync with it.
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? "var/uploads";
