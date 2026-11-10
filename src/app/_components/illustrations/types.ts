@@ -13,6 +13,22 @@ export type DrawingData = {
   /** Compass only: strokes from `from` onward, and every dot, form the needle
       group that settles to north around `origin`. */
   needle?: { from: number; origin: [number, number] };
+  /** Home horizon only: flat colour under the lines, painted in order (far to
+      near). `tone` names a `--wash-*` token; `at` is the stroke whose drawing
+      brings it in; `fade` swaps the flat fill for a linear gradient in
+      drawing units, each stop [offset, tone, opacity = 1]. */
+  washes?: Wash[];
+};
+
+export type Wash = {
+  d: string;
+  tone: string;
+  at: number;
+  fade?: {
+    from: [number, number];
+    to: [number, number];
+    stops: [number, string, number?][];
+  };
 };
 
 export type IllName =
@@ -25,7 +41,7 @@ export type IllName =
   | "silkworm"
   | "cotton"
   | "mark"
-  | "ridge"
+  | "horizon"
   | "sextant"
   | "rivers"
   | "compass";

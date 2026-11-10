@@ -11,7 +11,7 @@ The spec below was built as written, with these deliberate differences. Where
 this list and the spec disagree, this list describes the code.
 
 - **Drawings.** Construction lives in `scripts/illustrations.mjs`, which adds the hand wobble and writes `src/app/_components/illustrations/data/*.ts` (run `node scripts/illustrations.mjs --preview out.html` for a contact sheet). `scripts/illustration-prep.mjs` imports an editor-made SVG instead.
-  - `ridge` is the Tian Shan in profile (snow lines under three summits, foothills, a river and its delta), redrawn during the approved mock-up, not §5.4 #10's contour rings. `tulip`, `pomegranate` and `cotton` carry the mock-up's refinements.
+  - `horizon` (was `ridge`) is the home panorama; see "Owner's feedback" below. `tulip`, `pomegranate` and `cotton` carry the mock-up's refinements.
   - `leopard` has no tail (alone, it read as a stray squiggle) and is scaled up to fill the plate; the mouth is a cat's, not an arc.
   - `saiga` has a shorter neck and larger head; `silkworm` places the moth above the leaf (fill-none lines would cross); `apple` routes the branch above the fruit; `melon` is a torpedo on a diagonal.
 - **Favicon** (`icon.svg`): two rings and the dot, heavier strokes; three rings crowd at 16px.
@@ -33,6 +33,18 @@ this list and the spec disagree, this list describes the code.
 - **Drawn underlines.** Text links draw a hand-drawn wave under their words on hover or focus (`--wave` mask); prose links keep a quiet straight underline at rest.
 - **Submissions** show a track per paper: Submitted → Under review → Decision (`ui/SubmissionTrack.tsx`).
 - Smaller: "№" is set in the serif inside mono meta (`ui/Numero.tsx`); `--color-line-dot` is darker (`#c4b6a0` / `#6a6862`) so drawing dots are visible; About's 70vh steps tighten where scroll timelines are unsupported or motion is reduced; the shortcut hint reads Ctrl K off Apple devices; the Next.js dev badge is off (`devIndicators: false`).
+
+### Owner's feedback (2026-11-10)
+
+The owner liked the site and asked for the home illustration to show yurts and horses, and for a cover image that shows modernisation: yurts with wind turbines, trains and a modern skyline. The owner also asked to replace "Research on Central Asia" with "New Voices of Central Asia: Bringing the Soul of Central Asia to the World".
+
+- **Headline.** The home `h1` is the title "New Voices of Central Asia" plus a deck, "Bringing the Soul of Central Asia to the World", set on its own line inside the same heading (`HeadlineStack deck`, `.stack-deck`: serif, 22–36px, `ink-3`). Its words carry on the title's word rise. Screen readers and crawlers read "title: deck". The owner's capitalisation is kept. The headline is longer than the 9-word copy budget, at the owner's request. The lede is unchanged and sets on two lines at desktop width.
+- **`horizon` replaces `ridge`** (viewBox `1200 × 320`, 300px tall at desktop and 160px on phones, slice). Read left to right, it runs from tradition to modernity. The Tian Shan ridge and snow lines stay behind. On the steppe line at the left are three yurts (wall, domed roof, crown, belt, door; the big one has roof poles and smoke) and four horses, standing and grazing. On the right are three wind turbines (hub dots) and a new city of layered towers (slant, spire, round, sail, mast and a low dome). A high-speed trainset runs along a rail at the front, with its wheels as dots. Every motif appears in the middle 640 units, which is all a phone shows.
+- **Occlusion.** Lines are fill-none, so `scripts/illustrations.mjs` cuts each farther line where it passes behind a nearer shape (`occlude()`: closed silhouettes, or open strokes with a 4–5 unit pad). The ridge runs behind the yurts, horses, turbines and towers, and back towers stand behind front ones. Ridge pieces shorter than 28 units are dropped. Strokes carry their own wobble: 2.2 on the long lines, 0.7 on the figures.
+- **The subject rule (§5.1) changes for this one drawing:** yurts, horses, turbines, a train and buildings are allowed in `horizon` only. The issue plates keep the old rule. The PRODUCT.md limits still apply: no flags, no emblems, and no tower or dome a reader could attribute to one state.
+- Draw-in: 55 strokes and 15 dots, 34ms stagger (≈ 3s), so the scene builds from the mountains to the train. The parallax is unchanged (`horizon-drift`).
+- **Washes (colour under the line; second ask, same day: "slight colours, not too colourful").** `horizon` is the one drawing with fills: 33 flat shapes (`DrawingData.washes`, `[data-w]`) painted under the strokes, far to near. Each is opaque, so a nearer wash covers a farther one the way occlusion hides a farther line. Tints come from the plate palette (§3.3) mixed most of the way to the page, as `--wash-*` `light-dark()` pairs on `.ill[data-ill="horizon"]`. Snow-capped blue peaks fade to the page by the foothills. A pale sun has no outline. The steppe is a wheat strip between the ground line and the rail, fading out at both ends. Yurts have white felt walls, a warm roof and a terracotta door. The horses are chestnut, dun and grey. The city is glass in three blues (the far towers paler) and warm stone, with one turquoise dome. The train is white with a terracotta band and blue glass. Every wash is shifted 1.5 units down and right of its line, like a hand-tinted print. A wash fades in (900ms) as its motif's outline closes (`at` = that motif's last stroke; delay `at × stagger + 0.85 × dur-draw`). With reduced motion or no JS, washes are simply there. The accent rule (§3) is untouched: no wash uses `accent` or `accent-mark`.
+- **Hero spacing.** The home hero's top padding is 32–56px (not `--page-top`'s 48–96px) and the horizon's top margin is 32px, so on a 1440 × 900 viewport the whole drawing, train and rail included, sits above the fold.
 
 ---
 
@@ -405,7 +417,7 @@ Pairs sit 12px apart, primary first. md and sm get a 44px `::after` hit area on 
 
 ### 5.1 Language
 
-- **Subjects**: the region's land, water, crops, animals and sky-science. Never flags, emblems, yurts, buildings, people, maps with borders, or anything captioned as belonging to one country. A drawing names a species or a landform, never a state.
+- **Subjects**: the region's land, water, crops, animals and sky-science. Never flags, emblems, yurts, buildings, people, maps with borders, or anything captioned as belonging to one country. A drawing names a species or a landform, never a state. *(Exception, owner's direction 2026-11-10: the home `horizon` alone draws yurts, horses, wind turbines, a train and a generic skyline. See Implementation notes.)*
 - **Line**: one weight, `stroke-linecap: round; stroke-linejoin: round; fill: none`. Every "straight" stroke is a cubic with 2–3 interior nodes offset ≤ 1.5 units (hand wobble); terminals stay slightly open; no hatching, no outlines of outlines. A naturalist's field sketch, not an icon.
 - **Dots**: 3–9 small filled circles per drawing (seeds, stamens, eyes, settlements), `fill: var(--dot)`, no stroke. They appear after the lines.
 - **Colour** (`tone` prop sets `color` and `--dot` on the `<svg>`):
@@ -1519,7 +1531,7 @@ Each page task: import only from `ui/`, `illustrations/`, `motion/`, `TitleCarry
 - [ ] I3. All 13 drawings exist and render in `/design`; at every size the rendered stroke measures 1.5–2px (DevTools, zoom 100%) with round caps.
 - [ ] I4. With JS disabled every drawing is complete on first paint; with JS, below-fold drawings draw on (≤ 2.2s, dots last) the first time they enter.
 - [ ] I5. Hovering a plate (mouse) scales it 1.016, re-inks its strokes and turns its dots terracotta; on touch nothing hover-only happens.
-- [ ] I6. No flag, emblem, yurt, building, person, map border, girih, ikat, arch, gold, shelf, spine or photograph exists in `src/` or the rendered site.
+- [ ] I6. No flag, emblem, yurt, building, person, map border, girih, ikat, arch, gold, shelf, spine or photograph exists in `src/` or the rendered site. (Except the home `horizon`'s yurts, turbines, train and skyline, by the owner's direction of 2026-11-10.)
 - [ ] I7. Rows carry no glyph/thumbnail; `/papers` rows show a 20 × 26 issue chip.
 
 **Motion**

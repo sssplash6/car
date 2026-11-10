@@ -85,6 +85,7 @@ export default async function HomePage() {
           }
           eyebrowHref={current ? issueHref : undefined}
           title={hero.title}
+          deck={hero.deck}
           lede={hero.body}
           actions={
             <>
@@ -99,16 +100,17 @@ export default async function HomePage() {
         />
       </section>
 
-      {/* The horizon: the Tian Shan in profile, drawn on first paint, drifting
-          40px over the first screen of scroll. Decorative. */}
+      {/* The horizon: the steppe camp under the Tian Shan, the turbines and
+          the new city, the train between them. Drawn on first paint, left to
+          right, drifting 40px over the first screen of scroll. Decorative. */}
       <div className="wrap">
-        <div className="ridge-wrap">
+        <div className="horizon-wrap">
           <Drawing
-            name="ridge"
+            name="horizon"
             size="hero"
             draw="load"
             delay={200}
-            stagger={60}
+            stagger={34}
             preserveAspectRatio="xMidYMid slice"
           />
         </div>

@@ -72,6 +72,52 @@ export function DrawingFrom({
     />
   ));
 
+  // Washes: colour under the line, faded in as each motif's outline closes.
+  // A fade is a userSpace gradient whose stops read the same tokens, so it
+  // follows the colour scheme like everything else.
+  const washes = data.washes?.length ? (
+    <>
+      <defs>
+        {data.washes.map((w, i) =>
+          w.fade ? (
+            <linearGradient
+              key={i}
+              id={`${name}-wash-${i}`}
+              gradientUnits="userSpaceOnUse"
+              x1={w.fade.from[0]}
+              y1={w.fade.from[1]}
+              x2={w.fade.to[0]}
+              y2={w.fade.to[1]}
+            >
+              {w.fade.stops.map(([offset, tone, opacity = 1]) => (
+                <stop
+                  key={offset}
+                  offset={offset}
+                  style={{ stopColor: `var(--wash-${tone})`, stopOpacity: opacity }}
+                />
+              ))}
+            </linearGradient>
+          ) : null,
+        )}
+      </defs>
+      <g data-washes="">
+        {data.washes.map((w, i) => (
+          <path
+            key={`w${i}`}
+            d={w.d}
+            data-w=""
+            style={
+              {
+                fill: w.fade ? `url(#${name}-wash-${i})` : `var(--wash-${w.tone})`,
+                "--i": w.at,
+              } as CSSProperties
+            }
+          />
+        ))}
+      </g>
+    </>
+  ) : null;
+
   let body: ReactNode;
   if (data.needle) {
     const [ox, oy] = data.needle.origin;
@@ -87,6 +133,7 @@ export function DrawingFrom({
   } else {
     body = (
       <>
+        {washes}
         {paths}
         {dots}
       </>

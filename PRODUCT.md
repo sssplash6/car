@@ -39,7 +39,10 @@ DESIGN.md.
   columns and nothing else. (This was the site's own v1; the rework exists
   because it read as institutional-anonymous.)
 - Tourist-bazaar kitsch: ornament on every element, literal photo collages of
-  yurts and flags. Ornament belongs at boundaries and beginnings.
+  yurts and flags. Ornament belongs at boundaries and beginnings. (The home
+  horizon does draw yurts and horses beside wind turbines, a train and a new
+  city, at the owner's request (2026-11-10). It uses the same single line, and
+  no photographs.)
 - SaaS template energy: hero-metric blocks, icon-card grids, gradient text.
 - National symbolism used carelessly: no flags, no state emblems, no motif
   captioned as belonging to a specific country. Geometry is shared heritage;
@@ -54,4 +57,7 @@ DESIGN.md.
    marketed to. Motion resolves and settles; nothing loops, nothing bounces.
 3. **The review is bilingual in spirit** — the region is the subject, not a
    backdrop. Ornament is one hand-drawn line of the region's nature and
-   science, never its flags, buildings or costume.
+   science, never its flags, emblems or costume. The home horizon is the one
+   exception: there the line draws the region as it lives now, with yurts and
+   horses, wind turbines, a train and a new city. Nothing in it is a landmark
+   of one state.

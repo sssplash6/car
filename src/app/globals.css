@@ -1071,6 +1071,32 @@
   .ill .summit {
     fill: var(--color-accent-mark);
   }
+  /* Washes (home horizon, owner's request 2026-11-10): pale flat colour under
+     the line, drawn from the plate palette (§3.3) and mixed most of the way
+     to the page, so the line still leads. Opaque, painted far to near. */
+  .ill[data-ill="horizon"] {
+    --wash-sun: light-dark(#f7e0c9, #3a2d22);
+    --wash-hills: light-dark(#d8e2ee, #222d3a);
+    --wash-snow: light-dark(#ffffff, #3a4352);
+    --wash-steppe: light-dark(#f0e3c4, #302a1b);
+    --wash-felt: light-dark(#fdfbf6, #2b2a26);
+    --wash-roof: light-dark(#efe1c4, #3b3323);
+    --wash-door: light-dark(#e3aa92, #643c2c);
+    --wash-chestnut: light-dark(#ddae8f, #573a28);
+    --wash-dun: light-dark(#e8d2a8, #4a3f27);
+    --wash-grey: light-dark(#dcdcdc, #36373a);
+    --wash-glass: light-dark(#d2e0ee, #243446);
+    --wash-glass-2: light-dark(#c4d4e6, #2b3c50);
+    --wash-glass-far: light-dark(#e3e9f0, #1e2631);
+    --wash-stone: light-dark(#ece5d9, #302c26);
+    --wash-dome: light-dark(#a9d1c9, #2f5a52);
+    --wash-train: light-dark(#fdfcf9, #2a2a27);
+    --wash-livery: light-dark(#e3a58d, #6a3b29);
+    --wash-window: light-dark(#c8d8ea, #2a3d52);
+  }
+  .ill [data-w] {
+    stroke: none;
+  }
   @media (max-width: 767px) {
     .ill [data-s] {
       stroke-width: var(--sw-sm, var(--sw));
@@ -1082,7 +1108,8 @@
   [data-draw="pending"] [data-s] {
     stroke-dashoffset: 1.001;
   }
-  [data-draw="pending"] [data-d] {
+  [data-draw="pending"] [data-d],
+  [data-draw="pending"] [data-w] {
     opacity: 0;
   }
   [data-draw="in"] [data-s] {
@@ -1094,6 +1121,11 @@
       opacity 300ms var(--ease-out-quart)
         calc(var(--draw-delay, 0ms) + var(--draw-total, 1400ms) - 300ms),
       fill var(--dur-2);
+  }
+  /* a wash comes in as its motif's outline closes */
+  [data-draw="in"] [data-w] {
+    transition: opacity 900ms var(--ease-out-quart)
+      calc(var(--draw-delay, 0ms) + var(--i) * var(--stagger-path) + var(--dur-draw) * 0.85);
   }
   [data-needle] {
     transform-box: view-box;
@@ -1639,19 +1671,37 @@
   }
 
   /* ---------- home (§9.1) ---------- */
+  /* Tighter than --page-top (32 → 56px, not 48 → 96) since the deck line
+     came in: on a 1440 × 900 laptop the whole horizon, train included, sits
+     above the fold. */
   .hero {
-    padding-top: var(--page-top);
+    padding-top: clamp(2rem, 1.25rem + 2.5vw, 3.5rem);
   }
   .hero .stack-title {
     max-width: 22ch;
     margin-inline: auto;
+    text-wrap: balance;
   }
-  .ridge-wrap {
-    height: 280px;
-    margin: 48px 0 64px;
+  .hero .stack-lede {
+    max-width: 46ch;
+    text-wrap: balance;
+  }
+  /* The title's second clause, inside the h1: a quieter serif line. */
+  .stack-deck {
+    display: block;
+    margin-top: 0.5em;
+    font-size: clamp(1.375rem, 1.0536rem + 1.3333vw, 2.25rem);
+    line-height: 1.2;
+    letter-spacing: -0.012em;
+    color: var(--color-ink-3);
+    text-wrap: balance;
+  }
+  .horizon-wrap {
+    height: 300px;
+    margin: 32px 0 64px;
     overflow: hidden;
   }
-  .ridge-wrap .ill {
+  .horizon-wrap .ill {
     width: 100%;
     height: 100%;
   }
@@ -1696,7 +1746,7 @@
     gap: 16px;
   }
   @media (max-width: 1023px) {
-    .ridge-wrap {
+    .horizon-wrap {
       height: 220px;
     }
     .band-grid {
@@ -1709,8 +1759,8 @@
     }
   }
   @media (max-width: 767px) {
-    .ridge-wrap {
-      height: 150px;
+    .horizon-wrap {
+      height: 160px;
       margin-bottom: 48px;
     }
     .hero .stack-actions .btn {
@@ -3227,7 +3277,7 @@
     transform: translateY(2px);
   }
 }
-@keyframes ridge-drift {
+@keyframes horizon-drift {
   to {
     transform: translateY(-40px);
   }
@@ -3282,6 +3332,12 @@
     --dur-draw: 900ms;
     --stagger-path: 120ms;
   }
+  [data-draw-mode="load"] [data-w] {
+    animation: fade-in 900ms var(--ease-out-quart) both;
+    animation-delay: calc(
+      var(--draw-delay, 0ms) + var(--i) * var(--stagger-path) + var(--dur-draw) * 0.85
+    );
+  }
   [data-draw-mode="load"] [data-needle] {
     animation: needle 900ms var(--ease-out-quart) both;
     animation-delay: calc(var(--draw-delay, 0ms) + var(--draw-total, 1400ms));
@@ -3314,8 +3370,8 @@
    ====================================================================== */
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
-    .ridge-wrap .ill {
-      animation: ridge-drift linear both;
+    .horizon-wrap .ill {
+      animation: horizon-drift linear both;
       animation-timeline: scroll(root);
       animation-range: 0 100vh;
     }
@@ -3469,7 +3525,9 @@
     animation: none !important;
   }
   [data-draw] [data-d],
-  [data-draw-mode] [data-d] {
+  [data-draw-mode] [data-d],
+  [data-draw] [data-w],
+  [data-draw-mode] [data-w] {
     opacity: 1 !important;
     animation: none !important;
   }
@@ -3481,7 +3539,7 @@
     filter: none !important;
   }
   /* scroll timelines: zeroing durations does not neutralise them */
-  .ridge-wrap .ill,
+  .horizon-wrap .ill,
   .site-header,
   .sticky-seq [data-s],
   .sticky-seq [data-d],

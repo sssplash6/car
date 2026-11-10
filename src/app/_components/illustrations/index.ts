@@ -4,11 +4,11 @@ import type { DrawingData, IllName } from "./types";
 import { apple } from "./data/apple";
 import { compass } from "./data/compass";
 import { cotton } from "./data/cotton";
+import { horizon } from "./data/horizon";
 import { leopard } from "./data/leopard";
 import { mark } from "./data/mark";
 import { melon } from "./data/melon";
 import { pomegranate } from "./data/pomegranate";
-import { ridge } from "./data/ridge";
 import { rivers } from "./data/rivers";
 import { saiga } from "./data/saiga";
 import { sextant } from "./data/sextant";
@@ -25,7 +25,7 @@ export const DRAWINGS: Record<IllName, DrawingData> = {
   silkworm,
   cotton,
   mark,
-  ridge,
+  horizon,
   sextant,
   rivers,
   compass,

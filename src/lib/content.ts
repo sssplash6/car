@@ -12,7 +12,9 @@
 export const COPY = {
   home: {
     hero: {
-      title: "Research on Central Asia, read with care",
+      // The owner's line (2026-11-10): one h1, read as "title: deck".
+      title: "New Voices of Central Asia",
+      deck: "Bringing the Soul of Central Asia to the World",
       body: "An independent, edited review of the region's politics, economies and societies.",
       primary: "Read the issue",
       secondary: "Submit a paper",

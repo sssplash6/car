@@ -31,6 +31,7 @@ export function HeadlineStack({
   eyebrow,
   eyebrowHref,
   title,
+  deck,
   titleAs = "h1",
   titleId,
   size,
@@ -46,6 +47,8 @@ export function HeadlineStack({
   eyebrow?: ReactNode;
   eyebrowHref?: string;
   title: string;
+  /** The title's second clause, set under it inside the same heading. */
+  deck?: string;
   titleAs?: "h1" | "h2" | "p";
   titleId?: string;
   size: "display" | "h1" | "title" | "h2";
@@ -68,6 +71,7 @@ export function HeadlineStack({
         as={titleAs}
         id={titleId}
         text={title}
+        deck={deck}
         mode={load ? "load" : "view"}
         blur={blur}
         className={titleClass}
@@ -75,6 +79,12 @@ export function HeadlineStack({
     ) : (
       <Title id={titleId} className={cx(titleClass, load && "rise-load")} style={load ? d(60) : undefined}>
         {title}
+        {deck && (
+          <>
+            <span className="sr-only">: </span>
+            <span className="stack-deck">{deck}</span>
+          </>
+        )}
       </Title>
     );
 

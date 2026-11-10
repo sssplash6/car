@@ -229,6 +229,128 @@ function place(cx, cy, rotDeg = 0) {
 }
 const segOf = (d) => parse(d)[0].segs[0];
 
+// ---------- occlusion (the home horizon) ----------
+// Lines are fill-none, so a nearer shape cannot hide a farther line by paint.
+// Instead the farther line is cut where it passes behind: every cubic is
+// sampled, the hidden stretches found (inside a closed silhouette, or within
+// `pad` of an open one), and the visible stretches kept as exact sub-cubics.
+
+/** Polyline of a construction path (all its subpaths, joined). */
+function polyOf(d, n = 24) {
+  const pts = [];
+  for (const s of parse(d)) for (const seg of s.segs) for (let i = 0; i <= n; i++) pts.push(bez(seg, i / n).pt);
+  return pts;
+}
+/** Each subpath as its own polyline. */
+const polysOf = (d, n = 24) =>
+  parse(d).map((s) => s.segs.flatMap((seg) => Array.from({ length: n + 1 }, (_, i) => bez(seg, i / n).pt)));
+
+function inPoly([x, y], poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+function segDist(p, a, b) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const l2 = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2));
+  return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy);
+}
+/** An occluder: a closed silhouette (`fill`) and/or lines kept clear by `pad`. */
+const solid = (poly, pad = 5) => ({ poly, closed: true, pad });
+const wire = (poly, pad = 5) => ({ poly, closed: false, pad });
+function hidden(p, occs) {
+  for (const o of occs) {
+    if (o.closed && inPoly(p, o.poly)) return true;
+    const P = o.poly;
+    const last = o.closed ? P.length : P.length - 1;
+    for (let i = 0; i < last; i++) if (segDist(p, P[i], P[(i + 1) % P.length]) < o.pad) return true;
+  }
+  return false;
+}
+function subCubic(seg, t0, t1) {
+  const right = t0 > 0 ? split(seg, t0)[1] : seg;
+  return t1 < 1 ? split(right, (t1 - t0) / (1 - t0))[0] : right;
+}
+function occlude(d, occs, minRun = 3) {
+  const N = 72;
+  const out = [];
+  for (const s of parse(d)) {
+    let run = null;
+    for (const seg of s.segs) {
+      const hid = (t) => hidden(bez(seg, t).pt, occs);
+      const edges = [];
+      let prev = hid(0);
+      for (let i = 1; i <= N; i++) {
+        const v = hid(i / N);
+        if (v !== prev) {
+          let lo = (i - 1) / N;
+          let hi = i / N;
+          for (let k = 0; k < 12; k++) {
+            const mid = (lo + hi) / 2;
+            if (hid(mid) === prev) lo = mid;
+            else hi = mid;
+          }
+          edges.push((lo + hi) / 2);
+        }
+        prev = v;
+      }
+      const ts = [0, ...edges, 1];
+      let vis = !hid(0);
+      for (let k = 0; k < ts.length - 1; k++, vis = !vis) {
+        if (!vis || ts[k + 1] - ts[k] < 1e-4) {
+          if (!vis) run = null;
+          continue;
+        }
+        const piece = subCubic(seg, ts[k], ts[k + 1]);
+        if (run && ts[k] === 0) run.segs.push(piece);
+        else {
+          run = { start: piece[0], segs: [piece], closed: false };
+          out.push(run);
+        }
+      }
+      if (prev) run = null;
+    }
+  }
+  // drop crumbs a pen would never leave
+  return serialize(out.filter((r) => r.segs.reduce((n, g) => n + dist(g[0], g[3]), 0) > minRun));
+}
+
+/** Catmull-Rom through points → one smooth cubic path. */
+function smooth(pts) {
+  let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2] ?? p2;
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C ${f(c1[0])} ${f(c1[1])} ${f(c2[0])} ${f(c2[1])} ${f(p2[0])} ${f(p2[1])}`;
+  }
+  return d;
+}
+
+/** Local figure coordinates (ground at y = 0, facing left) → the scene. */
+const at = (x, y, s = 1, flip = false) => ([lx, ly]) => [x + (flip ? -lx : lx) * s, y + ly * s];
+
+/** A closed polygon as a path: the shape of a wash. */
+const ring = (pts) => `M${pts.map(([x, y]) => `${f(x)} ${f(y)}`).join(" L ")} Z`;
+/** Height at x along a polyline that runs left to right. */
+const yAt = (pts) => (x) => {
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x0, y0] = pts[i];
+    const [x1, y1] = pts[i + 1];
+    if (x >= x0 && x <= x1) return y0 + ((y1 - y0) * (x - x0)) / (x1 - x0 || 1);
+  }
+  return pts[x < pts[0][0] ? 0 : pts.length - 1][1];
+};
+
 // ---------- the library (§5.4) ----------
 // Each entry: viewBox, wobble amp (and step for very large boxes), shift/scale
 // to re-centre the composition with the §5.2 margin, strokes in draw order,
@@ -248,6 +370,325 @@ const saigaHornSegs = parse(saigaHorn)[0].segs;
 
 const silkAntenna = "M196 152 C 188 134 176 120 160 112";
 
+// ---------- the home horizon ----------
+// The region now, read left to right: the steppe camp (yurts, smoke, horses)
+// under the Tian Shan, wind turbines and a new city on the right, and a fast
+// train along the front carrying one toward the other. Owner's direction of
+// 2026-11-10, after the plain ridge. Every motif appears at least once in the
+// middle 640 units, which is all a phone shows (xMidYMid slice, 150px tall).
+// Nothing is a specific landmark: no tower, dome or flag belongs to one state.
+
+const HZ_RIDGE =
+  "M48 200 C 110 192 160 172 198 152 C 224 138 242 122 262 106 C 276 116 290 128 306 132 C 326 116 346 84 368 58 C 388 82 404 108 426 122 C 446 112 460 100 476 92 C 494 104 512 120 534 128 C 562 116 588 92 612 68 C 628 54 640 44 652 36 C 668 56 690 86 716 106 C 736 98 752 88 768 82 C 790 100 812 118 838 126 C 866 110 890 90 914 74 C 934 92 958 116 986 132 C 1034 158 1092 178 1156 188";
+const HZ_SNOW = [
+  "M352 80 L 358 86 L 363 81 L 369 90 L 375 83 L 380 87 L 386 82",
+  "M634 60 L 640 67 L 645 62 L 652 72 L 658 64 L 664 69 L 671 61",
+  "M900 90 L 906 96 L 911 92 L 917 100 L 923 93 L 928 97 L 934 92",
+];
+
+// The steppe line everything stands on; g(x) is its height at x.
+const HZ_GROUND = smooth([
+  [36, 236],
+  [170, 232],
+  [310, 236],
+  [450, 232],
+  [590, 235],
+  [730, 231],
+  [870, 234],
+  [1010, 231],
+  [1166, 236],
+]);
+const hzGroundPts = polyOf(HZ_GROUND, 40);
+const g = yAt(hzGroundPts);
+const hzRidgePts = polyOf(HZ_RIDGE, 10);
+const hzGroundCoarse = polyOf(HZ_GROUND, 6); // for washes: fewer points, same line
+
+/** A yurt on the steppe: felt walls, the domed roof up to the crown, the
+    wall-roof belt, the door; `ribs` adds two roof poles, `smoke` a wisp. */
+function yurt(cx, w, { ribs = false, smoke = false } = {}) {
+  const b = g(cx);
+  const hw = w / 2;
+  const wt = b - w * 0.24; // wall top
+  const cy = wt - w * 0.2; // crown rim
+  const cw = w * 0.11;
+  const sag = w * 0.035;
+  const roof =
+    ` C ${cx - hw + w * 0.08} ${wt - w * 0.11} ${cx - cw - w * 0.12} ${cy + w * 0.03} ${cx - cw} ${cy}` +
+    ` C ${cx - cw * 0.6} ${cy - w * 0.05} ${cx + cw * 0.6} ${cy - w * 0.05} ${cx + cw} ${cy}` +
+    ` C ${cx + cw + w * 0.12} ${cy + w * 0.03} ${cx + hw - w * 0.08} ${wt - w * 0.11} ${cx + hw} ${wt}`;
+  const outline = `M${cx - hw * 0.97} ${b} L ${cx - hw} ${wt}${roof} L ${cx + hw * 0.97} ${b}`;
+  const belt = `M${cx - hw} ${wt} C ${cx - hw * 0.4} ${wt + sag} ${cx + hw * 0.4} ${wt + sag} ${cx + hw} ${wt}`;
+  const dw = w * 0.075;
+  const door = `M${cx - dw} ${b} L ${cx - dw} ${b - w * 0.13} L ${cx + dw} ${b - w * 0.13} L ${cx + dw} ${b}`;
+  const beltPts = polyOf(belt, 10);
+  // white felt walls, a sun-warmed roof, a painted door
+  const washes = [
+    { d: ring([[cx - hw * 0.97, b], ...beltPts, [cx + hw * 0.97, b]]), tone: "felt" },
+    { d: ring([...polyOf(`M${cx - hw} ${wt}${roof}`, 8), ...[...beltPts].reverse()]), tone: "roof" },
+    { d: `${door} Z`, tone: "door" },
+  ];
+  const strokes = [outline, belt, door];
+  if (ribs)
+    strokes.push(
+      `M${cx - cw * 0.7} ${cy + 1.5} C ${cx - w * 0.16} ${cy + w * 0.08} ${cx - w * 0.22} ${wt - w * 0.03} ${cx - w * 0.26} ${wt + sag * 0.85}` +
+        ` M${cx + cw * 0.7} ${cy + 1.5} C ${cx + w * 0.16} ${cy + w * 0.08} ${cx + w * 0.22} ${wt - w * 0.03} ${cx + w * 0.26} ${wt + sag * 0.85}`,
+    );
+  if (smoke) {
+    const y0 = cy - w * 0.06;
+    strokes.push(`M${cx} ${y0} C ${cx - 5} ${y0 - 9} ${cx + 6} ${y0 - 15} ${cx + 3} ${y0 - 24} C ${cx} ${y0 - 32} ${cx + 9} ${y0 - 38} ${cx + 16} ${y0 - 42}`);
+  }
+  return { strokes, washes, occ: [solid(polyOf(outline), 5), ...(smoke ? [wire(polyOf(strokes.at(-1)), 5)] : [])] };
+}
+
+// Horses in profile, facing left, ground at y = 0, about 110 long.
+const HORSE_STAND = {
+  strokes: [
+    // face, ear, crest, back, rump, the far hind leg
+    "M8 -62 C 12 -68 16 -76 20 -82 L 23 -92 L 28 -84 C 37 -80 46 -68 55 -63 C 66 -58 80 -58 92 -61 C 100 -63 106 -57 105 -48 C 104 -38 98 -32 97 -22 L 96 0",
+    // muzzle, jaw, throat, neck, chest, the near foreleg
+    "M8 -62 C 5 -58 8 -54 13 -55 C 19 -56 24 -60 29 -66 C 32 -58 34 -50 36 -44 C 38 -40 38 -36 37 -31 L 36 -14 L 37 0",
+    // belly, the far foreleg, the near hind leg
+    "M37 -31 C 50 -27 70 -28 84 -33 M46 -29 L 45 -14 L 47 0 M84 -33 C 88 -24 89 -18 86 -12 L 85 0",
+    // tail
+    "M102 -59 C 111 -54 113 -42 110 -26 M104 -56 C 110 -48 108 -36 112 -27",
+  ],
+  hull: [[8, -62], [20, -82], [24, -93], [28, -84], [55, -63], [92, -61], [105, -48], [112, -27], [96, 0], [85, 0], [84, -33], [47, 0], [36, 0], [36, -44], [29, -66], [13, -55]],
+  // the coat's wash: head, neck and barrel; the legs stay line
+  coat: [[8, -62], [14, -72], [20, -82], [23, -90], [28, -84], [40, -76], [55, -63], [70, -60], [92, -61], [102, -57], [105, -48], [101, -36], [97, -24], [88, -24], [84, -33], [70, -29], [50, -28], [37, -31], [37, -40], [34, -50], [29, -66], [19, -56], [10, -55]],
+};
+const HORSE_GRAZE = {
+  strokes: [
+    // muzzle in the grass, face, ear, crest, back, rump, the far hind leg
+    "M6 -3 C 7 -12 10 -22 14 -30 L 12 -39 L 20 -33 C 28 -46 40 -60 55 -63 C 66 -58 80 -58 92 -61 C 100 -63 106 -57 105 -48 C 104 -38 98 -32 97 -22 L 96 0",
+    // chin, jaw, throat, neck, chest, the near foreleg
+    "M6 -3 C 8 -1 12 -1 15 -3 C 18 -8 20 -14 22 -18 C 28 -26 33 -36 37 -40 C 38 -36 38 -34 37 -31 L 36 -14 L 37 0",
+    "M37 -31 C 50 -27 70 -28 84 -33 M46 -29 L 45 -14 L 47 0 M84 -33 C 88 -24 89 -18 86 -12 L 85 0",
+    "M102 -59 C 111 -54 113 -42 110 -26 M104 -56 C 110 -48 108 -36 112 -27",
+  ],
+  hull: [[6, -3], [14, -30], [12, -39], [20, -33], [55, -63], [92, -61], [105, -48], [112, -27], [96, 0], [85, 0], [84, -33], [47, 0], [36, 0], [37, -40], [22, -18], [15, -3]],
+  coat: [[6, -3], [8, -14], [12, -24], [14, -30], [13, -37], [20, -33], [30, -48], [42, -58], [55, -63], [70, -60], [92, -61], [102, -57], [105, -48], [101, -36], [97, -24], [88, -24], [84, -33], [70, -29], [50, -28], [37, -31], [37, -38], [30, -30], [22, -18], [17, -8], [12, -2]],
+};
+function horse(kind, x, s, flip = false, coat = "bay") {
+  const m = at(x, g(x), s, flip);
+  return {
+    strokes: kind.strokes.map((d) => xform(d, m)),
+    washes: [{ d: ring(kind.coat.map(m)), tone: coat }],
+    occ: [solid(kind.hull.map(m), 4)],
+  };
+}
+
+/** A wind turbine: the tower, three swept blades, the hub as a dot. `turn` is
+    the first blade's angle from vertical, clockwise. */
+function turbine(x, H, L, turn) {
+  const b = g(x);
+  const hub = [x, b - H];
+  const tower = `M${x} ${b} L ${x} ${hub[1] + 3}`;
+  const blades = [0, 1, 2]
+    .map((k) => {
+      const a = rad(turn + k * 120);
+      const u = [Math.sin(a), -Math.cos(a)];
+      const n = [-u[1], u[0]];
+      const P = (t, o) => [hub[0] + u[0] * L * t + n[0] * L * o, hub[1] + u[1] * L * t + n[1] * L * o];
+      const [c1, c2, tip] = [P(0.35, 0.07), P(0.72, 0.05), P(1, 0)];
+      return `M${f(hub[0])} ${f(hub[1])} C ${f(c1[0])} ${f(c1[1])} ${f(c2[0])} ${f(c2[1])} ${f(tip[0])} ${f(tip[1])}`;
+    })
+    .join(" ");
+  return {
+    strokes: [tower, blades],
+    dot: [hub[0], +f(hub[1]), 2.6],
+    occ: [wire(polyOf(tower), 5), ...polysOf(blades).map((p) => wire(p, 5))],
+  };
+}
+
+/** One building standing on the steppe, as a closed outline plus an optional
+    edge line that turns the face into a volume. `tone` is its wash; a dome
+    also carries `cap`, the dome's own colour. */
+function tower(x0, x1, top, kind, { edge = 0, tone = "glass", cap } = {}) {
+  const b0 = g(x0);
+  const b1 = g(x1);
+  const w = x1 - x0;
+  const cx = (x0 + x1) / 2;
+  let crown;
+  if (kind === "slant") crown = `L ${x0} ${top + w * 0.5} L ${x1} ${top}`;
+  else if (kind === "slant-l") crown = `L ${x0} ${top} L ${x1} ${top + w * 0.5}`;
+  else if (kind === "spire")
+    crown = `L ${x0} ${top} L ${cx - w * 0.18} ${top - 12} L ${cx} ${top - 34} L ${cx + w * 0.18} ${top - 12} L ${x1} ${top}`;
+  else if (kind === "round") crown = `L ${x0} ${top + w / 2} ${arc(cx, top + w / 2, w / 2, w / 2, 180, 360).replace(/^M[^C]*/, "")}`;
+  else if (kind === "sail") crown = `L ${x0} ${top} C ${x0 + w * 0.7} ${top + 2} ${x1} ${top + w * 0.7} ${x1} ${top + w * 1.6}`;
+  else if (kind === "dome")
+    crown = `L ${x0} ${top} L ${x0 + w * 0.08} ${top} ${arc(cx, top, w * 0.42, w * 0.5, 180, 360).replace(/^M[^C]*/, "")} L ${x1} ${top}`;
+  else crown = `L ${x0} ${top} L ${x1} ${top}`;
+  const outline = `M${x0} ${b0} ${crown} L ${x1} ${b1}`;
+  const extra = [];
+  if (edge) {
+    const ex = x0 + w * edge;
+    const ey = kind === "slant" ? top + w * 0.5 * (1 - edge) : kind === "slant-l" ? top + w * 0.5 * edge : kind === "round" ? top + w / 2 - Math.sqrt(Math.max(0, (w / 2) ** 2 - (ex - cx) ** 2)) : top;
+    extra.push(`M${f(ex)} ${f(ey + 6)} L ${f(ex)} ${f(g(ex))}`);
+  }
+  if (kind === "dome") extra.push(`M${cx} ${top - w * 0.5} L ${cx} ${top - w * 0.5 - 9}`);
+  if (kind === "mast") extra.push(`M${cx} ${top} L ${cx} ${top - 16}`);
+  const poly = polyOf(outline, 16);
+  const washes = [{ d: ring(polyOf(outline, 6)), tone }];
+  if (kind === "dome" && cap) washes.push({ d: `${arc(cx, top, w * 0.42, w * 0.5, 180, 360)} Z`, tone: cap });
+  return { outline, extra, poly, washes };
+}
+
+/** The new city, nearest first: each building hides what stands behind it.
+    Glass in three blues (the far ones paler, in haze), two in warm stone, and
+    one turquoise dome, the region's colour, on no particular city's mosque. */
+function city() {
+  const front = [
+    tower(828, 856, 198, "flat", { tone: "stone" }),
+    tower(902, 928, 112, "round", { edge: 0.68, tone: "glass" }),
+    tower(938, 984, 196, "dome", { tone: "stone", cap: "dome" }),
+    tower(1004, 1028, 142, "mast", { tone: "glass-2" }),
+    tower(1056, 1098, 188, "flat", { tone: "glass" }),
+    tower(1098, 1146, 208, "flat", { tone: "stone" }),
+  ];
+  const back = [
+    tower(848, 878, 112, "slant", { edge: 0.34, tone: "glass-far" }),
+    tower(880, 906, 92, "spire", { edge: 0.28, tone: "glass-far" }),
+    tower(982, 1012, 100, "sail", { edge: 0.3, tone: "glass-far" }),
+    tower(1030, 1058, 124, "slant-l", { edge: 0.62, tone: "glass-far" }),
+  ];
+  const frontOcc = front.map((t) => solid(t.poly, 4));
+  // left to right, so the city rises in the order the eye reads it
+  const all = [...front.map((t) => ({ t, near: true })), ...back.map((t) => ({ t, near: false }))].sort(
+    (p, q) => p.t.poly[0][0] - q.t.poly[0][0],
+  );
+  const parts = all.map(({ t, near }) => {
+    const d = [t.outline, ...t.extra].join(" ");
+    return { d: near ? d : occlude(d, frontOcc), near, washes: t.washes };
+  });
+  return { parts, occ: [...front, ...back].map((t) => solid(t.poly, 5)) };
+}
+
+/** The train on its rail, nose to the right: body, window strips per car,
+    car joints, the windscreen, a pantograph; its wheels are dots. */
+const HZ_RAIL = 294;
+function train(x0, x1, cars = 3) {
+  const tb = HZ_RAIL - 6;
+  const tr = HZ_RAIL - 36;
+  // a trainset: the long nose leads, a short one closes the rear
+  const body =
+    `M${x0 + 6} ${tb} C ${x0 + 1} ${tb} ${x0 - 1} ${tb - 3} ${x0} ${tb - 6} C ${x0 + 6} ${tr + 10} ${x0 + 22} ${tr} ${x0 + 46} ${tr}` +
+    ` L ${x1 - 92} ${tr} C ${x1 - 46} ${tr} ${x1 - 12} ${tr + 12} ${x1} ${tb - 5}` +
+    ` C ${x1 + 1} ${tb - 1} ${x1 - 3} ${tb} ${x1 - 9} ${tb} Z`;
+  const carLen = (x1 - x0) / cars;
+  const joints = Array.from({ length: cars - 1 }, (_, i) => x0 + carLen * (i + 1));
+  const win = [x0, ...joints]
+    .map((a, i) => {
+      const s = i === 0 ? a + 34 : a + 10;
+      const e = i === cars - 1 ? x1 - 100 : a + carLen - 10;
+      return `M${f(s)} ${tr + 8} L ${f(e)} ${tr + 8} L ${f(e)} ${tr + 15} L ${f(s)} ${tr + 15} Z`;
+    })
+    .join(" ");
+  const seams = joints.map((j) => `M${f(j)} ${tr} L ${f(j)} ${tb}`).join(" ");
+  const screen = `M${x1 - 86} ${tr + 3} C ${x1 - 60} ${tr + 3} ${x1 - 40} ${tr + 8} ${x1 - 28} ${tr + 15}`;
+  const stripe = `M${x0 + 2} ${tb - 8} L ${x1 - 8} ${tb - 8}`;
+  const p = joints[0] - carLen / 2;
+  const panto = `M${p - 8} ${tr} L ${p} ${tr - 8} L ${p + 10} ${tr - 8} M${p} ${tr - 8} L ${p + 6} ${tr}`;
+  const wheels = [x0, ...joints].flatMap((a, i) => {
+    const e = i === cars - 1 ? x1 - 30 : a + carLen;
+    return [a + 18, a + 30, e - 30, e - 18].map((x) => [+f(x), HZ_RAIL - 3, 2.2]);
+  });
+  // white body, a band of livery under the stripe, glass in the windows
+  const livery =
+    `M${x0 + 1} ${tb - 8} L ${x1 - 3} ${tb - 8} L ${x1} ${tb - 5} C ${x1 + 1} ${tb - 1} ${x1 - 3} ${tb} ${x1 - 9} ${tb}` +
+    ` L ${x0 + 6} ${tb} C ${x0 + 1} ${tb} ${x0 - 1} ${tb - 3} ${x0} ${tb - 6} Z`;
+  const glass = `M${x1 - 86} ${tr + 3} C ${x1 - 60} ${tr + 3} ${x1 - 40} ${tr + 8} ${x1 - 28} ${tr + 15} L ${x1 - 86} ${tr + 15} Z`;
+  const washes = [
+    { d: body, tone: "train" },
+    { d: livery, tone: "livery" },
+    { d: `${win} ${glass}`, tone: "window" },
+  ];
+  return { strokes: [body, win, seams, screen, stripe, panto], dots: wheels, washes };
+}
+
+function horizon() {
+  const yurts = [yurt(330, 92, { ribs: true, smoke: true }), yurt(420, 64), yurt(214, 46)];
+  const horses = [
+    horse(HORSE_STAND, 474, 0.56, false, "chestnut"),
+    horse(HORSE_GRAZE, 612, 0.5, true, "dun"),
+    horse(HORSE_GRAZE, 66, 0.4, false, "grey"),
+    horse(HORSE_STAND, 168, 0.36, true, "chestnut"),
+  ];
+  const turbines = [turbine(688, 122, 46, 14), turbine(752, 96, 36, 52), turbine(800, 72, 27, 98)];
+  const town = city();
+  const tr = train(372, 852);
+
+  const front = [...yurts, ...horses, ...turbines, town].flatMap((o) => o.occ);
+  const behindCity = town.occ;
+
+  // Strokes in draw order, each tagged with the motif it belongs to, so a
+  // wash can come in as its motif's outline closes. A line wholly behind
+  // something nearer leaves nothing to draw and is dropped.
+  const strokes = [];
+  const add = (key, ds, amp) => ds.forEach((d) => d && strokes.push({ d, amp, key }));
+  add("ridge", [occlude(HZ_RIDGE, front, 28)], 2.2);
+  HZ_SNOW.forEach((d, i) => add(`snow${i}`, [occlude(d, front)], 0.7));
+  add("ground", [HZ_GROUND], 2.2);
+  yurts.forEach((o, i) => add(`yurt${i}`, o.strokes, 0.7));
+  horses.forEach((o, i) => add(`horse${i}`, o.strokes, 0.7));
+  turbines.forEach((o, i) => add(`turbine${i}`, o.strokes.map((d) => occlude(d, behindCity)), 0.7));
+  town.parts.forEach((t, i) => add(`tower${i}`, [t.d], 0.7));
+  add("rail", [`M24 ${HZ_RAIL} L 1176 ${HZ_RAIL}`], 2.2);
+  add("train", tr.strokes, 0.7);
+  const last = (key, or = 0) => {
+    const i = strokes.findLastIndex((s) => s.key === key);
+    return i < 0 ? or : i;
+  };
+
+  // ---- washes: flat colour under the line, painted far to near ----
+  // Opaque pale tints, so a nearer wash covers a farther one exactly as a
+  // nearer line hides a farther one; only the hills and steppe fade, into
+  // the page, and nothing stands behind them.
+  const ridgeAt = yAt(hzRidgePts);
+  const [rx0, rx1] = [hzRidgePts[0][0], hzRidgePts.at(-1)[0]];
+  const groundBack = hzGroundCoarse.filter(([x]) => x > rx0 && x < rx1).reverse();
+  const hills = ring([...hzRidgePts, [rx1, g(rx1)], ...groundBack, [rx0, g(rx0)]]);
+  // snow: from each zigzag up to the ridge above it
+  const snow = HZ_SNOW.map((d) => {
+    const zig = polyOf(d, 2);
+    const [a, b] = [zig[0][0], zig.at(-1)[0]];
+    const cap = hzRidgePts.filter(([x]) => x > a && x < b).reverse();
+    return ring([...zig, [b, ridgeAt(b)], ...cap, [a, ridgeAt(a)]]);
+  });
+  // the steppe: the strip between the ground line and the rail, fading out
+  // sideways where the ground line ends
+  const [gx0, gx1] = [hzGroundCoarse[0][0], hzGroundCoarse.at(-1)[0]];
+  const steppe = ring([...hzGroundCoarse, [gx1, HZ_RAIL], [gx0, HZ_RAIL]]);
+  const towerWashes = town.parts
+    .map((t, i) => ({ ...t, at: last(`tower${i}`, last("ground")) }))
+    .sort((p, q) => p.near - q.near) // far towers first
+    .flatMap((t) => t.washes.map((w) => ({ ...w, at: t.at })));
+
+  const washes = [
+    { d: ellipse(520, 62, 24, 24), tone: "sun", at: 0 },
+    // blue on the peaks, gone to the page by the foothills (so the ridge's
+    // open ends need no edge)
+    { d: hills, tone: "hills", fade: { from: [0, 44], to: [0, 228], stops: [[0, "hills"], [1, "hills", 0]] }, at: last("ridge") },
+    ...snow.map((d) => ({ d, tone: "snow", at: last("ridge") + 1 })),
+    {
+      d: steppe,
+      tone: "steppe",
+      fade: { from: [gx0, 0], to: [gx1, 0], stops: [[0, "steppe", 0], [0.16, "steppe"], [0.84, "steppe"], [1, "steppe", 0]] },
+      at: last("ground"),
+    },
+    ...towerWashes,
+    ...yurts.flatMap((o, i) => o.washes.map((w) => ({ ...w, at: last(`yurt${i}`) }))),
+    ...horses.flatMap((o, i) => o.washes.map((w) => ({ ...w, at: last(`horse${i}`) }))),
+    ...tr.washes.map((w) => ({ ...w, at: last("train") })),
+  ];
+
+  return {
+    strokes: strokes.map(({ d, amp }) => ({ d, amp })),
+    dots: [...turbines.map((t) => t.dot), ...tr.dots],
+    washes,
+  };
+}
+const HZ = horizon();
+
 const RAW = {
   mark: {
     vb: [48, 48],
@@ -260,26 +701,16 @@ const RAW = {
     dots: [[29, 23, 1.8]],
   },
 
-  // The Tian Shan in profile: far ridgeline → snow lines under the three
-  // highest summits → foothills → the river leaving the valley → its delta.
-  ridge: {
-    vb: [1200, 280],
-    amp: 2.2,
+  // The home horizon, built above (HZ): the Tian Shan, the steppe camp, the
+  // turbines, the city and the train. Strokes carry their own wobble.
+  horizon: {
+    vb: [1200, 320],
+    amp: 0.7,
     step: 140,
-    strokes: [
-      "M48 200 C 110 192 160 172 198 152 C 224 138 242 122 262 106 C 276 116 290 128 306 132 C 326 116 346 84 368 58 C 388 82 404 108 426 122 C 446 112 460 100 476 92 C 494 104 512 120 534 128 C 562 116 588 92 612 68 C 628 54 640 44 652 36 C 668 56 690 86 716 106 C 736 98 752 88 768 82 C 790 100 812 118 838 126 C 866 110 890 90 914 74 C 934 92 958 116 986 132 C 1034 158 1092 178 1156 188",
-      "M352 80 L 358 86 L 363 81 L 369 90 L 375 83 L 380 87 L 386 82",
-      "M634 60 L 640 67 L 645 62 L 652 72 L 658 64 L 664 69 L 671 61",
-      "M900 90 L 906 96 L 911 92 L 917 100 L 923 93 L 928 97 L 934 92",
-      "M36 232 C 120 218 196 204 268 208 C 330 212 380 194 446 190 C 512 186 556 196 600 202 C 648 196 700 182 770 184 C 846 186 902 204 982 202 C 1052 200 1110 208 1168 214",
-      "M600 202 C 594 216 614 224 608 238 C 602 252 570 256 548 266",
-      "M608 238 C 630 250 668 254 704 266",
-    ],
-    dots: [
-      [600, 202, 3.5],
-      [548, 266, 4],
-      [704, 266, 4],
-    ],
+    strokes: HZ.strokes,
+    dots: HZ.dots,
+    washes: HZ.washes,
+    washShift: [1.5, 1.5],
   },
 
   // Tulipa greigii. Stage 1 = stem and leaves, 2 = the cup, 3 = open petals.
@@ -559,7 +990,7 @@ for (const [name, r] of Object.entries(RAW)) {
   const strokes = r.strokes.map((s, i) => {
     const src = typeof s === "string" ? { d: s } : s;
     return {
-      d: wobble(src.d, { amp: r.amp, seed: `${name}-${i}`, step: r.step ?? 90, map }),
+      d: wobble(src.d, { amp: src.amp ?? r.amp, seed: `${name}-${i}`, step: r.step ?? 90, map }),
       ...(src.stage ? { stage: src.stage } : {}),
     };
   });
@@ -568,6 +999,25 @@ for (const [name, r] of Object.entries(RAW)) {
     return stage ? [+f(mx), +f(my), rr, stage] : [+f(mx), +f(my), rr];
   });
   const entry = { viewBox: r.vb, strokes, dots };
+  // washes sit a hair off the line, down and right, like a hand-tinted print
+  if (r.washes) {
+    const [ox, oy] = r.washShift ?? [0, 0];
+    // move every point, keeping L as L (serialize would spell each as a cubic)
+    const shift = (d) => {
+      const out = [];
+      let pair = [];
+      for (const t of d.match(/[MLCZ]|-?\d*\.?\d+/g)) {
+        if (/[MLCZ]/.test(t)) out.push(t);
+        else if (pair.push(+t) === 2) {
+          const [x, y] = map([pair[0] + ox, pair[1] + oy]);
+          out.push(`${f(x)} ${f(y)}`);
+          pair = [];
+        }
+      }
+      return out.join(" ").replace(/([MLCZ]) /g, "$1");
+    };
+    entry.washes = r.washes.map(({ d, ...w }) => ({ d: shift(d), ...w }));
+  }
   if (r.needleFrom !== undefined) {
     const [ox, oy] = map([200, 212]);
     entry.needle = { from: r.needleFrom, origin: [+f(ox), +f(oy)] };
@@ -613,7 +1063,7 @@ if (pi > -1) {
   const html = `<!doctype html><meta charset="utf-8"><body style="margin:24px;background:#faf9f5;font-family:sans-serif">
 <div style="display:flex;flex-wrap:wrap;gap:16px">${plates.map(([n, bg]) => svg(n, { w: 300, bg })).join("")}
 ${svg("compass", { w: 300, bg: "#f5f4ed" })}${svg("mark", { w: 96, sw: 1 })}</div>
-<div style="margin-top:16px">${svg("ridge", { w: 1200, sw: 1.75 })}</div>
+<div style="margin-top:16px">${svg("horizon", { w: 1200, sw: 1.75 })}</div>
 <div style="margin-top:16px">${svg("rivers", { w: 1200, sw: 1.75 })}</div></body>`;
   writeFileSync(file, html);
   console.log(`preview → ${file}`);
