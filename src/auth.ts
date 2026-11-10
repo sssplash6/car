@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import { authConfig } from "@/auth.config";
+import { authConfig, demoMode } from "@/auth.config";
 import { siteUrl } from "@/lib/site";
 
 // Emails promoted to ADMIN on sign-in. Comma-separated; blank means nobody can
@@ -29,8 +29,9 @@ function intendedRole(email: string | null | undefined): "ADMIN" | "READER" {
 // queue can be exercised without registering a Google OAuth client.
 //
 // This is a COMPLETE AUTHENTICATION BYPASS: authorize() below accepts any input
-// and hands back a session. It is therefore guarded three times, and each guard
-// covers a different way the other two can fail. DO NOT relax any of them.
+// and hands back a session. Outside the public demo it is therefore guarded three
+// times, and each guard covers a different way the other two can fail. DO NOT
+// relax any of them.
 //
 //   1. the flag must be explicitly set                    (runtime)
 //   2. the build must not be a production build           (runtime)
@@ -48,11 +49,25 @@ function intendedRole(email: string | null | undefined): "ADMIN" | "READER" {
 //
 // NODE_ENV is a genuine per-process runtime read (`next start` sets it), so
 // guard 2 holds even against a mis-built bundle.
+//
+// The one deliberate exception is DEMO_MODE (src/auth.config.ts): a throwaway
+// public demo with fictional data, where handing every visitor a session is the
+// point. It skips the three guards but still grants no role: the editor is ADMIN
+// only because the demo's ADMIN_EMAILS lists DEV_ADMIN_EMAIL. Set on the real
+// site by mistake, it shows the demo banner on every page, and it switches itself
+// off once Google sign-in is configured.
 const devLoginRequested = process.env.ALLOW_DEV_LOGIN === "true";
 const isProduction = process.env.NODE_ENV === "production";
 const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(siteUrl());
 
-export const devLoginEnabled = devLoginRequested && !isProduction && isLocalhost;
+export const devLoginEnabled =
+  demoMode || (devLoginRequested && !isProduction && isLocalhost);
+
+if (demoMode) {
+  console.warn("[auth] DEMO_MODE is on: anyone can sign in as the demo reader or editor.");
+} else if (process.env.DEMO_MODE === "true") {
+  console.warn("[auth] DEMO_MODE=true was IGNORED because Google sign-in is configured.");
+}
 
 if (devLoginRequested && !devLoginEnabled) {
   console.warn(

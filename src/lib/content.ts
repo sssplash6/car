@@ -110,6 +110,10 @@ export const COPY = {
     body: "Sign in to download papers or submit your own. Continuing with Google creates your account; there is no separate registration.",
     google: "Continue with Google",
     devLabel: "Local only",
+    demo: {
+      title: "Try the review",
+      body: "No account needed. Submit as a reader, publish as the editor. Everything resets nightly.",
+    },
     legal: "By continuing you accept the privacy notice.",
   },
   submit: {

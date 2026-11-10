@@ -112,7 +112,8 @@ is a summary. The four that cause damage rather than an obvious failure:
 | `ADMIN_EMAILS` | Blank means nobody can publish; papers pile up in the queue. |
 
 Others: `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `NEXT_PUBLIC_SITE_URL`,
-`RESEND_API_KEY`, `MAIL_FROM`.
+`RESEND_API_KEY`, `MAIL_FROM`, and `DEMO_MODE` (public demo copies only: anyone can
+sign in as the editor, so never on the real site).
 
 ## Deployment
 

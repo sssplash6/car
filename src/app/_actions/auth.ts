@@ -21,12 +21,12 @@ export async function signOutAction() {
 }
 
 /**
- * Dev-only: sign in as a throwaway reader or editor.
+ * Dev and demo only: sign in as a throwaway reader or editor.
  *
  * Safe to expose because the "dev" provider is only registered when
- * ALLOW_DEV_LOGIN=true AND the site is on localhost (see src/auth.ts). Off
- * localhost the provider does not exist, so this call fails rather than granting
- * anything.
+ * ALLOW_DEV_LOGIN=true AND the site is on localhost, or on the public demo
+ * (DEMO_MODE; see src/auth.ts). Anywhere else the provider does not exist, so
+ * this call fails rather than granting anything.
  */
 export async function signInAsDev(as: "reader" | "admin") {
   await signIn("dev", {

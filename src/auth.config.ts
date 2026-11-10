@@ -16,6 +16,12 @@ export const googleEnabled = !!(
   process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET
 );
 
+// The public demo deployment (car-demo on the VPS): every visitor gets one-click
+// sign-in as the shared demo reader or editor (see src/auth.ts) and a banner on
+// every page. Fictional seed data, wiped nightly. NEVER set it on the real site.
+// Ignored when Google is configured: a site with real accounts is never the demo.
+export const demoMode = process.env.DEMO_MODE === "true" && !googleEnabled;
+
 // Routes that require a signed-in user. Everything else is public — this is a
 // content-marketing site, so the paper index and abstract pages MUST stay
 // crawlable. Adding "/" or "/p" here would delete the site's search traffic.

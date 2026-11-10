@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { GoogleLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import { siteUrl } from "@/lib/site";
 import { COPY } from "@/lib/content";
-import { googleEnabled } from "@/auth.config";
+import { demoMode, googleEnabled } from "@/auth.config";
 import { devLoginEnabled } from "@/auth";
 import { signInAsDev, signInWithGoogle } from "@/app/_actions/auth";
 import { Notice } from "@/app/_components/ui/Feedback";
@@ -50,8 +50,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
     <div className="wrap page-top page-end">
       <div className="login-card settle-load">
         <Mark size={32} draw="load" delay={200} />
-        <h1 className="t-h2 mt-6">{copy.title}</h1>
-        <p className="t-body mt-3">{copy.body}</p>
+        <h1 className="t-h2 mt-6">{demoMode ? copy.demo.title : copy.title}</h1>
+        <p className="t-body mt-3">{demoMode ? copy.demo.body : copy.body}</p>
 
         {error && (
           <Notice tone="bad" className="mt-6">
@@ -59,39 +59,46 @@ export default async function LoginPage({ searchParams }: PageProps) {
           </Notice>
         )}
 
-        <div className="mt-8">
-          {googleEnabled ? (
-            <form
-              action={async () => {
-                "use server";
-                await signInWithGoogle(next);
-              }}
-            >
-              <button type="submit" className="btn btn-primary btn-lg w-full">
-                <GoogleLogoIcon weight="bold" aria-hidden="true" />
-                {copy.google}
-              </button>
-            </form>
-          ) : (
-            // A configuration problem, not a user error, so say so plainly
-            // rather than render a button that dead-ends on Google's error page.
-            <Notice tone="warn" role="none">
-              Google sign-in is not configured on this deployment. Set AUTH_GOOGLE_ID and
-              AUTH_GOOGLE_SECRET.
-            </Notice>
-          )}
-        </div>
+        {/* The demo has no Google client by design; its buttons below are the sign-in. */}
+        {!demoMode && (
+          <div className="mt-8">
+            {googleEnabled ? (
+              <form
+                action={async () => {
+                  "use server";
+                  await signInWithGoogle(next);
+                }}
+              >
+                <button type="submit" className="btn btn-primary btn-lg w-full">
+                  <GoogleLogoIcon weight="bold" aria-hidden="true" />
+                  {copy.google}
+                </button>
+              </form>
+            ) : (
+              // A configuration problem, not a user error, so say so plainly
+              // rather than render a button that dead-ends on Google's error page.
+              <Notice tone="warn" role="none">
+                Google sign-in is not configured on this deployment. Set AUTH_GOOGLE_ID and
+                AUTH_GOOGLE_SECRET.
+              </Notice>
+            )}
+          </div>
+        )}
 
-        {/* Local testing only. Cannot render off localhost: see the double
-            guard on devLoginEnabled in src/auth.ts. */}
+        {/* Local testing, or the public demo. Renders nowhere else: see the
+            guards on devLoginEnabled in src/auth.ts. */}
         {devLoginEnabled && (
           <div>
-            <p className="or-rule t-meta">{copy.devLabel}</p>
-            <p className="t-ui-sm mt-3 text-ink-3">
-              Bypasses Google entirely. The editor account is promoted through the real
-              ADMIN_EMAILS path, so it only works if that address is listed.
-            </p>
-            <div className="actions mt-4">
+            {!demoMode && (
+              <>
+                <p className="or-rule t-meta">{copy.devLabel}</p>
+                <p className="t-ui-sm mt-3 text-ink-3">
+                  Bypasses Google entirely. The editor account is promoted through the real
+                  ADMIN_EMAILS path, so it only works if that address is listed.
+                </p>
+              </>
+            )}
+            <div className={`actions ${demoMode ? "mt-8" : "mt-4"}`}>
               <form
                 action={async () => {
                   "use server";

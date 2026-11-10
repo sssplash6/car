@@ -3,6 +3,8 @@ import { IBM_Plex_Mono, Inter, Source_Serif_4 } from "next/font/google";
 import { SiteHeader } from "@/app/_components/SiteHeader";
 import { SiteFooter } from "@/app/_components/SiteFooter";
 import { PUBLISHER_NAME, SITE_NAME, siteUrl } from "@/lib/site";
+import { demoMode } from "@/auth.config";
+import { signInAsDev } from "@/app/_actions/auth";
 import "./globals.css";
 
 // Three families, all with full Cyrillic (DESIGN.md §2.1): the review names
@@ -88,6 +90,27 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a href="#content" className="skip-link btn btn-primary btn-sm">
           Skip to content
         </a>
+        {demoMode && (
+          // The public demo (DEMO_MODE): say so on every page, and put the
+          // one-click sign-in where visitors land, not only on /login.
+          <div className="border-b border-rule bg-surface-1">
+            <div className="wrap flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
+              <p className="t-ui-sm text-ink-2">Demo site: fictional papers, wiped every night.</p>
+              <div className="actions">
+                <form action={signInAsDev.bind(null, "reader")}>
+                  <button type="submit" className="btn btn-ghost btn-sm">
+                    Try as reader
+                  </button>
+                </form>
+                <form action={signInAsDev.bind(null, "admin")}>
+                  <button type="submit" className="btn btn-secondary btn-sm">
+                    Try as editor
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
         <SiteHeader />
         <main id="content" className="flex-1">
           {children}
