@@ -5,7 +5,7 @@ import type { DrawSize } from "./types";
  * 1.5–2px at every size; never `vector-effect`. Values are viewBox units for a
  * 400-unit-wide box and are scaled by the drawing's own width / 400, except the
  * `own` sizes, which are already expressed in their drawing's box (the 1200-wide
- * horizon and rivers, the 48-wide Mark). `swSm` / `dsSm` apply below 768px.
+ * horizon, the 800-wide region map, the 48-wide Mark). `swSm` / `dsSm` apply below 768px.
  */
 export const STROKE: Record<
   DrawSize,

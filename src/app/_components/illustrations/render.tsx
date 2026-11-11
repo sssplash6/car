@@ -49,6 +49,13 @@ export function DrawingFrom({
     "--draw-total": `${total}ms`,
   } as CSSProperties;
 
+  // The horizon's scroll timeline: `data-t` plus the moments as variables;
+  // globals.css binds them to the scroll where scroll timelines exist.
+  const moment = (
+    t: [number, number] | null | undefined,
+  ): { "data-t"?: ""; style: Record<string, number> } =>
+    t ? { "data-t": "", style: { "--t": t[0], "--m": t[1] } } : { style: {} };
+
   const paths = data.strokes.map((stroke, i) => (
     <path
       key={`s${i}`}
@@ -56,21 +63,40 @@ export function DrawingFrom({
       pathLength={1}
       data-s=""
       data-stage={stroke.stage}
-      style={{ "--i": i } as CSSProperties}
+      data-t={stroke.t ? "" : undefined}
+      data-out={stroke.out ? "" : undefined}
+      data-move={stroke.move}
+      data-ink={stroke.ink}
+      style={
+        {
+          "--i": i,
+          ...(stroke.t && {
+            "--t0": stroke.t[0],
+            "--t1": stroke.t[1],
+            "--m0": stroke.t[2],
+            "--m1": stroke.t[3],
+          }),
+          ...(stroke.out && { "--o0": stroke.out[0], "--o1": stroke.out[1], "--f": stroke.out[2] }),
+        } as CSSProperties
+      }
     />
   ));
-  const dots = data.dots.map(([cx, cy, r, stage], i) => (
-    <circle
-      key={`d${i}`}
-      cx={cx}
-      cy={cy}
-      r={r1(r * s.ds)}
-      data-d=""
-      data-stage={stage}
-      className={name === "mark" ? "summit" : undefined}
-      style={{ "--r": r, "--i": i } as CSSProperties}
-    />
-  ));
+  const dots = data.dots.map(([cx, cy, r, stage], i) => {
+    const t = moment(data.dotsAt?.[i]);
+    return (
+      <circle
+        key={`d${i}`}
+        cx={cx}
+        cy={cy}
+        r={r1(r * s.ds)}
+        data-d=""
+        data-stage={stage}
+        data-t={t["data-t"]}
+        className={name === "mark" ? "summit" : undefined}
+        style={{ "--r": r, "--i": i, ...t.style } as CSSProperties}
+      />
+    );
+  });
 
   // Washes: colour under the line, faded in as each motif's outline closes.
   // A fade is a userSpace gradient whose stops read the same tokens, so it
@@ -101,19 +127,28 @@ export function DrawingFrom({
         )}
       </defs>
       <g data-washes="">
-        {data.washes.map((w, i) => (
-          <path
-            key={`w${i}`}
-            d={w.d}
-            data-w=""
-            style={
-              {
-                fill: w.fade ? `url(#${name}-wash-${i})` : `var(--wash-${w.tone})`,
-                "--i": w.at,
-              } as CSSProperties
-            }
-          />
-        ))}
+        {data.washes.map((w, i) => {
+          const t = moment(w.t);
+          return (
+            <path
+              key={`w${i}`}
+              d={w.d}
+              data-w=""
+              data-tone={w.tone}
+              data-t={t["data-t"]}
+              data-out={w.out ? "" : undefined}
+              data-move={w.move}
+              style={
+                {
+                  fill: w.fade ? `url(#${name}-wash-${i})` : `var(--wash-${w.tone})`,
+                  "--i": w.at,
+                  ...t.style,
+                  ...(w.out && { "--o0": w.out[0], "--o1": w.out[1] }),
+                } as CSSProperties
+              }
+            />
+          );
+        })}
       </g>
     </>
   ) : null;

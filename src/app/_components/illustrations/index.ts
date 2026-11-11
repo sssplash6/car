@@ -9,7 +9,7 @@ import { leopard } from "./data/leopard";
 import { mark } from "./data/mark";
 import { melon } from "./data/melon";
 import { pomegranate } from "./data/pomegranate";
-import { rivers } from "./data/rivers";
+import { region } from "./data/region";
 import { saiga } from "./data/saiga";
 import { sextant } from "./data/sextant";
 import { silkworm } from "./data/silkworm";
@@ -27,7 +27,7 @@ export const DRAWINGS: Record<IllName, DrawingData> = {
   mark,
   horizon,
   sextant,
-  rivers,
+  region,
   compass,
 };
 

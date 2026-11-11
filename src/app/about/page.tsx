@@ -49,16 +49,30 @@ export default function AboutPage() {
           <h2 id="coverage-label" className="t-meta">
             {coverage.label}
           </h2>
-          {/* Amu Darya and Syr Darya running to the Aral's 1960 shoreline. */}
-          <Drawing name="rivers" size="hero" draw="view" stagger={120} />
-          <Reveal as="ul" gesture="rows" className="coverage-names">
-            {REGION_COUNTRIES.map((country, i) => (
-              <li key={country.lang} style={{ "--i": i } as CSSProperties}>
-                <span className="t-h4 block">{country.en}</span>
-                <span lang={country.lang}>{country.native}</span>
-              </li>
-            ))}
-          </Reveal>
+          {/* The five states on one map, with the list beside it as its legend:
+              each name wears its state's wash, and hovering a name lifts that
+              state on the map. */}
+          <div className="coverage-map">
+            <Drawing
+              name="region"
+              size="hero"
+              draw="view"
+              stagger={90}
+              label="Map of Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan and Uzbekistan"
+            />
+            <Reveal as="ul" gesture="rows" className="coverage-names">
+              {REGION_COUNTRIES.map((country, i) => (
+                <li
+                  key={country.lang}
+                  data-c={country.lang}
+                  style={{ "--i": i, "--c": `var(--wash-${country.lang})` } as CSSProperties}
+                >
+                  <span className="t-h4 block">{country.en}</span>
+                  <span lang={country.lang}>{country.native}</span>
+                </li>
+              ))}
+            </Reveal>
+          </div>
           <p className="t-body mt-8 text-ink-3">{coverage.note}</p>
         </div>
       </Band>

@@ -46,6 +46,49 @@ The owner liked the site and asked for the home illustration to show yurts and h
 - **Washes (colour under the line; second ask, same day: "slight colours, not too colourful").** `horizon` is the one drawing with fills: 33 flat shapes (`DrawingData.washes`, `[data-w]`) painted under the strokes, far to near. Each is opaque, so a nearer wash covers a farther one the way occlusion hides a farther line. Tints come from the plate palette (§3.3) mixed most of the way to the page, as `--wash-*` `light-dark()` pairs on `.ill[data-ill="horizon"]`. Snow-capped blue peaks fade to the page by the foothills. A pale sun has no outline. The steppe is a wheat strip between the ground line and the rail, fading out at both ends. Yurts have white felt walls, a warm roof and a terracotta door. The horses are chestnut, dun and grey. The city is glass in three blues (the far towers paler) and warm stone, with one turquoise dome. The train is white with a terracotta band and blue glass. Every wash is shifted 1.5 units down and right of its line, like a hand-tinted print. A wash fades in (900ms) as its motif's outline closes (`at` = that motif's last stroke; delay `at × stagger + 0.85 × dur-draw`). With reduced motion or no JS, washes are simply there. The accent rule (§3) is untouched: no wash uses `accent` or `accent-mark`.
 - **Hero spacing.** The home hero's top padding is 32–56px (not `--page-top`'s 48–96px) and the horizon's top margin is 32px, so on a 1440 × 900 viewport the whole drawing, train and rail included, sits above the fold.
 
+### Owner's feedback (2026-11-11)
+
+The owner asked for "these things" to appear gradually as the reader scrolls, "like an evolutionary timeline", and for a madrasa or Samarkand-like building.
+
+- **A madrasa, between the camp and the turbines** (`madrasa()`, centred at 594, scale 0.85). It is the Timurid type, not a copy of one building: a portal (pishtaq) with a frieze, a pointed iwan and a door; two low wings of arched cells; a minaret at each corner (tapered, with a gallery and a small cap); and a ribbed melon dome on a drum behind the portal. Its washes are warm brick, pale tile blue in the iwan and cells, and the turquoise dome. The city's low dome became a plain stone block, so the turquoise dome belongs to one era. To make room, the turbines moved right (700, 756, 802) and the dun horse moved into the camp (284). The subject rule above now also allows a madrasa in `horizon`, still none a reader could name.
+- **The drawing reads left to right as time:** the land, the nomad camp, the madrasa, the turbines and the city, and the train last.
+- **Scroll timeline.** The land (ridge, snow, ground, sun, hill and steppe washes) draws on load as before. Everything else draws with the scroll, in the drawing's order:
+  - The rail is the time axis. It draws left to right over 86% of the run.
+  - Each motif draws as the rail's pen passes its left edge, its strokes one after another. Washes fade in as each outline closes, and dots appear at the end.
+  - The train comes last (0.87–0.98).
+  - Each moment is a fraction of the run, computed in `scripts/illustrations.mjs`. They are stored as `strokes[].t` (`Span`), `washes[].t` and `dotsAt`.
+  - A phone sees only the middle of the drawing (x 250–950), so every moment is computed twice: once for wide screens, once for phones (`--t…` / `--m…`).
+- **The pin.** While the timeline plays, the horizon holds mid-screen (`position: sticky`, top `max(header + 24px, 50vh − height/2)`) for 75vh of scroll. `.horizon-track` is that runway, and its `view-timeline: --hz` drives every animation. t = 0 is 96px before the drawing settles, and t = 1 is where it lets go. Then the issue band rises in. `horizon-drift` is gone, since the pin replaces it.
+- **Patches.** The ridge and snow are cut where motifs will stand in front of them, but those motifs only arrive with the scroll. So each cut piece is also kept as its own stroke (`strokes[].out`, `[data-out]`). It draws on load as the ridge's pen passes, and fades out as the motif that hides it starts to draw. Pieces too short to keep between two motifs fade with the later one. On load the ridge is whole; at the end it is cut exactly as before.
+- **Fallbacks.** Without scroll timelines (`@supports (animation-timeline: view())`), there is no pin, the whole drawing draws on load as before, and patches are never shown. The same applies with reduced motion, where the drawing is simply there. Checked in Chromium and WebKit 27 (Safari): desktop 1440 × 900 and phone 390 × 844, light and dark, no console errors.
+
+### Beyond the brief (2026-11-11)
+
+These were proposed on top of the owner's asks, in the same line and wash.
+
+- **The caravan becomes the train.** Four Bactrian camels (`CAMEL`, `caravan()`) walk the rail line, the road the train will take, at x 440–602. Each carries a pack (terracotta or tile) and is roped from its nose to the pack of the camel ahead. They draw in with the madrasa's era (the rail's pen passes them at t ≈ 0.29–0.43). They fade at `LEAVE` (0.855), just before the train draws on the same stretch. It reads as the Silk Road and the new Silk Road on one line.
+  - The camels' strokes and washes carry both `t` and `out`.
+  - Their washes leave by `fill-opacity` (`leave-fill`), since `opacity` is already taken by their fade-in.
+  - Without scroll timelines the caravan is never shown, so the static picture is unchanged.
+- **Dawn to day.** On load the sun sits low and warm in the valley between the first two peaks, half behind the hills' wash. Over the run it climbs to its place (`move: "sun"`, `@keyframes sun-rise`: translate plus `--wash-dawn` → `--wash-sun`).
+- **New voices.** Five birds (`HZ_FLOCK`, one stroke, `move: "flock"`) draw on load over the empty steppe. They cross the eras with the scroll, rising and dipping above the ridge, and come to rest over the new city (`@keyframes flock`, `--fx` −500px wide / −440px on phones). This is a nod to the headline: "Bringing the Soul of Central Asia to the World".
+- The data contract grew accordingly: `strokes[].move`, `washes[].out`, `washes[].move`; wash paths now also carry `data-tone`.
+
+### The coverage map (About, 2026-11-11)
+
+The old `rivers` drawing (the Amu Darya and Syr Darya running to the Aral's 1960 shoreline, as seven bare curves) did not read: the user could not tell what it was. It is replaced by `region`, a real map of the five states.
+
+- **Source.** Natural Earth 1:50m (public domain). `scripts/region-map.mjs <folder>` reads `ne_50m_admin_0_countries`, `ne_50m_lakes` and `ne_50m_rivers_lake_centerlines` (download from github.com/nvkelso/natural-earth-vector, `geojson/`). It writes the compact `scripts/region-map.json`, which is committed; the GeoJSON is not.
+  - Projection: Lambert conformal conic, standard parallels 38° and 52°, centred on 67° E.
+  - Shared borders are found topologically and drawn once. The outer boundary is cut where they meet it, so every border joins.
+  - Islands and enclaves too small to draw are left out.
+  - The Caspian is built from every coast in its box; only its far (Russian, Azerbaijani, Iranian) shore is drawn as a line.
+  - Rivers (Amu Darya, Syr Darya, Naryn, Ural, Irtysh) are clipped to the five and kept off border lines.
+- **Drawing.** Borders are ruled polylines (the desert borders are straight), hand-wobbled at 0.5. Lakes and rivers are smooth and in a water ink (`strokes[].ink`, `--ink-water`), so a river never reads as a border. The five capitals are dots.
+- **Colour.** Each state has a pale wash from the plate palette: Kazakhstan sand, Kyrgyzstan sage, Tajikistan lilac, Turkmenistan apricot, Uzbekistan rose; water is pale blue. The tokens are on `.coverage`.
+- **Legend.** The country list sits beside the map (7fr / 3fr) as its legend, each name with a swatch of its state's wash. Hovering a name pales the other four states (`:has()`). Below 1024px the map is full width with the list in 3, then 2, columns. The map has an accessible name.
+- **Drawn view-triggered:** the outline, the inner borders, then the water, with the washes after.
+
 ---
 
 ## 0. Decision record
@@ -595,7 +638,7 @@ Motion: load draw 1.6 s total (per-stroke 1.1 s, 60 ms stagger, starts 200 ms af
 Dot: observer `(180,380,6)`.
 Where: `error.tsx` (`lg`, muted); About step 2 on mobile (`sm`).
 
-**12. `rivers`** — Amu Darya and Syr Darya running to the Aral shoreline. viewBox `1200 × 400`. 7 strokes + 0 dots.
+**12. `region`** (was `rivers`; replaced 2026-11-11, see Implementation notes → "The coverage map") — the five states on one map, with the Caspian, the Aral remnants, Balkhash, Issyk-Kul, the rivers and the capitals. viewBox `800 × 596`.
 1. low peaks at the origin `M40 360 C 70 330 90 300 110 330 C 130 300 160 270 190 320 C 210 300 230 290 250 330`
 2. Amu Darya `M80 380 C 300 340 420 300 560 260 C 700 220 760 180 780 120`
 3. Syr Darya `M240 390 C 500 360 700 300 860 240 C 960 200 1000 160 1000 110`
@@ -633,7 +676,7 @@ Motion: draw-on 1.1 s, then the needle group rotates `−24deg → 0` over 900 m
 | mark | — | logo, favicon, OG, login card, home statement |
 | ridge | — | home hero |
 | sextant | — | error page |
-| rivers | — | /about coverage |
+| region | — | /about coverage |
 | compass | — | 404 pages |
 
 The door panel on the paper page carries the paper's own issue drawing (`md`, door tone). Never more than one drawing larger than `sm` per viewport.
@@ -746,7 +789,7 @@ Legend — L: first paint (CSS only), V: on scroll-in (below-fold only, post-hyd
 | /about | h1, lede, rule | L | rise / draw | as paper header |
 | /about | sticky sequence | S `view()` per step | tulip stage N strokes `stroke-dashoffset 1 → 0`, `animation-range: entry 0% cover 40%` | scroll-linked; fallback: view draw |
 | /about | steps | V | rise | 800 ms |
-| /about | rivers | V | draw left → right | 1.6 s |
+| /about | region | V | the outline, the borders, then the water | ≈ 2 s |
 | /about | coverage names | V | rows unroll | 52 ms |
 | /login | card | L | settle | 700 ms |
 | /login | Mark in card | L | draw | 900 ms, 200 ms delay |

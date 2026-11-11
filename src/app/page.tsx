@@ -100,10 +100,13 @@ export default async function HomePage() {
         />
       </section>
 
-      {/* The horizon: the steppe camp under the Tian Shan, the turbines and
-          the new city, the train between them. Drawn on first paint, left to
-          right, drifting 40px over the first screen of scroll. Decorative. */}
-      <div className="wrap">
+      {/* The horizon, read left to right as time: the steppe camp under the
+          Tian Shan, a madrasa, the turbines and the new city, the train last.
+          The land draws on first paint; the rest draws with the scroll while
+          the drawing holds mid-screen (globals.css, "the horizon as a
+          timeline"). Without scroll timelines it all draws on load.
+          Decorative. */}
+      <div className="wrap horizon-track">
         <div className="horizon-wrap">
           <Drawing
             name="horizon"

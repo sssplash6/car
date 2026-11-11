@@ -12,7 +12,7 @@
 //
 // For a drawing made in a vector editor instead, use scripts/illustration-prep.mjs.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -278,12 +278,16 @@ function subCubic(seg, t0, t1) {
   return t1 < 1 ? split(right, (t1 - t0) / (1 - t0))[0] : right;
 }
 function occlude(d, occs, minRun = 3) {
+  return keepWhere(d, (p) => hidden(p, occs), minRun);
+}
+/** The stretches of `d` where `isHidden` is false, as exact sub-cubics. */
+function keepWhere(d, isHidden, minRun = 3) {
   const N = 72;
   const out = [];
   for (const s of parse(d)) {
     let run = null;
     for (const seg of s.segs) {
-      const hid = (t) => hidden(bez(seg, t).pt, occs);
+      const hid = (t) => isHidden(bez(seg, t).pt);
       const edges = [];
       let prev = hid(0);
       for (let i = 1; i <= N; i++) {
@@ -351,6 +355,42 @@ const yAt = (pts) => (x) => {
   return pts[x < pts[0][0] ? 0 : pts.length - 1][1];
 };
 
+// ---------- the region map (About → Coverage) ----------
+// The five states, their shared borders, the Caspian and Aral seas, Balkhash
+// and Issyk-Kul, the Amu Darya, Syr Darya and their neighbours, and the five
+// capitals as dots. The geography is Natural Earth's (1:50m, public domain),
+// projected and simplified by scripts/region-map.mjs into region-map.json;
+// here it is only smoothed and handed the same pen as everything else. Each
+// state carries a pale wash of its own, which the list beside the map uses as
+// its legend (and hovering a name lifts that state's wash).
+function regionMap() {
+  const M = JSON.parse(readFileSync(join(root, "scripts/region-map.json"), "utf8"));
+  // borders keep their straight runs (the desert lines are ruled); water is
+  // drawn smooth, in the water ink, so a river never reads as a border
+  const ruled = (pts) => `M${pts.map(([x, y]) => `${f(x)} ${f(y)}`).join(" L ")}`;
+  const closed = (pts) => `${smooth([...pts, pts[0]])} Z`;
+  const strokes = [];
+  const add = (d, amp, ink) => strokes.push({ d, amp, ...(ink ? { ink } : {}) });
+  // the outline, then the borders inside it, then the water
+  M.outer.forEach((c) => add(ruled(c), 0.5));
+  M.inner.forEach((c) => add(ruled(c), 0.5));
+  M.farShore.forEach((c) => add(ruled(c), 0.5));
+  const borders = strokes.length - 1;
+  M.lakes.forEach((l) => add(closed(l.ring), 0.4, "water"));
+  add(M.rivers.map((c) => smooth(c)).join(" "), 0.4, "water");
+  return {
+    vb: M.vb,
+    strokes,
+    dots: M.capitals.map(([x, y]) => [x, y, 2.4]),
+    washes: [
+      ...M.states.map((st) => ({ d: ring(st.ring), tone: st.code, at: borders })),
+      { d: ring(M.caspian), tone: "water", at: borders },
+      ...M.lakes.map((l, i) => ({ d: ring(l.ring), tone: "water", at: borders + 1 + i })),
+    ],
+  };
+}
+const REGION = regionMap();
+
 // ---------- the library (§5.4) ----------
 // Each entry: viewBox, wobble amp (and step for very large boxes), shift/scale
 // to re-centre the composition with the §5.2 margin, strokes in draw order,
@@ -371,12 +411,15 @@ const saigaHornSegs = parse(saigaHorn)[0].segs;
 const silkAntenna = "M196 152 C 188 134 176 120 160 112";
 
 // ---------- the home horizon ----------
-// The region now, read left to right: the steppe camp (yurts, smoke, horses)
-// under the Tian Shan, wind turbines and a new city on the right, and a fast
-// train along the front carrying one toward the other. Owner's direction of
-// 2026-11-10, after the plain ridge. Every motif appears at least once in the
-// middle 640 units, which is all a phone shows (xMidYMid slice, 150px tall).
-// Nothing is a specific landmark: no tower, dome or flag belongs to one state.
+// The region read left to right as time: the steppe camp (yurts, smoke,
+// horses) under the Tian Shan, then a madrasa of the Silk Road cities, then
+// wind turbines and a new city, and a fast train along the front. Owner's
+// direction of 2026-11-10 (the motifs) and 2026-11-11 (the madrasa, and the
+// scroll drawing it in order "like an evolutionary timeline"). Every era
+// appears in the middle 700 units, which is all a phone shows (xMidYMid
+// slice, 160px tall). Nothing is a specific landmark: the madrasa is the
+// Timurid type, not one building, and no tower, dome or flag belongs to one
+// state.
 
 const HZ_RIDGE =
   "M48 200 C 110 192 160 172 198 152 C 224 138 242 122 262 106 C 276 116 290 128 306 132 C 326 116 346 84 368 58 C 388 82 404 108 426 122 C 446 112 460 100 476 92 C 494 104 512 120 534 128 C 562 116 588 92 612 68 C 628 54 640 44 652 36 C 668 56 690 86 716 106 C 736 98 752 88 768 82 C 790 100 812 118 838 126 C 866 110 890 90 914 74 C 934 92 958 116 986 132 C 1034 158 1092 178 1156 188";
@@ -477,6 +520,51 @@ function horse(kind, x, s, flip = false, coat = "bay") {
   };
 }
 
+/** A madrasa in the Timurid manner: the portal (pishtaq) with its pointed
+    iwan and a door, the frieze across it, two low wings of arched cells, a
+    minaret at each corner, and a ribbed melon dome on its drum behind the
+    portal. Built in local units (ground at 0, up negative), scaled by `s`. */
+function madrasa(cx, s) {
+  const m = at(cx, g(cx), s);
+  const L = (d) => xform(d, m);
+  // a pointed arch on two jambs, from the ground up to `apex`
+  const arch = (x, hw, spring, apex) => {
+    const [y1, y2] = [spring + (apex - spring) * 0.45, spring + (apex - spring) * 0.75];
+    return (
+      `M${x - hw} 0 L ${x - hw} ${spring} C ${x - hw} ${y1} ${x - hw * 0.45} ${y2} ${x} ${apex}` +
+      ` C ${x + hw * 0.45} ${y2} ${x + hw} ${y1} ${x + hw} ${spring} L ${x + hw} 0`
+    );
+  };
+  const minaret = (x) =>
+    `M${x - 4.5} 0 L ${x - 3.5} -104 L ${x - 5} -104 L ${x - 5} -110 L ${x - 3.5} -110 C ${x - 3.5} -114 ${x - 1.5} -117 ${x} -119` +
+    ` C ${x + 1.5} -117 ${x + 3.5} -114 ${x + 3.5} -110 L ${x + 5} -110 L ${x + 5} -104 L ${x + 3.5} -104 L ${x + 4.5} 0`;
+  const portal = "M-22 0 L -22 -100 L 22 -100 L 22 0";
+  const iwan = arch(0, 13, -54, -84);
+  const door = arch(0, 5, -16, -25);
+  const frieze = "M-22 -91 L 22 -91";
+  const cells = [-41, -30, 30, 41].map((x) => arch(x, 4, -24, -33));
+  const wings = ["M-22 -54 L -49 -54", "M22 -54 L 49 -54", ...cells].join(" ");
+  const dome =
+    "M-15 -100 L -15 -108 C -23 -112 -25 -129 -14 -138 C -8 -143 -3 -144 0 -148" +
+    " C 3 -144 8 -143 14 -138 C 25 -129 23 -112 15 -108 L 15 -100";
+  const ribs = "M-15 -108 L 15 -108 M-7 -108 C -12 -121 -9 -136 0 -148 M7 -108 C 12 -121 9 -136 0 -148 M0 -148 L 0 -156";
+  const [minL, minR] = [minaret(-53.5), minaret(53.5)];
+  const facade = [[-49, 0], [-49, -54], [-22, -54], [-22, -100], [22, -100], [22, -54], [49, -54], [49, 0]].map(m);
+  // warm brick, blue tile in the iwan and the cells, the turquoise dome
+  const washes = [
+    { d: ring(polyOf(L(dome), 8)), tone: "dome" },
+    { d: ring(facade), tone: "brick" },
+    ...[minL, minR].map((d) => ({ d: ring(polyOf(L(d), 4)), tone: "brick" })),
+    { d: ring(polyOf(L(iwan), 8)), tone: "tile" },
+    ...cells.map((d) => ({ d: ring(polyOf(L(d), 6)), tone: "tile" })),
+  ];
+  return {
+    strokes: [portal, `${iwan} ${door}`, frieze, wings, minL, minR, dome, ribs].map(L),
+    washes,
+    occ: [solid(facade, 4), solid(polyOf(L(dome), 12), 4), ...[minL, minR].map((d) => solid(polyOf(L(d), 6), 4))],
+  };
+}
+
 /** A wind turbine: the tower, three swept blades, the hub as a dot. `turn` is
     the first blade's angle from vertical, clockwise. */
 function turbine(x, H, L, turn) {
@@ -534,13 +622,13 @@ function tower(x0, x1, top, kind, { edge = 0, tone = "glass", cap } = {}) {
 }
 
 /** The new city, nearest first: each building hides what stands behind it.
-    Glass in three blues (the far ones paler, in haze), two in warm stone, and
-    one turquoise dome, the region's colour, on no particular city's mosque. */
+    Glass in three blues (the far ones paler, in haze) and warm stone. The
+    turquoise dome now belongs to the madrasa, an era earlier. */
 function city() {
   const front = [
     tower(828, 856, 198, "flat", { tone: "stone" }),
     tower(902, 928, 112, "round", { edge: 0.68, tone: "glass" }),
-    tower(938, 984, 196, "dome", { tone: "stone", cap: "dome" }),
+    tower(938, 984, 176, "flat", { edge: 0.36, tone: "stone" }),
     tower(1004, 1028, 142, "mast", { tone: "glass-2" }),
     tower(1056, 1098, 188, "flat", { tone: "glass" }),
     tower(1098, 1146, 208, "flat", { tone: "stone" }),
@@ -558,9 +646,50 @@ function city() {
   );
   const parts = all.map(({ t, near }) => {
     const d = [t.outline, ...t.extra].join(" ");
-    return { d: near ? d : occlude(d, frontOcc), near, washes: t.washes };
+    return { d: near ? d : occlude(d, frontOcc), near, washes: t.washes, occ: [solid(t.poly, 5)] };
   });
   return { parts, occ: [...front, ...back].map((t) => solid(t.poly, 5)) };
+}
+
+/** A Bactrian camel walking right on the road, local units (ground at 0, up
+    negative, about 70 long and 51 tall): the back over two humps, the neck
+    dipping and rising to the head, the underside and four legs mid-stride,
+    and a pack over the saddle between the humps. */
+const CAMEL = {
+  strokes: [
+    // tail, rump, rear hump, saddle, front hump, withers, neck, head, muzzle,
+    // chin, throat, down to the chest
+    "M-29 -29 C -29 -34 -28 -38 -26 -41 C -25 -50 -20 -58 -15 -58 C -10 -58 -8 -52 -6 -49 C -4 -54 0 -59 4 -59 C 9 -59 11 -52 13 -47 C 18 -44 22 -46 25 -51 C 27 -55 29 -58 32 -58 C 35 -58 38 -56 40 -54 C 41 -52 40 -51 38 -51 C 35 -51 32 -51 30 -49 C 27 -44 24 -38 18 -35",
+    // chest and the near foreleg, the far foreleg, belly, the hind legs, haunch
+    "M18 -35 C 16 -33 15 -32 14 -31 L 15 -15 L 17 0 M12 -31 L 11 -15 L 8 0 M12 -31 C 2 -28 -10 -28 -18 -31 L -15 -15 L -12 0 M-20 -31 L -22 -15 L -25 0 M-20 -31 C -23 -33 -25 -37 -26 -41",
+    // the pack over the saddle
+    "M-11 -51 L -12 -39 L 1 -39 L 0 -53",
+  ],
+  coat: [[-29, -29], [-27, -38], [-25, -48], [-20, -56], [-15, -58], [-10, -57], [-6, -49], [-2, -56], [4, -59], [9, -58], [12, -50], [16, -45], [22, -46], [27, -55], [32, -58], [38, -56], [40, -53], [36, -51], [30, -49], [26, -41], [18, -35], [14, -31], [2, -28], [-10, -28], [-18, -31], [-22, -32], [-26, -38]],
+  pack: [[-11, -51], [-12, -39], [1, -39], [0, -53], [-3, -50], [-6, -49], [-8, -51]],
+};
+/** A caravan walking the road the train will take: camels nose to tail, each
+    one's nose rope tied to the saddle of the one ahead. */
+function caravan(xs, s) {
+  return xs.map((x, i) => {
+    const m = at(x, HZ_RAIL, s);
+    const strokes = CAMEL.strokes.map((d) => xform(d, m));
+    const next = xs[i + 1];
+    if (next !== undefined) {
+      const [a, b] = [m([40, -52]), at(next, HZ_RAIL, s)([-11.5, -45])];
+      const sag = 6 * s;
+      strokes.push(
+        `M${f(a[0])} ${f(a[1])} C ${f(a[0] + (b[0] - a[0]) * 0.3)} ${f(a[1] + sag + 4)} ${f(a[0] + (b[0] - a[0]) * 0.7)} ${f(b[1] + sag)} ${f(b[0])} ${f(b[1])}`,
+      );
+    }
+    return {
+      strokes,
+      washes: [
+        { d: ring(CAMEL.coat.map(m)), tone: "camel" },
+        { d: ring(CAMEL.pack.map(m)), tone: i % 2 ? "tile" : "door" },
+      ],
+    };
+  });
 }
 
 /** The train on its rail, nose to the right: body, window strips per car,
@@ -605,20 +734,57 @@ function train(x0, x1, cars = 3) {
   return { strokes: [body, win, seams, screen, stripe, panto], dots: wheels, washes };
 }
 
+// The scroll timeline, in fractions of the run (0 → 1). The rail is the time
+// axis, drawn left to right until AXIS; each motif draws as the rail's pen
+// passes its left edge, and the train arrives last. Wide screens see the
+// whole box and phones only its middle, so every moment is worked out for
+// both windows ([wide, phone]); the land itself is there on load.
+const AXIS = 0.86;
+// the caravan fades as the train starts to draw on the same road
+const LEAVE = AXIS - 0.005;
+// Five birds over the new city, where the scroll brings them: they set out
+// over the empty steppe at dawn and cross the eras with the reader.
+const bird = (x, y, w) =>
+  `M${x - w} ${y - w * 0.1} C ${x - w * 0.6} ${y - w * 0.55} ${x - w * 0.2} ${y - w * 0.45} ${x} ${y + w * 0.15}` +
+  ` C ${x + w * 0.2} ${y - w * 0.45} ${x + w * 0.6} ${y - w * 0.55} ${x + w} ${y - w * 0.1}`;
+const HZ_FLOCK = [
+  [748, 46, 7],
+  [768, 36, 6],
+  [788, 50, 5.5],
+  [806, 30, 5],
+  [826, 42, 4.5],
+]
+  .map(([x, y, w]) => bird(x, y, w))
+  .join(" ");
+const WINDOWS = [
+  [24, 1176],
+  [250, 950],
+];
+
 function horizon() {
   const yurts = [yurt(330, 92, { ribs: true, smoke: true }), yurt(420, 64), yurt(214, 46)];
   const horses = [
     horse(HORSE_STAND, 474, 0.56, false, "chestnut"),
-    horse(HORSE_GRAZE, 612, 0.5, true, "dun"),
+    horse(HORSE_GRAZE, 284, 0.4, true, "dun"),
     horse(HORSE_GRAZE, 66, 0.4, false, "grey"),
     horse(HORSE_STAND, 168, 0.36, true, "chestnut"),
   ];
-  const turbines = [turbine(688, 122, 46, 14), turbine(752, 96, 36, 52), turbine(800, 72, 27, 98)];
+  const school = madrasa(594, 0.85);
+  const turbines = [turbine(700, 122, 46, 14), turbine(756, 96, 36, 52), turbine(802, 72, 27, 98)];
   const town = city();
   const tr = train(372, 852);
+  const camels = caravan([440, 494, 548, 602], 0.45);
 
-  const front = [...yurts, ...horses, ...turbines, town].flatMap((o) => o.occ);
-  const behindCity = town.occ;
+  // everything that stands in front of the land, by motif
+  const motifs = [
+    ...yurts.map((o, i) => ({ key: `yurt${i}`, occ: o.occ })),
+    ...horses.map((o, i) => ({ key: `horse${i}`, occ: o.occ })),
+    { key: "madrasa", occ: school.occ },
+    ...turbines.map((o, i) => ({ key: `turbine${i}`, occ: o.occ })),
+    ...town.parts.map((t, i) => ({ key: `tower${i}`, occ: t.occ })),
+  ];
+  const front = motifs.flatMap((m) => m.occ);
+  const behindTurbines = [...school.occ, ...town.occ];
 
   // Strokes in draw order, each tagged with the motif it belongs to, so a
   // wash can come in as its motif's outline closes. A line wholly behind
@@ -628,9 +794,12 @@ function horizon() {
   add("ridge", [occlude(HZ_RIDGE, front, 28)], 2.2);
   HZ_SNOW.forEach((d, i) => add(`snow${i}`, [occlude(d, front)], 0.7));
   add("ground", [HZ_GROUND], 2.2);
+  add("flock", [HZ_FLOCK], 0.3);
   yurts.forEach((o, i) => add(`yurt${i}`, o.strokes, 0.7));
   horses.forEach((o, i) => add(`horse${i}`, o.strokes, 0.7));
-  turbines.forEach((o, i) => add(`turbine${i}`, o.strokes.map((d) => occlude(d, behindCity)), 0.7));
+  add("madrasa", school.strokes, 0.7);
+  camels.forEach((o, i) => add(`camel${i}`, o.strokes, 0.5));
+  turbines.forEach((o, i) => add(`turbine${i}`, o.strokes.map((d) => occlude(d, behindTurbines)), 0.7));
   town.parts.forEach((t, i) => add(`tower${i}`, [t.d], 0.7));
   add("rail", [`M24 ${HZ_RAIL} L 1176 ${HZ_RAIL}`], 2.2);
   add("train", tr.strokes, 0.7);
@@ -664,7 +833,7 @@ function horizon() {
     .flatMap((t) => t.washes.map((w) => ({ ...w, at: t.at })));
 
   const washes = [
-    { d: ellipse(520, 62, 24, 24), tone: "sun", at: 0 },
+    { d: ellipse(520, 62, 24, 24), tone: "sun", at: 0, move: "sun" },
     // blue on the peaks, gone to the page by the foothills (so the ridge's
     // open ends need no edge)
     { d: hills, tone: "hills", fade: { from: [0, 44], to: [0, 228], stops: [[0, "hills"], [1, "hills", 0]] }, at: last("ridge") },
@@ -676,15 +845,97 @@ function horizon() {
       at: last("ground"),
     },
     ...towerWashes,
+    ...school.washes.map((w) => ({ ...w, at: last("madrasa") })),
     ...yurts.flatMap((o, i) => o.washes.map((w) => ({ ...w, at: last(`yurt${i}`) }))),
     ...horses.flatMap((o, i) => o.washes.map((w) => ({ ...w, at: last(`horse${i}`) }))),
+    ...camels.flatMap((o, i) => o.washes.map((w) => ({ ...w, at: last(`camel${i}`), out: [LEAVE, LEAVE] }))),
     ...tr.washes.map((w) => ({ ...w, at: last("train") })),
   ];
 
+  // ---- the timeline: each stroke's [start, end] per window ----
+  const land = new Set(["ridge", "ground", "flock", ...HZ_SNOW.map((_, i) => `snow${i}`)]);
+  const keys = [...new Set(strokes.map((s) => s.key))].filter((k) => !land.has(k));
+  const spans = strokes.map(() => []);
+  for (const [w0, w1] of WINDOWS) {
+    const xT = (x) => (AXIS * (x - w0)) / (w1 - w0);
+    for (const k of keys) {
+      const idx = strokes.flatMap((s, i) => (s.key === k ? [i] : []));
+      const n = idx.length;
+      let t0;
+      let dur;
+      if (k === "rail") [t0, dur] = [xT(24), xT(1176) - xT(24)];
+      else if (k === "train") [t0, dur] = [AXIS + 0.01, 0.11];
+      else {
+        const x0 = Math.min(...idx.flatMap((i) => polyOf(strokes[i].d, 4).map(([x]) => x)));
+        dur = Math.min(0.11, Math.max(0.045, 0.035 + 0.01 * n));
+        t0 = Math.min(Math.max(xT(x0), -0.2), 0.95 - dur);
+      }
+      // a motif's strokes follow one another, each over 60% of its time
+      const len = k === "rail" ? dur : dur * 0.6;
+      const step = n > 1 ? (dur - len) / (n - 1) : 0;
+      idx.forEach((i, j) => spans[i].push(t0 + j * step, t0 + j * step + len));
+    }
+  }
+  // a wash comes in as its stroke closes, a dot as its motif ends
+  const moment = (i) => (spans[i].length ? [0, 2].map((o) => spans[i][o] + 0.85 * (spans[i][o + 1] - spans[i][o])) : null);
+  const end = (i) => [spans[i][1], spans[i][3]];
+
+  // ---- patches: the land is whole on load ----
+  // The ridge and snow are cut where motifs will stand in front of them, but
+  // those motifs only arrive with the scroll. So each cut piece is kept as its
+  // own stroke, drawn on load and faded out the moment the motif that hides it
+  // starts to draw (`out`: [wide, phone, place along the ridge]). Pieces too
+  // short to keep between two motifs fade with the later one. Without scroll
+  // timelines everything draws at once and the patches are never shown.
+  const startOf = (key) => {
+    const idx = strokes.flatMap((s, i) => (s.key === key && spans[i].length ? [i] : []));
+    return idx.length ? [Math.min(...idx.map((i) => spans[i][0])), Math.min(...idx.map((i) => spans[i][2]))] : null;
+  };
+  const arriving = motifs
+    .map((m) => ({ ...m, at: startOf(m.key) }))
+    .filter((m) => m.at)
+    .sort((p, q) => p.at[0] - q.at[0]);
+  const LAND = [{ d: HZ_RIDGE, run: 28, amp: 2.2 }, ...HZ_SNOW.map((d) => ({ d, run: 3, amp: 0.7 }))];
+  const patches = [];
+  for (const src of LAND) {
+    const byMotif = new Map();
+    arriving.forEach((m, j) => {
+      const earlier = arriving.slice(0, j).flatMap((o) => o.occ);
+      const d = keepWhere(src.d, (p) => !hidden(p, m.occ) || hidden(p, earlier), 1);
+      if (d) byMotif.set(m.key, [d]);
+    });
+    for (const sub of parse(keepWhere(src.d, (p) => hidden(p, front), 0))) {
+      if (sub.segs.reduce((n, g) => n + dist(g[0], g[3]), 0) > src.run) continue;
+      const ends = [sub.start, sub.segs.at(-1)[3]];
+      const touching = arriving.filter((m) => ends.some((e) => hidden(e, m.occ.map((o) => ({ ...o, pad: o.pad + 2 })))));
+      const owner = touching.at(-1);
+      if (owner) byMotif.set(owner.key, [...(byMotif.get(owner.key) ?? []), serialize([sub])]);
+    }
+    for (const [key, ds] of byMotif) {
+      const m = arriving.find((o) => o.key === key);
+      const d = ds.join(" ");
+      const x0 = Math.min(...polyOf(d, 2).map(([x]) => x));
+      patches.push({ d, amp: src.amp, out: [...m.at, Math.min(1, Math.max(0, (x0 - 48) / (1156 - 48)))] });
+    }
+  }
+
   return {
-    strokes: strokes.map(({ d, amp }) => ({ d, amp })),
+    strokes: [
+      ...strokes.map(({ d, amp, key }, i) => ({
+        d,
+        amp,
+        ...(spans[i].length ? { t: spans[i] } : {}),
+        ...(key.startsWith("camel") ? { out: [LEAVE, LEAVE, 0] } : {}),
+        ...(key === "flock" ? { move: "flock" } : {}),
+      })),
+      ...patches,
+    ],
     dots: [...turbines.map((t) => t.dot), ...tr.dots],
-    washes,
+    dotsAt: [...turbines.map((_, i) => end(last(`turbine${i}`))), ...tr.dots.map(() => end(last("train")))],
+    washes: washes.map((w) => {
+      const t = moment(w.at);
+      return t ? { ...w, t } : w;
+    }),
   };
 }
 const HZ = horizon();
@@ -710,6 +961,7 @@ const RAW = {
     strokes: HZ.strokes,
     dots: HZ.dots,
     washes: HZ.washes,
+    dotsAt: HZ.dotsAt,
     washShift: [1.5, 1.5],
   },
 
@@ -939,24 +1191,15 @@ const RAW = {
     dots: [[180, 380, 6]],
   },
 
-  // Amu Darya and Syr Darya running to the Aral's 1960 shoreline and the two
-  // lagoons left inside it.
-  rivers: {
-    vb: [1200, 400],
-    amp: 2.2,
+  // The five states on one map (About → Coverage), built below (REGION).
+  region: {
+    vb: REGION.vb,
+    amp: 0.5,
     step: 140,
-    shift: [0, -36],
-    scale: 0.95,
-    strokes: [
-      "M40 360 C 70 330 90 300 110 330 C 130 300 160 270 190 320 C 210 300 230 290 250 330",
-      "M80 380 C 300 340 420 300 560 260 C 700 220 760 180 780 120",
-      "M240 390 C 500 360 700 300 860 240 C 960 200 1000 160 1000 110",
-      "M300 396 C 340 360 380 340 430 320",
-      "M700 110 C 760 90 900 80 1060 96 C 1100 100 1130 120 1150 140",
-      "M790 120 C 820 104 860 108 870 124 C 860 140 820 142 800 134",
-      "M900 150 C 940 130 1000 136 1010 160 C 1000 186 940 190 914 176",
-    ],
-    dots: [],
+    strokes: REGION.strokes,
+    dots: REGION.dots,
+    washes: REGION.washes,
+    washShift: [0.8, 0.8],
   },
 
   // Compass rose after the astrolabe. Strokes from index 2 (the needles, the
@@ -982,6 +1225,7 @@ const RAW = {
 
 // ---------- build ----------
 const DATA = {};
+const r3 = (n) => Math.round(n * 1000) / 1000;
 for (const [name, r] of Object.entries(RAW)) {
   const [sx, sy] = r.shift ?? [0, 0];
   const k = r.scale ?? 1;
@@ -992,6 +1236,10 @@ for (const [name, r] of Object.entries(RAW)) {
     return {
       d: wobble(src.d, { amp: src.amp ?? r.amp, seed: `${name}-${i}`, step: r.step ?? 90, map }),
       ...(src.stage ? { stage: src.stage } : {}),
+      ...(src.t ? { t: src.t.map(r3) } : {}),
+      ...(src.out ? { out: src.out.map(r3) } : {}),
+      ...(src.move ? { move: src.move } : {}),
+      ...(src.ink ? { ink: src.ink } : {}),
     };
   });
   const dots = r.dots.map(([x, y, rr, stage]) => {
@@ -999,6 +1247,7 @@ for (const [name, r] of Object.entries(RAW)) {
     return stage ? [+f(mx), +f(my), rr, stage] : [+f(mx), +f(my), rr];
   });
   const entry = { viewBox: r.vb, strokes, dots };
+  if (r.dotsAt) entry.dotsAt = r.dotsAt.map((t) => t.map(r3));
   // washes sit a hair off the line, down and right, like a hand-tinted print
   if (r.washes) {
     const [ox, oy] = r.washShift ?? [0, 0];
@@ -1016,7 +1265,7 @@ for (const [name, r] of Object.entries(RAW)) {
       }
       return out.join(" ").replace(/([MLCZ]) /g, "$1");
     };
-    entry.washes = r.washes.map(({ d, ...w }) => ({ d: shift(d), ...w }));
+    entry.washes = r.washes.map(({ d, t, ...w }) => ({ d: shift(d), ...w, ...(t ? { t: t.map(r3) } : {}) }));
   }
   if (r.needleFrom !== undefined) {
     const [ox, oy] = map([200, 212]);
@@ -1045,7 +1294,7 @@ if (pi > -1) {
   const svg = (name, { w, tone = "#141413", bg = "transparent", sw }) => {
     const d = DATA[name];
     const strokeW = sw ?? (d.viewBox[0] / 400) * 2.75;
-    const paths = d.strokes.map((s) => `<path d="${s.d}"/>`).join("");
+    const paths = d.strokes.filter((s) => !s.out).map((s) => `<path d="${s.d}"/>`).join("");
     const dots = d.dots.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join("");
     return `<figure style="margin:0;background:${bg};border-radius:24px;padding:12px;width:${w}px"><svg viewBox="0 0 ${d.viewBox[0]} ${d.viewBox[1]}" width="${w}" fill="none" stroke="${tone}" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round" style="display:block;overflow:visible">${paths}<g fill="${tone}" fill-opacity=".6" stroke="none">${dots}</g></svg><figcaption style="font:12px monospace;margin-top:6px">${name}</figcaption></figure>`;
   };
@@ -1064,7 +1313,8 @@ if (pi > -1) {
 <div style="display:flex;flex-wrap:wrap;gap:16px">${plates.map(([n, bg]) => svg(n, { w: 300, bg })).join("")}
 ${svg("compass", { w: 300, bg: "#f5f4ed" })}${svg("mark", { w: 96, sw: 1 })}</div>
 <div style="margin-top:16px">${svg("horizon", { w: 1200, sw: 1.75 })}</div>
-<div style="margin-top:16px">${svg("rivers", { w: 1200, sw: 1.75 })}</div></body>`;
+<div style="margin-top:16px">${svg("region", { w: 800, sw: 1.75 })}</div>
+<figure style="margin:16px 0 0"><svg viewBox="400 240 260 60" width="1040" fill="none" stroke="#141413" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${DATA.horizon.strokes.filter((s) => s.out && s.t).map((s) => `<path d="${s.d}"/>`).join("")}<path d="M380 294 L 680 294"/></svg><figcaption style="font:12px monospace">horizon: the caravan</figcaption></figure></body>`;
   writeFileSync(file, html);
   console.log(`preview → ${file}`);
 }
