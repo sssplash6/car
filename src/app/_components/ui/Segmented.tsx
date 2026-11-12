@@ -28,6 +28,7 @@ export function Segmented({
       const thumb = nav.querySelector<HTMLElement>(".seg-thumb");
       if (!active || !thumb) return;
       thumb.style.setProperty("--x", `${active.offsetLeft}px`);
+      thumb.style.setProperty("--y", `${active.offsetTop}px`);
       thumb.style.setProperty("--w", `${active.offsetWidth}px`);
     };
     measure();

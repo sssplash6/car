@@ -588,9 +588,11 @@
 
   @media (hover: hover) and (pointer: fine) {
     .btn-primary:hover {
+      background: var(--color-ink-2);
       box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 18%, transparent);
     }
     .btn-secondary:hover {
+      background: var(--color-surface-3);
       box-shadow: 0 0 0 1px var(--color-ink-3);
     }
     .btn-ghost:hover {
@@ -598,7 +600,8 @@
       color: var(--color-ink);
     }
     .btn-on-door:hover {
-      box-shadow: 0 0 0 2px rgb(250 249 245 / 0.3);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgb(250 249 245 / 0.35);
     }
     .link:hover > span::after,
     .prose-link:hover::after,
@@ -1995,14 +1998,14 @@
   }
   .seg-thumb {
     position: absolute;
-    top: 4px;
+    top: 0;
     left: 0;
     height: 32px;
     width: var(--w, 0);
     border-radius: 999px;
     background: var(--color-overlay);
     box-shadow: 0 1px 2px rgb(20 20 19 / 0.08);
-    transform: translateX(var(--x, 0));
+    transform: translate(var(--x, 0), var(--y, 4px));
     opacity: 0;
   }
   .seg[data-ready] .seg-thumb {
@@ -3075,10 +3078,32 @@
   .admin-tabs {
     margin-top: 24px;
   }
+  /* Five tabs do not fit a phone: wrap them onto a second row of the same
+     track rather than hiding Readers and Email log off the edge. */
+  @media (max-width: 639px) {
+    .admin-tabs .seg {
+      flex-wrap: wrap;
+      height: auto;
+      row-gap: 2px;
+      border-radius: 20px;
+      overflow: visible;
+    }
+  }
   .counts {
     display: flex;
     flex-wrap: wrap;
     gap: 8px 20px;
+  }
+  /* On a phone the counts are a two-column list; the dots would otherwise
+     wrap to the start of a line. */
+  @media (max-width: 639px) {
+    .counts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .counts > [aria-hidden="true"] {
+      display: none;
+    }
   }
   .counts a {
     text-decoration: underline 1px transparent;
@@ -3127,6 +3152,10 @@
   .dtable .primary-cell {
     color: var(--color-ink);
   }
+  /* A small button in a cell sits on the row's first text line, not below it. */
+  .dtable td .btn-sm {
+    margin-block: -6px;
+  }
   @media (max-width: 767px) {
     .dtable thead {
       position: absolute;
@@ -3171,6 +3200,10 @@
     }
     .dtable td:empty {
       display: none;
+    }
+    /* Line the ghost button's word up with the other values in its column. */
+    .dtable td .btn-ghost {
+      margin-inline-start: -12px;
     }
   }
 
