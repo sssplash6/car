@@ -112,7 +112,7 @@ export default async function PaperPage({ params }: PageProps) {
     getOptionalUser(),
     prisma.paper.findMany({
       where: { status: PAPER_STATUS.PUBLISHED },
-      select: { id: true, slug: true, title: true, authorLine: true, publishedAt: true },
+      select: { id: true, slug: true, title: true, authorLine: true, publishedAt: true, coverImage: true },
     }),
   ]);
 

@@ -7,7 +7,8 @@ import { PlateChip } from "./IssuePlate";
 import { cx } from "./cx";
 
 // One paper in a list (DESIGN.md §8.9): title, authors, one meta. No glyph,
-// no thumbnail, no numbering, and no abstract text at rest. The whole row is
+// no numbering, and no abstract text at rest. The one picture allowed is a
+// paper's own cover art, small, beside the title, and only when it has one. The whole row is
 // the link; hover is a background pseudo-element and an arrow, so it never
 // moves another row. data-slug lets /papers' preview pane follow the row.
 
@@ -18,6 +19,8 @@ export type RowPaper = {
   publishedAt: Date | null;
   abstract?: string;
   issue?: { number: number; label: string } | null;
+  /** Cover art, when the paper has one: shown small beside the title. */
+  coverImage?: string | null;
 };
 
 export function PaperRow({
@@ -46,9 +49,16 @@ export function PaperRow({
       data-slug={paper.slug}
       style={{ "--i": index } as CSSProperties}
     >
-      <div>
-        {carry ? <TitleCarry slug={paper.slug}>{title}</TitleCarry> : title}
-        <p className="row-authors">{paper.authorLine}</p>
+      <div className={cx(paper.coverImage && "row-main-cover")}>
+        {paper.coverImage && (
+          // Decorative: the title beside it is the link and the name.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={paper.coverImage} alt="" className="row-cover" loading="lazy" />
+        )}
+        <div className="min-w-0">
+          {carry ? <TitleCarry slug={paper.slug}>{title}</TitleCarry> : title}
+          <p className="row-authors">{paper.authorLine}</p>
+        </div>
       </div>
       <div className="row-meta">
         {meta !== "none" && paper.publishedAt && (

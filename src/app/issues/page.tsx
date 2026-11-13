@@ -27,7 +27,7 @@ export default async function IssuesPage() {
   const papers = await prisma.paper.findMany({
     where: { status: PAPER_STATUS.PUBLISHED },
     orderBy: { publishedAt: "desc" },
-    select: { id: true, slug: true, title: true, authorLine: true, publishedAt: true },
+    select: { id: true, slug: true, title: true, authorLine: true, publishedAt: true, coverImage: true },
   });
 
   const issues = groupIntoIssues(

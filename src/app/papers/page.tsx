@@ -57,6 +57,7 @@ export default async function PapersPage({ searchParams }: PageProps) {
         abstract: true,
         authorLine: true,
         publishedAt: true,
+        coverImage: true,
       },
     }),
     // Issue numbers are derived against the whole archive, not the results.
@@ -112,6 +113,7 @@ export default async function PapersPage({ searchParams }: PageProps) {
     authors: paper.authorLine,
     date: paper.publishedAt?.toISOString() ?? null,
     snippet: excerpt(paper.abstract, 280),
+    coverImage: paper.coverImage,
     issue: paper.issue ? { number: paper.issue.number, label: paper.issue.label } : null,
   }));
   const plates: Record<number, { className: string; art: React.ReactNode }> = {};

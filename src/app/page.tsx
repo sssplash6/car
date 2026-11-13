@@ -31,7 +31,7 @@ export default async function HomePage() {
       where: { status: PAPER_STATUS.PUBLISHED },
       orderBy: { publishedAt: "desc" },
       take: ROWS,
-      select: { id: true, slug: true, title: true, authorLine: true, publishedAt: true },
+      select: { id: true, slug: true, title: true, authorLine: true, publishedAt: true, coverImage: true },
     }),
     // One indexed column for the whole archive: the issue number is derived
     // against every publish date, so home can never disagree with /issues.

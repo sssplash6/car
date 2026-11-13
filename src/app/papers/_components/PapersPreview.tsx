@@ -22,6 +22,8 @@ export type PreviewItem = {
   date: string | null;
   snippet: string;
   issue: { number: number; label: string } | null;
+  /** The paper's cover art; when set it takes the plate's place. */
+  coverImage?: string | null;
 };
 
 export function PapersPreview({
@@ -53,7 +55,12 @@ export function PapersPreview({
       {item && (
         <aside className="papers-preview" aria-hidden="true">
           <div key={item.slug} className="papers-preview-in">
-            {plate && item.issue && (
+            {item.coverImage ? (
+              <div className={cx("pv-plate pv-plate-cover", plate?.className)}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={item.coverImage} alt="" className="pv-cover" />
+              </div>
+            ) : plate && item.issue && (
               <div className={cx("pv-plate", plate.className)}>
                 {plate.art}
                 <span className="pv-num">{item.issue.number}</span>
