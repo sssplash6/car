@@ -43,8 +43,8 @@ const inverted = (n: Name) => (n.given.length ? `${n.family}, ${givenFull(n)}` :
 const natural = (n: Name) => (n.given.length ? `${givenFull(n)} ${n.family}` : n.family);
 const apaName = (n: Name) => (n.given.length ? `${n.family}, ${n.given.map(initial).join(" ")}` : n.family);
 
-/** End a fragment with exactly one full stop. */
-const stop = (text: string) => (text.endsWith(".") ? text : `${text}.`);
+/** End a fragment with exactly one full stop (a "?" or "!" already ends it). */
+const stop = (text: string) => (/[.?!]$/.test(text) ? text : `${text}.`);
 
 function chicago(i: CiteInput, names: Name[]): string {
   let authors = "";

@@ -43,6 +43,7 @@ const publishedSelect = {
   authorLine: true,
   originalName: true,
   fileSize: true,
+  coverImage: true,
   publishedAt: true,
 } as const;
 
@@ -241,6 +242,15 @@ export default async function PaperPage({ params }: PageProps) {
       />
 
       <div className="wrap-narrow">
+        {paper.coverImage && (
+          <Reveal gesture="settle" className="paper-cover">
+            {/* A plain img: covers come in any size and Next's optimiser
+                needs the dimensions up front. Covers are public, like the
+                abstract, so there is no gate here. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={paper.coverImage} alt={`Cover art for ${paper.title}`} loading="eager" />
+          </Reveal>
+        )}
         <Reveal as="section" className="abstract" aria-labelledby="abstract-label">
           <h2 id="abstract-label" className="t-meta">
             {COPY.paper.abstractLabel}

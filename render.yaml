@@ -69,7 +69,11 @@ services:
     # prompting or resetting. It runs at START, not build, because that is the
     # first moment the disk exists. On the very first boot this also creates the
     # database file.
-    startCommand: npx prisma migrate deploy && npm start
+    #
+    # scripts/publications.mjs then inserts any paper from content/publications
+    # that the database does not have yet (insert-only, keyed by slug), so the
+    # editors' own papers ship by committing them.
+    startCommand: npx prisma migrate deploy && node scripts/publications.mjs && npm start
 
     # Push-to-deploy is fine here — unlike the Telegram bots, there is no
     # in-memory conversation state to drop and no queued updates to lose. The only

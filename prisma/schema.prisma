@@ -105,6 +105,11 @@ model Paper {
   originalName String
   fileSize     Int // bytes; capped at MAX_UPLOAD_BYTES in src/lib/storage.ts
 
+  // Optional cover art, as a public URL path ("/covers/gapirma.jpg"). Covers
+  // are public on purpose: they sit on the abstract page, which anyone can
+  // read. Null for papers that have none, which is most of them.
+  coverImage String?
+
   submitterId String
   submitter   User   @relation("PapersSubmitted", fields: [submitterId], references: [id], onDelete: Cascade)
   reviewerId  String?

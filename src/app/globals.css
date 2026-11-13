@@ -2101,6 +2101,24 @@
   .abstract {
     margin-top: 64px;
   }
+  /* Cover art, when a paper has one: the only full-colour image on the page,
+     so it sits on its own, centred, at book-cover size above the abstract. */
+  .paper-cover {
+    margin: 56px auto 0;
+    max-width: 360px;
+  }
+  .paper-cover img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow:
+      0 1px 2px rgb(20 20 19 / 0.08),
+      0 18px 40px -18px rgb(20 20 19 / 0.35);
+  }
+  .paper-cover + .abstract {
+    margin-top: 48px;
+  }
   .abstract .t-meta {
     display: block;
     margin-bottom: 16px;
