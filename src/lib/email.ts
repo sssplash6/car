@@ -1,5 +1,6 @@
 import "server-only";
 
+import { GUEST_EMAIL } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 import { SITE_NAME, siteUrl } from "@/lib/site";
 
@@ -57,6 +58,11 @@ async function deliver(
   subject: string,
   html: string,
 ): Promise<SendResult> {
+  if (to === GUEST_EMAIL) {
+    // The shared open-access guest (src/lib/dal.ts) has no real inbox.
+    return { status: "SKIPPED" };
+  }
+
   if (!process.env.RESEND_API_KEY) {
     // Dev fallback: no mail account configured. Log so the flow stays fully
     // testable locally, and record it as SKIPPED rather than SENT so the admin

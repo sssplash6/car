@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { GUEST_EMAIL, openAccess } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 
 // Data access layer. Every server action and every protected page starts here.
@@ -21,6 +22,20 @@ export type SessionUser = {
   name: string | null;
 };
 
+// Open access (src/auth.config.ts): with no session, every visitor is this one
+// shared account. It is an editor so the whole review flow can be shown. Its
+// address is never mailed (src/lib/email.ts skips it).
+
+const guestUser = cache(async (): Promise<SessionUser> => {
+  const user = await prisma.user.upsert({
+    where: { email: GUEST_EMAIL },
+    update: { role: "ADMIN" },
+    create: { email: GUEST_EMAIL, name: "Guest editor", role: "ADMIN" },
+    select: { id: true, email: true, name: true },
+  });
+  return user;
+});
+
 /**
  * Return the signed-in user, or redirect to /login.
  *
@@ -32,6 +47,7 @@ export const requireUser = cache(async (): Promise<SessionUser> => {
   const session = await auth();
   const id = session?.user?.id;
 
+  if (!id && openAccess) return guestUser();
   if (!id) redirect("/login");
 
   return {
@@ -51,7 +67,7 @@ export const requireUser = cache(async (): Promise<SessionUser> => {
 export const getOptionalUser = cache(async (): Promise<SessionUser | null> => {
   const session = await auth();
   const id = session?.user?.id;
-  if (!id) return null;
+  if (!id) return openAccess ? guestUser() : null;
 
   return {
     id,

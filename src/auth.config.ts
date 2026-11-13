@@ -22,6 +22,14 @@ export const googleEnabled = !!(
 // Ignored when Google is configured: a site with real accounts is never the demo.
 export const demoMode = process.env.DEMO_MODE === "true" && !googleEnabled;
 
+// Open access (the default while the owner demos the product): no sign-in and
+// no download gate. Every visitor is the one shared guest account from
+// src/lib/dal.ts, which is an editor, so submit, write and the editor's desk
+// all work without Google. Set REQUIRE_SIGN_IN=true to bring back the Google
+// sign-in and the PDF gate exactly as they were.
+export const openAccess = process.env.REQUIRE_SIGN_IN !== "true";
+export const GUEST_EMAIL = "guest@centralasianreview.invalid";
+
 // Routes that require a signed-in user. Everything else is public — this is a
 // content-marketing site, so the paper index and abstract pages MUST stay
 // crawlable. Adding "/" or "/p" here would delete the site's search traffic.
@@ -55,6 +63,12 @@ export const authConfig = {
     // open signup is the point. Anyone may register and read; publishing is
     // gated by review, not by who can log in.
     authorized({ auth, request: { nextUrl } }) {
+      if (openAccess) {
+        // Nobody signs in, so the sign-in page has nothing to offer.
+        if (nextUrl.pathname === "/login") return Response.redirect(new URL("/", nextUrl));
+        return true;
+      }
+
       const isLoggedIn = !!auth?.user;
       const needsAuth = PROTECTED_PREFIXES.some(
         (prefix) =>

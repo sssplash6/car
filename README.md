@@ -6,6 +6,12 @@ an editor reviews every submission before it appears.
 
 ## How access works
 
+> **Open access is ON by default (demo).** There is no sign-in and no PDF gate:
+> every visitor is one shared "Guest editor" account, so downloading, submitting,
+> writing and the editor's desk all work without Google. Set
+> `REQUIRE_SIGN_IN=true` to restore the Google sign-in and the gate described
+> below. See `openAccess` in `src/auth.config.ts`.
+
 Three tiers, and only the middle one is open to the world:
 
 | Who | Can do |

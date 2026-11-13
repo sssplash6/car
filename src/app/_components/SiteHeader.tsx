@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { auth } from "@/auth";
+import { openAccess } from "@/auth.config";
+import { getOptionalUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { unreadCount } from "@/lib/notifications";
 import { SITE_NAME } from "@/lib/site";
@@ -29,8 +30,9 @@ const NAV = [
 ];
 
 export async function SiteHeader() {
-  const session = await auth();
-  const userId = session?.user?.id ?? null;
+  // Under open access this is the shared guest, never null (src/lib/dal.ts).
+  const user = await getOptionalUser();
+  const userId = user?.id ?? null;
 
   // Role from the database rather than the JWT, so a freshly promoted editor
   // sees the desk on the next page load. One primary-key lookup, signed-in only.
@@ -43,8 +45,9 @@ export async function SiteHeader() {
 
   const account = userId
     ? {
-        name: session?.user?.name ?? null,
-        email: session?.user?.email ?? null,
+        // The guest's placeholder address is not worth showing.
+        name: user?.name ?? null,
+        email: openAccess ? null : (user?.email ?? null),
         isAdmin: roleRow?.role === "ADMIN",
         unread,
       }
@@ -71,6 +74,7 @@ export async function SiteHeader() {
                 email={account.email}
                 isAdmin={account.isAdmin}
                 unread={account.unread}
+                canSignOut={!openAccess}
                 className="max-lg:hidden"
               />
             </>
@@ -82,6 +86,7 @@ export async function SiteHeader() {
           <MobileSheet
             nav={NAV}
             account={account}
+            canSignOut={!openAccess}
             brand={
               <>
                 <Mark size={24} />

@@ -75,7 +75,7 @@ export const COPY = {
     main: {
       title: "About the Review",
       lede: "Research on the politics, economies and societies of Central Asia. Independent, edited, free to read.",
-      body: "Central Asian Review covers Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan and Uzbekistan, and the wider region where it bears on them. It is independent and published by Freshman Academy. Abstracts are public so the work can be found; the papers are free to registered readers.",
+      body: "Central Asian Review covers Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan and Uzbekistan, and the wider region where it bears on them. It is independent and published by Freshman Academy. Abstracts and papers are free to read and download.",
     },
     processLabel: "How a paper reaches a reader",
     process: [
@@ -103,7 +103,7 @@ export const COPY = {
     },
     readers: {
       title: "For readers",
-      body: "Abstracts are open to everyone. Papers are free to registered readers; a Google sign-in creates the account.",
+      body: "Abstracts and full papers are open to everyone, with no account needed.",
       action: "Browse papers",
     },
   },

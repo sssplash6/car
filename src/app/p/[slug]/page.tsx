@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeftIcon, ArrowRightIcon, DownloadSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { prisma } from "@/lib/prisma";
 import { getOptionalUser } from "@/lib/dal";
+import { openAccess } from "@/auth.config";
 import { PAPER_KIND, PAPER_STATUS, parseTopics } from "@/lib/papers";
 import { bodyText, countWords, parseBody, readingMinutes, renderBody } from "@/lib/article/document";
 import { ArticleLayout } from "@/app/_components/article/ArticleLayout";
@@ -191,7 +192,7 @@ export default async function PaperPage({ params }: PageProps) {
     ...(paper.coverImage && { image: `${siteUrl()}${paper.coverImage}` }),
     // A paper's PDF is gated (flexible sampling, the door panel below); an
     // article is free and whole on the page.
-    ...(isArticle
+    ...(isArticle || openAccess
       ? { isAccessibleForFree: true, ...(topics.length && { keywords: topics.join(", ") }) }
       : {
           isAccessibleForFree: false,
