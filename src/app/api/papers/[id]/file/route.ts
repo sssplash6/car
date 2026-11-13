@@ -40,7 +40,9 @@ export async function GET(
 
   // Same 404 whether the paper is missing or the caller may not see it — a
   // distinct 403 would confirm that a given id exists.
-  if (!paper) return new NextResponse("Not found", { status: 404 });
+  // An article has no PDF: its text is the page itself.
+  if (!paper || !paper.storedName) return new NextResponse("Not found", { status: 404 });
+  const storedName = paper.storedName;
 
   const isPublished = paper.status === PAPER_STATUS.PUBLISHED;
   const isOwner = !!user && user.id === paper.submitterId;
@@ -65,7 +67,7 @@ export async function GET(
 
   let bytes: Buffer;
   try {
-    bytes = await readPdf(paper.storedName);
+    bytes = await readPdf(storedName);
   } catch (err) {
     // The row exists but the file does not — the classic symptom of a Render
     // deploy where UPLOAD_DIR pointed outside the mounted disk.
@@ -79,7 +81,7 @@ export async function GET(
       // to start with %PDF, so this is accurate, and it stops a mislabelled
       // upload from being served as something the browser would execute.
       "Content-Type": "application/pdf",
-      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${asciiFilename(paper.originalName)}"`,
+      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${asciiFilename(paper.originalName ?? "paper.pdf")}"`,
       "Content-Length": String(bytes.byteLength),
       // Gated content must never be cached by a shared cache, or a CDN could
       // serve one reader's download to an anonymous visitor.

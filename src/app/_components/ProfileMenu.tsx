@@ -63,6 +63,9 @@ export function ProfileMenu({
             <p className="truncate text-ui font-medium text-ink">{label}</p>
             {email && email !== label && <p className="truncate text-ui-sm text-ink-3">{email}</p>}
           </div>
+          <Link href="/write" className="menu-item" onClick={done}>
+            Write an article
+          </Link>
           <Link href="/submissions" className="menu-item" onClick={done}>
             My submissions
           </Link>

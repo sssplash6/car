@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { PAPER_STATUS } from "@/lib/papers";
+import { PAPER_KIND, PAPER_STATUS } from "@/lib/papers";
+import { bodyText, countWords, parseBody } from "@/lib/article/document";
 import { formatDate } from "@/lib/site";
 import { EmptyState, Notice } from "@/app/_components/ui/Feedback";
 import { ReviewCard } from "@/app/admin/_components/ReviewCard";
@@ -31,6 +32,10 @@ export default async function QueuePage({ searchParams }: PageProps) {
       abstract: true,
       authorLine: true,
       fileSize: true,
+      kind: true,
+      subtitle: true,
+      coverImage: true,
+      body: true,
       submittedAt: true,
       submitter: { select: { email: true, name: true } },
     },
@@ -54,7 +59,7 @@ export default async function QueuePage({ searchParams }: PageProps) {
       ) : (
         <>
           <p className="t-body text-ink-3">
-            {queue.length} paper{queue.length === 1 ? "" : "s"} awaiting a decision, oldest first.
+            {queue.length} submission{queue.length === 1 ? "" : "s"} awaiting a decision, oldest first.
           </p>
           <div className="mt-8 grid gap-6">
             {queue.map((paper) => (
@@ -65,6 +70,15 @@ export default async function QueuePage({ searchParams }: PageProps) {
                 abstract={paper.abstract}
                 authorLine={paper.authorLine}
                 fileSize={paper.fileSize}
+                article={
+                  paper.kind === PAPER_KIND.ARTICLE
+                    ? {
+                        subtitle: paper.subtitle,
+                        coverImage: paper.coverImage,
+                        words: countWords(bodyText(parseBody(paper.body))),
+                      }
+                    : null
+                }
                 submitterLabel={paper.submitter.email ?? paper.submitter.name ?? "unknown"}
                 submittedAt={paper.submittedAt ? formatDate(paper.submittedAt) : "an unrecorded date"}
                 waitingDays={paper.submittedAt ? daysSince(paper.submittedAt) : null}

@@ -11,7 +11,7 @@ Three tiers, and only the middle one is open to the world:
 | Who | Can do |
 |---|---|
 | Anyone, signed out | Read the paper index and any published abstract |
-| Any signed-in user (`READER`) | Download published PDFs, submit their own papers |
+| Any signed-in user (`READER`) | Download published PDFs, submit papers, write articles |
 | `ADMIN` | Publish or return submissions |
 
 Signup is deliberately open — it is the point, since the gated PDF is what makes
@@ -24,8 +24,8 @@ in-app UI to change them.
 
 ### Where the checks actually live
 
-`src/proxy.ts` redirects signed-out users away from `/submit`, `/submissions` and
-`/admin`, but that is an **optimistic cookie check and not a security boundary** —
+`src/proxy.ts` redirects signed-out users away from `/submit`, `/submissions`,
+`/write`, `/preview` and `/admin`, but that is an **optimistic cookie check and not a security boundary** —
 it never runs for a direct server action POST. The real checks are in
 `src/lib/dal.ts`, next to the data:
 
@@ -39,6 +39,47 @@ Uploaded PDFs are stored **outside `public/`** with generated filenames and are
 served only by `src/app/api/papers/[id]/file/route.ts`. Anything under `public/`
 would be served statically with no auth check, which would bypass the gate
 entirely.
+
+## Articles and the editor
+
+Besides PDF papers, signed-in users can **write articles on the site** at
+`/write`: a Tiptap (ProseMirror) editor with a cover image, title, subtitle,
+topics, images with captions (column, wide or full width), YouTube embeds,
+headings, quotes, lists, links and footnote marks. Type `/` for the block menu;
+select text for the formatting bar. Drafts autosave a moment after typing stops
+and are listed on `/submissions`.
+
+The review rule is the same as for papers: **nothing is public until an editor
+publishes it.**
+
+| State | Author | Editor (`ADMIN`) |
+|---|---|---|
+| `DRAFT` | edits, deletes, submits | cannot see it |
+| `SUBMITTED` | read-only; may withdraw it back to draft | previews it at `/preview/<id>`, may fix it in the editor, publishes or returns it with a note |
+| `REJECTED` (returned) | sees the note in the editor, revises, resubmits | |
+| `PUBLISHED` | read-only | may withdraw it to the queue |
+
+Where things live:
+
+- Article rules (who may edit what, when): `src/lib/articles.ts`. Actions:
+  `src/app/write/actions.ts`, each one re-checks access.
+- The document schema is one list shared by editor and renderer:
+  `src/lib/article/extensions.ts`. Every save is sanitised against it
+  (`src/lib/article/document.ts`: allowed nodes and marks only, links limited to
+  http/https/mailto, images to our media store or https, embeds to YouTube), then
+  rendered to HTML on the server. Published articles are free and read in full on
+  `/p/<slug>`; there is no PDF.
+- Images (covers and figures) are stored on the disk at `UPLOAD_DIR/media`, type
+  checked by their bytes, 8 MB max, and served publicly with long caching by
+  `/api/media/<uuid>.<ext>`.
+
+### Editors' own papers
+
+Papers the editors prepare themselves ship as content: put the PDF (and an
+optional cover in `public/covers/`) in `content/publications/`, list it in
+`publications.json`, and commit. `scripts/publications.mjs` runs at every start
+on Render and inserts any listed paper the database lacks (insert-only, by slug),
+so later edits on the site are never overwritten. Locally: `npm run db:publications`.
 
 ## SEO
 

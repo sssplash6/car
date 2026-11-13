@@ -1,0 +1,235 @@
+/* Article reading typography: the public page, the preview, and the editor's
+   canvas all wear these classes, so writing looks like reading. Tokens only
+   (globals.css @theme); the measure is the site's narrow column, figures can
+   break out to wide or full. */
+
+@layer components {
+  .a-article {
+    --a-measure: var(--narrow);
+    --a-wide: min(64rem, calc(100vw - 2 * var(--gutter)));
+    width: 100%;
+    max-width: calc(var(--a-measure) + 2 * var(--gutter));
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+  }
+
+  .a-head {
+    text-align: left;
+    padding-top: 8px;
+  }
+  .a-topics {
+    color: var(--color-accent);
+    margin-bottom: 18px;
+  }
+  .a-title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--color-ink);
+    text-wrap: balance;
+  }
+  .a-subtitle {
+    margin-top: 16px;
+    font-family: var(--font-serif);
+    font-size: var(--text-lede);
+    line-height: var(--text-lede--line-height);
+    color: var(--color-ink-3);
+    text-wrap: pretty;
+  }
+  .a-byline {
+    margin-top: 22px;
+    font-family: var(--font-sans);
+    font-size: var(--text-ui);
+    color: var(--color-ink-2);
+    font-weight: 500;
+  }
+  .a-meta {
+    margin-top: 6px;
+  }
+
+  .a-cover {
+    margin: 40px auto 0;
+    width: var(--a-wide);
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  /* Sized to the image: a landscape cover fills the wide column, a portrait
+     one stands at its own width instead of floating in a letterbox. */
+  .a-cover img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 80vh;
+    margin-inline: auto;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ---- Body ---------------------------------------------------------- */
+  .a-body {
+    margin-top: 44px;
+    font-family: var(--font-serif);
+    font-size: var(--text-read);
+    line-height: var(--text-read--line-height);
+    color: var(--color-ink);
+    overflow-wrap: break-word;
+  }
+  .a-body > * + * {
+    margin-top: 1.1em;
+  }
+  .a-body p {
+    text-wrap: pretty;
+  }
+  .a-body h2 {
+    margin-top: 2em;
+    font-size: var(--text-h3);
+    line-height: var(--text-h3--line-height);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+  }
+  .a-body h3 {
+    margin-top: 1.7em;
+    font-size: var(--text-h4);
+    line-height: var(--text-h4--line-height);
+    font-weight: 600;
+  }
+  .a-body h2 + *,
+  .a-body h3 + * {
+    margin-top: 0.6em;
+  }
+  .a-body a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-mark);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+  }
+  .a-body a:hover {
+    color: var(--color-accent);
+  }
+  .a-body strong {
+    font-weight: 650;
+  }
+  .a-body mark {
+    background: var(--color-accent-soft);
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 3px;
+  }
+  .a-body sup,
+  .a-body sub {
+    font-size: 0.7em;
+    line-height: 0;
+  }
+  .a-body code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--color-surface-2);
+    padding: 0.1em 0.35em;
+    border-radius: 5px;
+  }
+  .a-body pre {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-sm);
+    padding: 18px 20px;
+    overflow-x: auto;
+  }
+  .a-body pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+  }
+  .a-body blockquote {
+    border-left: 2px solid var(--color-accent-mark);
+    padding-left: 1.1em;
+    font-style: italic;
+    color: var(--color-ink-2);
+  }
+  .a-body ul,
+  .a-body ol {
+    padding-left: 1.4em;
+  }
+  .a-body ul {
+    list-style: disc;
+  }
+  .a-body ol {
+    list-style: decimal;
+  }
+  .a-body li + li {
+    margin-top: 0.35em;
+  }
+  .a-body li > p + p {
+    margin-top: 0.5em;
+  }
+  .a-body li::marker {
+    color: var(--color-ink-4);
+  }
+  .a-body hr {
+    border: 0;
+    height: auto;
+    margin-block: 2.4em;
+    text-align: center;
+  }
+  .a-body hr::after {
+    content: "* * *";
+    letter-spacing: 0.6em;
+    color: var(--color-accent);
+    font-size: 0.9em;
+  }
+
+  /* Figures: column, wide, or full bleed. */
+  .a-figure {
+    margin-block: 2em;
+  }
+  .a-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-xs);
+  }
+  .a-figure figcaption {
+    margin-top: 10px;
+    font-family: var(--font-sans);
+    font-size: var(--text-ui-sm);
+    line-height: 1.45;
+    color: var(--color-ink-3);
+    text-align: center;
+  }
+  .a-figure-wide,
+  .a-figure-full {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .a-figure-wide {
+    width: var(--a-wide);
+  }
+  .a-figure-full {
+    width: 100vw;
+  }
+  .a-figure-full img {
+    border-radius: 0;
+  }
+
+  /* YouTube: 16:9, never wider than the column. */
+  .a-body div[data-youtube-video] {
+    margin-block: 2em;
+  }
+  .a-body div[data-youtube-video] iframe,
+  .a-body iframe.a-embed {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    border-radius: var(--radius-xs);
+    background: var(--color-surface-2);
+  }
+
+  .a-body [style*="text-align: center"] {
+    text-wrap: balance;
+  }
+}

@@ -1,4 +1,5 @@
-import { ArrowUpRightIcon } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import { ArrowUpRightIcon, PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { publishPaper, rejectPaper } from "@/app/admin/actions";
 import { PendingButton } from "@/app/_components/PendingButton";
 import { Field, Textarea } from "@/app/_components/ui/Field";
@@ -14,6 +15,7 @@ export function ReviewCard({
   abstract,
   authorLine,
   fileSize,
+  article,
   submitterLabel,
   submittedAt,
   waitingDays,
@@ -22,7 +24,9 @@ export function ReviewCard({
   title: string;
   abstract: string;
   authorLine: string;
-  fileSize: number;
+  fileSize: number | null;
+  /** Set for an article written on the site: read it in the preview, not a PDF. */
+  article?: { subtitle: string | null; coverImage: string | null; words: number } | null;
   submitterLabel: string;
   submittedAt: string;
   /** Whole days since submission: the queue's triage cue. */
@@ -47,19 +51,52 @@ export function ReviewCard({
           </span>
         )}
         {" · "}
-        {/* Inline, new tab: reading the PDF is step one of every review. */}
-        <a
-          href={`/api/papers/${id}/file?disposition=inline`}
-          target="_blank"
-          rel="noopener"
-          className="prose-link inline-flex items-center gap-1 text-ink-2"
-        >
-          Open PDF, {formatFileSize(fileSize)}
-          <ArrowUpRightIcon aria-hidden="true" className="size-3.5" />
-        </a>
+        {article ? (
+          <>
+            Article, {article.words.toLocaleString()} words{" · "}
+            {/* The preview is the article exactly as it would publish. */}
+            <a
+              href={`/preview/${id}`}
+              target="_blank"
+              rel="noopener"
+              className="prose-link inline-flex items-center gap-1 text-ink-2"
+            >
+              Read the article
+              <ArrowUpRightIcon aria-hidden="true" className="size-3.5" />
+            </a>
+          </>
+        ) : (
+          // Inline, new tab: reading the PDF is step one of every review.
+          <a
+            href={`/api/papers/${id}/file?disposition=inline`}
+            target="_blank"
+            rel="noopener"
+            className="prose-link inline-flex items-center gap-1 text-ink-2"
+          >
+            Open PDF, {formatFileSize(fileSize ?? 0)}
+            <ArrowUpRightIcon aria-hidden="true" className="size-3.5" />
+          </a>
+        )}
       </p>
 
-      <p className="t-body prose-plain mt-5">{abstract}</p>
+      {article ? (
+        <div className="review-article mt-5">
+          {article.coverImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={article.coverImage} alt="" className="review-cover" />
+          )}
+          <div>
+            {article.subtitle && <p className="t-lede text-ink-2">{article.subtitle}</p>}
+            <p className="t-body prose-plain mt-3 text-ink-3">{abstract}</p>
+            <Link href={`/write/${id}`} className="link mt-3 inline-flex items-center gap-1.5">
+              <PencilSimpleIcon aria-hidden="true" />
+              <span>Fix something in the editor first</span>
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <p className="t-body prose-plain mt-5">{abstract}</p>
+      )}
 
       <form action={publishPaper} className="mt-8">
         <input type="hidden" name="id" value={id} />

@@ -1,12 +1,14 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowRightIcon, PencilSimpleLineIcon } from "@phosphor-icons/react/dist/ssr";
 import { requireUser } from "@/lib/dal";
 import { COPY } from "@/lib/content";
 import { Drawing } from "@/app/_components/illustrations/Drawing";
 import { SubmitForm } from "@/app/submit/_components/SubmitForm";
 
 export const metadata: Metadata = {
-  title: "Submit a paper",
+  title: "Submit",
   robots: { index: false, follow: false },
 };
 
@@ -31,6 +33,23 @@ export default async function SubmitPage() {
         </div>
         <Drawing name="cotton" size="sm" draw="load" className="h-[120px] w-24 shrink-0 max-lg:hidden" />
       </header>
+
+      {/* The two ways in. Writing on the site leads: it needs nothing
+          prepared. The PDF form below stays for finished papers. */}
+      <Link href="/write" className="write-card rise-load" style={{ "--d": "220ms" } as CSSProperties}>
+        <span className="write-card-icon" aria-hidden="true">
+          <PencilSimpleLineIcon />
+        </span>
+        <span className="min-w-0">
+          <span className="t-h3 block">{copy.write.title}</span>
+          <span className="t-ui mt-1 block text-ink-3">{copy.write.body}</span>
+        </span>
+        <span className="btn btn-primary btn-md write-card-cta">
+          {copy.write.action}
+          <ArrowRightIcon aria-hidden="true" />
+        </span>
+      </Link>
+      <h2 className="t-meta mt-14">{copy.upload}</h2>
 
       <div className="submit-grid">
         <SubmitForm art={<Drawing name="cotton" size="xs" draw="none" />} />

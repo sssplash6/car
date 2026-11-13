@@ -25,7 +25,7 @@ export const demoMode = process.env.DEMO_MODE === "true" && !googleEnabled;
 // Routes that require a signed-in user. Everything else is public — this is a
 // content-marketing site, so the paper index and abstract pages MUST stay
 // crawlable. Adding "/" or "/p" here would delete the site's search traffic.
-const PROTECTED_PREFIXES = ["/submit", "/submissions", "/admin", "/notifications"];
+const PROTECTED_PREFIXES = ["/submit", "/submissions", "/admin", "/notifications", "/write", "/preview"];
 
 // Edge-safe Auth.js config: no Prisma adapter, no database reads. Shared between
 // the proxy (route protection) and the full server config in `src/auth.ts`.

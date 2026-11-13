@@ -78,3 +78,27 @@ export async function buildUniqueSlug(
 
   throw new Error(`Could not derive a unique slug for "${title}"`);
 }
+
+// ----- Kinds -----
+
+export const PAPER_KIND = {
+  /** An uploaded PDF behind a public abstract. */
+  PAPER: "PAPER",
+  /** Written in the on-site editor (/write) and read in full on the page. */
+  ARTICLE: "ARTICLE",
+} as const;
+
+export type PaperKind = (typeof PAPER_KIND)[keyof typeof PAPER_KIND];
+
+/** Statuses in which an author may still change an article. SUBMITTED is
+    locked so the editor reviews a stable text; PUBLISHED changes go through
+    an editor (withdraw, then revise). */
+export const EDITABLE_STATUSES: readonly string[] = [PAPER_STATUS.DRAFT, PAPER_STATUS.REJECTED];
+
+/** Split a stored comma-separated topics string into clean labels. */
+export function parseTopics(topics: string | null | undefined): string[] {
+  return (topics ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter(Boolean);
+}

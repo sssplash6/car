@@ -88,7 +88,9 @@ model Paper {
   // not need logins to be credited.
   authorLine String
 
-  // DRAFT     — author is still editing, not visible to reviewers
+  // DRAFT     — author is still editing, not visible to reviewers (articles
+  //             autosave here; a returned article goes back to DRAFT-like
+  //             editing as REJECTED)
   // SUBMITTED — awaiting review, locked for editing
   // PUBLISHED — public abstract + READER-gated PDF download
   // REJECTED  — returned to the author with reviewNote
@@ -98,16 +100,31 @@ model Paper {
   // Shown to the author on /submissions when a paper is rejected.
   reviewNote String?
 
-  // Generated cuid filename on the disk mount. Never the name the user typed —
-  // user-controlled filenames allow path traversal out of the upload directory.
-  storedName   String
-  // The uploaded filename, used only for the Content-Disposition download name.
-  originalName String
-  fileSize     Int // bytes; capped at MAX_UPLOAD_BYTES in src/lib/storage.ts
+  // PAPER   — an uploaded PDF behind a public abstract (the original flow)
+  // ARTICLE — written in the on-site editor; the body is the text, read in
+  //           full on the page, and there is no PDF
+  // A String for the same SQLite reason as status; PAPER_KIND in
+  // src/lib/papers.ts is the source of truth.
+  kind String @default("PAPER")
 
-  // Optional cover art, as a public URL path ("/covers/gapirma.jpg"). Covers
-  // are public on purpose: they sit on the abstract page, which anyone can
-  // read. Null for papers that have none, which is most of them.
+  // Articles only. subtitle is the standfirst under the title; body is the
+  // editor's ProseMirror JSON, sanitised on every save (src/lib/article) and
+  // rendered to HTML on the server. topics is a comma-separated list.
+  subtitle String?
+  body     String?
+  topics   String?
+
+  // The PDF, for kind PAPER (null for articles). storedName is a generated
+  // uuid filename on the disk mount, never the name the user typed:
+  // user-controlled filenames allow path traversal out of the upload directory.
+  storedName   String?
+  // The uploaded filename, used only for the Content-Disposition download name.
+  originalName String?
+  fileSize     Int? // bytes; capped at MAX_UPLOAD_BYTES in src/lib/storage.ts
+
+  // Optional cover art, as a public URL path: "/covers/gapirma.jpg" for
+  // shipped papers, "/api/media/<uuid>.jpg" for covers uploaded in the editor.
+  // Public on purpose: covers sit on the public page.
   coverImage String?
 
   submitterId String

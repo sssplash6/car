@@ -120,11 +120,17 @@ export const COPY = {
   },
   submit: {
     intro: {
-      title: "Submit a paper",
+      title: "Submit your work",
       body: "An editor reads every submission in full; you are emailed when a decision is made.",
     },
+    write: {
+      title: "Write it here",
+      body: "Essays, commentary, reportage. A full editor with covers, images and video, saved as you type.",
+      action: "Start writing",
+    },
+    upload: "Or upload a finished paper as a PDF",
     nextLabel: "What happens next",
-    next: ["An editor reads it in full", "You hear back by email", "Accepted papers publish"],
+    next: ["An editor reads it in full", "You hear back by email", "Accepted work publishes"],
     authorsHint: "As they should be cited: S. Ito, K. Mamatov",
     abstractHint: "States the question, the method and the finding.",
     fileHint: "Drop a PDF here, or choose a file. Up to 10 MB.",
