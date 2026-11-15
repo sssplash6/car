@@ -2,7 +2,7 @@ import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
-import { authConfig, demoMode } from "@/auth.config";
+import { authConfig, demoMode, openAccess } from "@/auth.config";
 import { siteUrl } from "@/lib/site";
 
 // Emails promoted to ADMIN on sign-in. Comma-separated; blank means nobody can
@@ -19,7 +19,11 @@ const adminEmails = new Set(
     .filter(Boolean),
 );
 
+// Under open access (src/auth.config.ts) every account is an editor: full access
+// for anyone who signs in. Turning it off demotes non-listed accounts on their
+// next sign-in, through the same reconciliation in the jwt callback below.
 function intendedRole(email: string | null | undefined): "ADMIN" | "READER" {
+  if (openAccess) return "ADMIN";
   return email && adminEmails.has(email.toLowerCase()) ? "ADMIN" : "READER";
 }
 

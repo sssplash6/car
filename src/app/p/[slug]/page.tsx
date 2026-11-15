@@ -335,7 +335,7 @@ export default async function PaperPage({ params }: PageProps) {
               id="the-full-paper"
               className="gated-download"
               drawing={issue ? plateSubject(issue.number) : undefined}
-              {...(user
+              {...(user || openAccess
                 ? {
                     title: gate.signedInTitle,
                     line: `PDF · ${size}`,

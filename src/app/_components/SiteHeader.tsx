@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { openAccess } from "@/auth.config";
 import { getOptionalUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { unreadCount } from "@/lib/notifications";
@@ -30,7 +29,6 @@ const NAV = [
 ];
 
 export async function SiteHeader() {
-  // Under open access this is the shared guest, never null (src/lib/dal.ts).
   const user = await getOptionalUser();
   const userId = user?.id ?? null;
 
@@ -45,9 +43,8 @@ export async function SiteHeader() {
 
   const account = userId
     ? {
-        // The guest's placeholder address is not worth showing.
         name: user?.name ?? null,
-        email: openAccess ? null : (user?.email ?? null),
+        email: user?.email ?? null,
         isAdmin: roleRow?.role === "ADMIN",
         unread,
       }
@@ -74,7 +71,6 @@ export async function SiteHeader() {
                 email={account.email}
                 isAdmin={account.isAdmin}
                 unread={account.unread}
-                canSignOut={!openAccess}
                 className="max-lg:hidden"
               />
             </>
@@ -86,7 +82,6 @@ export async function SiteHeader() {
           <MobileSheet
             nav={NAV}
             account={account}
-            canSignOut={!openAccess}
             brand={
               <>
                 <Mark size={24} />

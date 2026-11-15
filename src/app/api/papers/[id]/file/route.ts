@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getOptionalUser } from "@/lib/dal";
+import { openAccess } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
 import { readPdf } from "@/lib/storage";
@@ -47,7 +48,8 @@ export async function GET(
   const isPublished = paper.status === PAPER_STATUS.PUBLISHED;
   const isOwner = !!user && user.id === paper.submitterId;
 
-  if (!user) {
+  // Open access (src/auth.config.ts): a published PDF is free to everyone.
+  if (!user && !(openAccess && isPublished)) {
     // Signed out: send them to sign in rather than a bare 401, since this URL is
     // reachable from the download button on a public abstract page.
     return NextResponse.redirect(
@@ -56,6 +58,7 @@ export async function GET(
   }
 
   if (!isPublished && !isOwner) {
+    if (!user) return new NextResponse("Not found", { status: 404 });
     const row = await prisma.user.findUnique({
       where: { id: user.id },
       select: { role: true },

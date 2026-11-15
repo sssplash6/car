@@ -14,14 +14,12 @@ export function ProfileMenu({
   email,
   isAdmin,
   unread,
-  canSignOut = true,
   className,
 }: {
   name: string | null;
   email: string | null;
   isAdmin: boolean;
   unread: number;
-  canSignOut?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -80,17 +78,13 @@ export function ProfileMenu({
               Editor&rsquo;s desk
             </Link>
           )}
-          {canSignOut && (
-            <>
-              <div className="menu-sep" />
-              {/* A form: signing out is a mutation, never reachable by prefetch. */}
-              <form action={signOutAction}>
-                <button type="submit" className="menu-item text-ink-2">
-                  Sign out
-                </button>
-              </form>
-            </>
-          )}
+          <div className="menu-sep" />
+          {/* A form: signing out is a mutation, never reachable by prefetch. */}
+          <form action={signOutAction}>
+            <button type="submit" className="menu-item text-ink-2">
+              Sign out
+            </button>
+          </form>
         </nav>
       )}
     </div>

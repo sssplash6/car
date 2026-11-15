@@ -23,12 +23,10 @@ type Account = { name: string | null; email: string | null; isAdmin: boolean; un
 export function MobileSheet({
   nav,
   account,
-  canSignOut = true,
   brand,
 }: {
   nav: ReadonlyArray<{ href: string; label: string }>;
   account: Account | null;
-  canSignOut?: boolean;
   brand: ReactNode;
 }) {
   const pathname = usePathname();
@@ -159,13 +157,11 @@ export function MobileSheet({
       <div className="sheet-foot sheet-item" style={item(nav.length + 1)}>
         <ThemeSelect />
         {account ? (
-          canSignOut && (
-            <form action={signOutAction}>
-              <button type="submit" className="btn btn-ghost btn-md">
-                Sign out
-              </button>
-            </form>
-          )
+          <form action={signOutAction}>
+            <button type="submit" className="btn btn-ghost btn-md">
+              Sign out
+            </button>
+          </form>
         ) : (
           <Link href="/login" className="btn btn-secondary btn-md" onClick={leave}>
             Sign in

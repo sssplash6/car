@@ -109,7 +109,7 @@ export const COPY = {
   },
   login: {
     title: "Sign in",
-    body: "Sign in to download papers or submit your own. Continuing with Google creates your account; there is no separate registration.",
+    body: "Sign in to submit, write and review. Continuing with Google creates your account; there is no separate registration. Papers are free to read and download without one.",
     google: "Continue with Google",
     devLabel: "Local only",
     demo: {

@@ -22,13 +22,13 @@ export const googleEnabled = !!(
 // Ignored when Google is configured: a site with real accounts is never the demo.
 export const demoMode = process.env.DEMO_MODE === "true" && !googleEnabled;
 
-// Open access (the default while the owner demos the product): no sign-in and
-// no download gate. Every visitor is the one shared guest account from
-// src/lib/dal.ts, which is an editor, so submit, write and the editor's desk
-// all work without Google. Set REQUIRE_SIGN_IN=true to bring back the Google
-// sign-in and the PDF gate exactly as they were.
-export const openAccess = process.env.REQUIRE_SIGN_IN !== "true";
-export const GUEST_EMAIL = "guest@centralasianreview.invalid";
+// Open access (the default): no paywall. Published PDFs download without an
+// account, and EVERY Google account that signs in is an editor (ADMIN), so
+// submit, write and the editor's desk work for anyone who signs in. Sign-in is
+// still required for those, so every action is tied to a real account.
+// Set OPEN_ACCESS=false to restore the gated download and ADMIN_EMAILS-only
+// editors; roles are recomputed on each sign-in (src/auth.ts).
+export const openAccess = process.env.OPEN_ACCESS !== "false";
 
 // Routes that require a signed-in user. Everything else is public — this is a
 // content-marketing site, so the paper index and abstract pages MUST stay
@@ -63,12 +63,6 @@ export const authConfig = {
     // open signup is the point. Anyone may register and read; publishing is
     // gated by review, not by who can log in.
     authorized({ auth, request: { nextUrl } }) {
-      if (openAccess) {
-        // Nobody signs in, so the sign-in page has nothing to offer.
-        if (nextUrl.pathname === "/login") return Response.redirect(new URL("/", nextUrl));
-        return true;
-      }
-
       const isLoggedIn = !!auth?.user;
       const needsAuth = PROTECTED_PREFIXES.some(
         (prefix) =>

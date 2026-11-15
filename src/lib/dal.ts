@@ -3,7 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { GUEST_EMAIL, openAccess } from "@/auth.config";
+import { openAccess } from "@/auth.config";
 import { prisma } from "@/lib/prisma";
 
 // Data access layer. Every server action and every protected page starts here.
@@ -22,20 +22,6 @@ export type SessionUser = {
   name: string | null;
 };
 
-// Open access (src/auth.config.ts): with no session, every visitor is this one
-// shared account. It is an editor so the whole review flow can be shown. Its
-// address is never mailed (src/lib/email.ts skips it).
-
-const guestUser = cache(async (): Promise<SessionUser> => {
-  const user = await prisma.user.upsert({
-    where: { email: GUEST_EMAIL },
-    update: { role: "ADMIN" },
-    create: { email: GUEST_EMAIL, name: "Guest editor", role: "ADMIN" },
-    select: { id: true, email: true, name: true },
-  });
-  return user;
-});
-
 /**
  * Return the signed-in user, or redirect to /login.
  *
@@ -47,7 +33,6 @@ export const requireUser = cache(async (): Promise<SessionUser> => {
   const session = await auth();
   const id = session?.user?.id;
 
-  if (!id && openAccess) return guestUser();
   if (!id) redirect("/login");
 
   return {
@@ -67,7 +52,7 @@ export const requireUser = cache(async (): Promise<SessionUser> => {
 export const getOptionalUser = cache(async (): Promise<SessionUser | null> => {
   const session = await auth();
   const id = session?.user?.id;
-  if (!id) return openAccess ? guestUser() : null;
+  if (!id) return null;
 
   return {
     id,
@@ -101,10 +86,11 @@ export const requireAdmin = cache(async (): Promise<SessionUser> => {
 /**
  * True when the caller may download a published paper's PDF.
  *
- * Every signed-in user is at least a READER, so presence of a session is the
- * whole check — no DB read needed. Kept as a named helper so the intent is
- * explicit at the call site rather than a bare null test.
+ * Under open access (src/auth.config.ts) anyone may, signed in or not.
+ * Otherwise every signed-in user is at least a READER, so presence of a session
+ * is the whole check — no DB read needed.
  */
 export async function canDownload(): Promise<boolean> {
+  if (openAccess) return true;
   return (await getOptionalUser()) !== null;
 }
