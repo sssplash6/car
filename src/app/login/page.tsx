@@ -49,7 +49,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
   return (
     <div className="wrap page-top page-end">
       <div className="login-card settle-load">
-        <Mark size={32} draw="load" delay={200} />
+        <Mark size={88} />
         <h1 className="t-h2 mt-6">{demoMode ? copy.demo.title : copy.title}</h1>
         <p className="t-body mt-3">{demoMode ? copy.demo.body : copy.body}</p>
 

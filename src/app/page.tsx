@@ -173,7 +173,7 @@ export default async function HomePage() {
       </section>
 
       <section className="statement wrap" aria-labelledby="statement-label">
-        <Mark size={96} draw="view" className="mark-big" />
+        <Mark size={128} className="mark-big" />
         <ScrollFill text={editorial.statement} className="t-statement" />
         <div className="attrib">
           <span className="t-meta" id="statement-label">

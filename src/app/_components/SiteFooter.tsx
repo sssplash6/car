@@ -26,7 +26,7 @@ export function SiteFooter() {
         <div className="foot-grid">
           <div className="foot-brand">
             <Link href="/" className="brand" aria-label={`${SITE_NAME}, home`}>
-              <Mark size={32} tone="door" />
+              <Mark size={56} />
               <span className="wordmark">{SITE_NAME}</span>
             </Link>
             <p>{COPY.footer.credit}</p>

@@ -54,7 +54,7 @@ export async function SiteHeader() {
     <header className="site-header print:hidden">
       <div className="wrap head-inner">
         <Link href="/" className="brand" aria-label={`${SITE_NAME}, home`}>
-          <Mark size={24} draw="session" />
+          <Mark size={40} priority />
           <span className="wordmark">{SITE_NAME}</span>
         </Link>
 
@@ -84,7 +84,7 @@ export async function SiteHeader() {
             account={account}
             brand={
               <>
-                <Mark size={24} />
+                <Mark size={40} />
                 <span className="wordmark">{SITE_NAME}</span>
               </>
             }

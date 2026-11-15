@@ -1,36 +1,31 @@
 import type { CSSProperties } from "react";
-import { DrawingFrom } from "@/app/_components/illustrations/render";
-import { mark } from "@/app/_components/illustrations/data/mark";
+import Image from "next/image";
 import { cx } from "./cx";
+import logo from "./logo.png";
 
-// The logo: three nested contour rings of a summit seen from above, with the
-// terracotta summit dot (DESIGN.md §5.4 #9). draw="session" animates only on
-// the first page of a browser session (html[data-first-visit], set pre-paint
-// in layout.tsx), so it never flashes after hydration.
+// The logo: the hand-drawn sun-face roundel with "The Central Asian Review"
+// lettered in its rays, cut to a circle with a transparent outside (source:
+// the owner's drawing, 2026-11-15). Decorative (alt=""): every use sits next to
+// the wordmark or inside a labelled link. The same file feeds the favicon,
+// the home-screen icon and the share cards.
 export function Mark({
   size,
-  draw = "none",
-  tone = "ink",
-  delay = 0,
+  priority = false,
   className,
 }: {
-  size: 24 | 32 | 96;
-  draw?: "load" | "session" | "view" | "none";
-  tone?: "ink" | "door";
-  /** ms before the first ring draws. */
-  delay?: number;
+  size: number;
+  /** Above the fold on every page (the header): load it eagerly. */
+  priority?: boolean;
   className?: string;
 }) {
   return (
-    <DrawingFrom
-      data={mark}
-      name="mark"
-      size={`mark-${size}`}
-      tone={tone}
-      draw={draw === "session" ? "none" : draw}
-      delay={delay}
-      stagger={120}
-      className={cx(draw === "session" && "mark-draw", className)}
+    <Image
+      src={logo}
+      alt=""
+      width={size}
+      height={size}
+      priority={priority}
+      className={cx("mark-logo", className)}
     />
   );
 }

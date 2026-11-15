@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/prisma";
 import { PAPER_STATUS } from "@/lib/papers";
@@ -43,6 +45,9 @@ export default async function PaperOpengraphImage({ params }: { params: Promise<
   const raw = paper?.title ?? SITE_NAME;
   const title = raw.length > 120 ? `${raw.slice(0, raw.lastIndexOf(" ", 117))}…` : raw;
 
+  // The site logo, inlined so the card needs no fetch (src/app/_components/ui/Mark.tsx).
+  const logo = await readFile(path.join(process.cwd(), "src/app/_components/ui/logo.png"));
+  const logoSrc = `data:image/png;base64,${logo.toString("base64")}`;
   return new ImageResponse(
     (
       <div
@@ -66,7 +71,8 @@ export default async function PaperOpengraphImage({ params }: { params: Promise<
             paddingRight: 48,
           }}
         >
-          <div style={{ display: "flex", fontSize: 24, letterSpacing: 0.5 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 24, letterSpacing: 0.5 }}>
+            <img src={logoSrc} width={64} height={64} alt="" />
             {`${SITE_NAME}${issue ? ` · № ${issue.number} · ${issue.label}` : ""}`}
           </div>
           <div style={{ fontSize: title.length > 70 ? 44 : 56, lineHeight: 1.12, letterSpacing: -1 }}>

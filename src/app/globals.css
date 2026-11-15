@@ -664,10 +664,10 @@
     border-radius: 8px;
     min-width: 0;
   }
-  .brand .ill {
-    width: 24px;
-    height: 24px;
+  .mark-logo {
+    display: block;
     flex: none;
+    border-radius: 50%;
   }
   .wordmark {
     font: 500 20px/1 var(--font-serif);
@@ -1760,8 +1760,6 @@
     text-align: center;
   }
   .statement .mark-big {
-    width: 96px;
-    height: 96px;
     margin: 0 auto 40px;
   }
   .statement .t-statement {
