@@ -8,6 +8,8 @@ import { PAPER_STATUS, buildUniqueSlug } from "@/lib/papers";
 import { UploadError, savePdf } from "@/lib/storage";
 import { NOTIFICATION_KIND, notify } from "@/lib/notifications";
 import { notifyEditorsOfSubmission } from "@/lib/email";
+import { MAX_BODY_BYTES, sanitizeDoc } from "@/lib/article/document";
+import { pdfToDoc } from "@/lib/article/from-pdf";
 
 // Field limits. Enforced server-side because the matching maxLength attributes in
 // the form are a hint to the browser, not a constraint — a crafted POST ignores
@@ -85,6 +87,11 @@ export async function submitPaper(
     return { error: "That upload failed. Please try again.", values };
   }
 
+  // The paper's text, so it can be read on its page and not only downloaded.
+  // Best effort: a scan or an odd layout yields null and the paper keeps just
+  // its PDF. Never blocks the submission.
+  const body = await paperText(file, title, authorLine);
+
   const slug = await buildUniqueSlug(title, async (candidate) => {
     const hit = await prisma.paper.findUnique({
       where: { slug: candidate },
@@ -104,6 +111,7 @@ export async function submitPaper(
       storedName: stored.storedName,
       originalName: file.name,
       fileSize: stored.size,
+      body,
       submitterId: user.id,
     },
   });
@@ -138,4 +146,17 @@ export async function submitPaper(
   // redirect() throws, so it must sit outside the try above or it would be
   // swallowed and reported to the user as an upload failure.
   redirect("/submissions?submitted=1");
+}
+
+/** The PDF's text as a sanitised article document (JSON), or null. */
+async function paperText(file: File, title: string, authorLine: string): Promise<string | null> {
+  try {
+    const doc = await pdfToDoc(new Uint8Array(await file.arrayBuffer()), { title, authorLine });
+    if (!doc) return null;
+    const json = JSON.stringify(sanitizeDoc(doc));
+    return Buffer.byteLength(json) <= MAX_BODY_BYTES ? json : null;
+  } catch (err) {
+    console.error("[submit] could not turn the PDF into text:", err);
+    return null;
+  }
 }
