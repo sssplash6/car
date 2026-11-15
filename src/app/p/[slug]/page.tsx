@@ -296,7 +296,7 @@ export default async function PaperPage({ params }: PageProps) {
               )}
               <span>PDF, {size}</span>
               {" · "}
-              {user ? (
+              {user || openAccess ? (
                 <a href={fileUrl}>Download</a>
               ) : (
                 <a href="#the-full-paper">{COPY.paper.freeWithAccount}</a>
@@ -308,7 +308,7 @@ export default async function PaperPage({ params }: PageProps) {
           <RunningHead
             title={paper.title}
             issue={issue}
-            action={user ? { href: fileUrl, label: "Download" } : { href: "#the-full-paper", label: "Get the PDF" }}
+            action={user || openAccess ? { href: fileUrl, label: "Download" } : { href: "#the-full-paper", label: "Get the PDF" }}
             sentinelId="rh-sentinel"
           />
 
@@ -328,6 +328,21 @@ export default async function PaperPage({ params }: PageProps) {
               </h2>
               <p className="t-read prose-plain">{paper.abstract}</p>
             </Reveal>
+
+            {/* With no gate (open access) the paper itself is on the page, not
+                only behind a download. Same file route, served inline. */}
+            {(user || openAccess) && (
+              <section className="paper-reader" aria-label="The full paper">
+                <iframe
+                  src={`${fileUrl}?disposition=inline#view=FitH&navpanes=0`}
+                  title={`${paper.title} (full paper, PDF)`}
+                  loading="lazy"
+                />
+                <a href={`${fileUrl}?disposition=inline`} target="_blank" rel="noopener" className="t-ui-sm">
+                  Open the PDF in a new tab
+                </a>
+              </section>
+            )}
 
             {/* Named by the JSON-LD cssSelector above: renaming the class or the
                 id silently breaks the metered-content declaration. */}
