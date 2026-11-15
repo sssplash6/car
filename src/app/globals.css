@@ -2244,19 +2244,14 @@
     display: block;
     margin-bottom: 16px;
   }
-  .paper-reader {
-    margin-top: 48px;
-    display: grid;
-    gap: 12px;
-    justify-items: end;
+  .paper-text {
+    margin-top: 56px;
   }
-  .paper-reader iframe {
-    width: 100%;
-    height: min(88vh, 1100px);
-    border: 0;
-    border-radius: var(--radius-md);
-    box-shadow: 0 0 0 1px var(--color-door-ring);
-    background: #fff;
+  .paper-text > .t-meta {
+    display: block;
+  }
+  .paper-text .a-body {
+    margin-top: 16px;
   }
   .door {
     position: relative;

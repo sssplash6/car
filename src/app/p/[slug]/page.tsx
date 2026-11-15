@@ -26,6 +26,8 @@ import { PaperRow } from "@/app/_components/ui/PaperRow";
 import { RunningHead } from "@/app/_components/ui/RunningHead";
 import { cx } from "@/app/_components/ui/cx";
 import { No } from "@/app/_components/ui/Numero";
+// .a-body typography for a paper's text (the same as on-site articles).
+import "@/app/_components/article/article.css";
 
 // A published paper's abstract page (DESIGN.md §9.4). Public and crawlable:
 // the PDF behind it is gated, so this page carries all of the paper's search
@@ -169,6 +171,8 @@ export default async function PaperPage({ params }: PageProps) {
   const articleDoc = isArticle ? parseBody(paper.body) : null;
   const articleHtml = articleDoc ? renderBody(articleDoc) : "";
   const minutes = articleDoc ? readingMinutes(countWords(bodyText(articleDoc))) : 0;
+  // A PDF paper may also carry its text in the same format, read on the page.
+  const paperHtml = !isArticle && paper.body ? renderBody(parseBody(paper.body)) : "";
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -329,18 +333,16 @@ export default async function PaperPage({ params }: PageProps) {
               <p className="t-read prose-plain">{paper.abstract}</p>
             </Reveal>
 
-            {/* With no gate (open access) the paper itself is on the page, not
-                only behind a download. Same file route, served inline. */}
-            {(user || openAccess) && (
-              <section className="paper-reader" aria-label="The full paper">
-                <iframe
-                  src={`${fileUrl}?disposition=inline#view=FitH&navpanes=0`}
-                  title={`${paper.title} (full paper, PDF)`}
-                  loading="lazy"
-                />
-                <a href={`${fileUrl}?disposition=inline`} target="_blank" rel="noopener" className="t-ui-sm">
-                  Open the PDF in a new tab
-                </a>
+            {/* The paper's text, read on the page like an article. Paper.body
+                holds it in the article document format (set from the PDF);
+                the PDF stays a download below. Shown under the same rule as
+                the download: anyone under open access, else signed-in. */}
+            {paperHtml && (user || openAccess) && (
+              <section className="paper-text" aria-labelledby="paper-text-label">
+                <h2 id="paper-text-label" className="t-meta">
+                  The full paper
+                </h2>
+                <div className="a-body" dangerouslySetInnerHTML={{ __html: paperHtml }} />
               </section>
             )}
 
@@ -352,7 +354,7 @@ export default async function PaperPage({ params }: PageProps) {
               drawing={issue ? plateSubject(issue.number) : undefined}
               {...(user || openAccess
                 ? {
-                    title: gate.signedInTitle,
+                    title: paperHtml ? "The paper as a PDF" : gate.signedInTitle,
                     line: `PDF · ${size}`,
                     action: (
                       <a href={fileUrl} className="btn btn-on-door btn-lg">

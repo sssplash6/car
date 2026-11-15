@@ -5,7 +5,7 @@
 //
 // Papers that the editors prepare themselves (commissioned essays, pieces sent
 // in by email) live in content/publications/: one PDF each, listed in
-// publications.json. This script copies any listed paper that is not yet in the
+// publications.json, optionally with the paper's text as <slug>.json. This script copies any listed paper that is not yet in the
 // database onto the upload disk and inserts it as PUBLISHED.
 //
 // Insert-only, keyed by slug: a paper already in the database is never touched
@@ -80,4 +80,17 @@ for (const entry of entries) {
 }
 
 console.log(`publications: ${added} added, ${entries.length - added} already present`);
+
+// The paper's text, read on its page (src/app/p/[slug]/page.tsx). Each entry's
+// "text" is an article document (the editor's ProseMirror JSON, only node and
+// mark types the article schema allows) transcribed from the PDF. Filled only
+// while the body is empty, so it never overwrites text edited on the site.
+const fillText = db.prepare(`UPDATE Paper SET body = ?, updatedAt = ? WHERE slug = ? AND body IS NULL`);
+for (const entry of entries) {
+  if (!entry.text) continue;
+  const body = readFileSync(path.join(CONTENT_DIR, entry.text), "utf8").trim();
+  JSON.parse(body); // fail loudly on a malformed file rather than store it
+  const { changes } = fillText.run(body, new Date().toISOString(), entry.slug);
+  if (changes) console.log(`publications: text set for ${entry.slug}`);
+}
 db.close();
